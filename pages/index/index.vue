@@ -1,0 +1,853 @@
+<template>
+  <view class="home-page">
+    <!-- 顶部主体卡片 -->
+    <view class="top-section">
+      <view class="top-bar">
+        <view class="subject-info" @tap="showSwitcher = true">
+          <view class="subject-avatar">
+            <text>{{ subjectMode === 'baby' ? (currentBaby?.gender === 'female' ? '👧' : '👦') : '🤱' }}</text>
+          </view>
+          <view class="subject-detail">
+            <text class="subject-name">{{ subjectName }}</text>
+            <text class="subject-sub">{{ subjectSubtitle }}</text>
+          </view>
+          <view class="switch-btn">
+            <text class="switch-text">切换</text>
+            <text class="switch-arrow">⌄</text>
+          </view>
+        </view>
+        <view class="allergy-btn" @tap="goAllergy">
+          <text class="allergy-btn-icon">⚠️</text>
+          <text class="allergy-btn-text">过敏</text>
+        </view>
+      </view>
+
+      <!-- 今日营养概览 -->
+      <view class="today-summary">
+        <view class="summary-title">
+          <text>今日饮食</text>
+          <text class="summary-date">{{ todayStr }}</text>
+        </view>
+        <view class="nutrition-row">
+          <view class="nutrition-item" v-for="n in nutritionStats" :key="n.key">
+            <text class="nutrition-icon">{{ n.icon }}</text>
+            <text class="nutrition-label">{{ n.label }}</text>
+            <view class="nutrition-bar">
+              <view class="nutrition-fill" :style="{ width: n.pct + '%', background: n.color }"></view>
+            </view>
+            <text class="nutrition-val">{{ n.pct }}%</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 快速记录按钮 -->
+    <view class="quick-actions">
+      <view class="action-primary" @tap="goCamera">
+        <text class="action-icon-big">📸</text>
+        <view>
+          <text class="action-title">拍照记一餐</text>
+          <text class="action-sub">AI 自动识别食材</text>
+        </view>
+        <text class="action-arrow">›</text>
+      </view>
+      <view class="action-secondary" @tap="goMealRecord">
+        <text class="action-icon">✍️</text>
+        <text class="action-text">手动记录</text>
+      </view>
+    </view>
+
+    <!-- 宝宝模式：今日餐次 + 推荐食材 -->
+    <template v-if="subjectMode === 'baby'">
+      <view class="section">
+        <view class="section-header">
+          <text class="section-title">今天吃了</text>
+          <text class="section-more" @tap="goMealList">全部记录 ›</text>
+        </view>
+        <view v-if="todayMeals.length === 0" class="empty-meals">
+          <text class="empty-icon">🍽️</text>
+          <text class="empty-text">今天还没记录，快去拍一拍吧~</text>
+          <view class="empty-btn" @tap="goCamera">记第一餐</view>
+        </view>
+        <view v-else class="meal-list">
+          <view
+            class="meal-card card"
+            v-for="meal in todayMeals"
+            :key="meal.id"
+            @tap="goMealDetail(meal.id)"
+          >
+            <view class="meal-card-header">
+              <text class="meal-time">{{ meal.mealType }}</text>
+              <text class="meal-hour">{{ meal.time }}</text>
+              <view v-if="meal.score" class="score-badge" :class="getScoreClass(meal.score)">
+                {{ meal.score }}分
+              </view>
+            </view>
+            <view class="ingredients-row">
+              <view
+                v-for="ing in meal.ingredients"
+                :key="ing.id"
+                class="ingredient-chip"
+                :class="{ 'allergy-chip': ing.isAllergy }"
+              >
+                <text v-if="ing.isAllergy" class="allergy-icon">⚠️</text>
+                <text>{{ ing.name }}</text>
+              </view>
+            </view>
+            <image v-if="meal.photo" :src="meal.photo" class="meal-photo" mode="aspectFill" />
+          </view>
+        </view>
+      </view>
+
+      <view class="section">
+        <view class="section-header">
+          <text class="section-title">本月龄推荐食材</text>
+          <text class="section-sub">{{ ageText }}适合</text>
+        </view>
+        <scroll-view scroll-x class="recommend-scroll">
+          <view class="recommend-list">
+            <view
+              class="recommend-card"
+              v-for="item in recommendIngredients"
+              :key="item.id"
+              @tap="addIngredient(item)"
+            >
+              <text class="recommend-emoji">{{ item.emoji }}</text>
+              <text class="recommend-name">{{ item.name }}</text>
+              <text class="recommend-tip">{{ item.tip }}</text>
+            </view>
+          </view>
+        </scroll-view>
+      </view>
+    </template>
+
+    <!-- 妈妈模式：孕期营养提示 -->
+    <template v-else>
+      <view class="section">
+        <view class="mother-tip-card card">
+          <text class="mother-tip-title">{{ subjectSubtitle }}营养重点</text>
+          <view class="mother-tip-list">
+            <view v-for="tip in motherNutritionTips" :key="tip.key" class="mother-tip-item">
+              <text class="tip-icon">{{ tip.icon }}</text>
+              <view>
+                <text class="tip-name">{{ tip.name }}</text>
+                <text class="tip-desc">{{ tip.desc }}</text>
+              </view>
+            </view>
+          </view>
+          <view class="mother-tip-edit" @tap="goEditMother">
+            <text>修改我的阶段 ›</text>
+          </view>
+        </view>
+      </view>
+    </template>
+
+    <!-- AI 周计划入口 -->
+    <view class="plan-banner" @tap="goPlan">
+      <view class="plan-banner-content">
+        <text class="plan-banner-icon">🗓️</text>
+        <view>
+          <text class="plan-banner-title">AI 智能周计划</text>
+          <text class="plan-banner-sub">根据月龄 + 过敏史，帮你安排本周饮食</text>
+        </view>
+      </view>
+      <text class="plan-banner-arrow">›</text>
+    </view>
+
+    <view class="bottom-space"></view>
+
+    <!-- 主体切换 Sheet -->
+    <view v-if="showSwitcher" class="switcher-mask" @tap="showSwitcher = false">
+      <view class="switcher-sheet" @tap.stop>
+        <view class="sheet-handle"></view>
+        <text class="sheet-title">切换视角</text>
+
+        <!-- 宝妈档案 -->
+        <view v-if="mother" class="switcher-item" :class="{ active: subjectMode === 'mother' }" @tap="switchToMother">
+          <view class="switcher-avatar">🤱</view>
+          <view class="switcher-info">
+            <text class="switcher-name">我的营养</text>
+            <text class="switcher-sub">{{ { preconception: '备孕期', pregnancy_early: '孕早期', pregnancy_mid: '孕中期', pregnancy_late: '孕晚期', lactation: '哺乳期', adult_female: '日常营养' }[mother.phase] || '妈妈' }}</text>
+          </view>
+          <text v-if="subjectMode === 'mother'" class="switcher-check">✓</text>
+        </view>
+
+        <!-- 宝宝列表 -->
+        <text class="sheet-section-title">我的宝宝</text>
+        <view
+          v-for="b in babies"
+          :key="b.id"
+          class="switcher-item"
+          :class="{ active: subjectMode === 'baby' && currentBabyId === b.id }"
+          @tap="switchToBaby(b)"
+        >
+          <view class="switcher-avatar">{{ b.gender === 'female' ? '👧' : '👦' }}</view>
+          <view class="switcher-info">
+            <text class="switcher-name">{{ b.name }}</text>
+            <text class="switcher-sub">{{ babyAgeText(b) }}</text>
+          </view>
+          <text v-if="subjectMode === 'baby' && currentBabyId === b.id" class="switcher-check">✓</text>
+        </view>
+
+        <!-- 添加宝宝 -->
+        <view class="switcher-add" @tap="addBaby">
+          <text class="add-icon">＋</text>
+          <text class="add-text">添加宝宝</text>
+          <text v-if="babies.length >= 1" class="add-tag">年会员</text>
+        </view>
+      </view>
+    </view>
+  </view>
+</template>
+
+<script setup>
+import { ref, computed } from 'vue'
+import { onShow } from '@dcloudio/uni-app'
+import { getMealList, getIngredientsByAge } from '@/api/meal.js'
+import { useUserStore } from '@/store/user.js'
+
+const userStore = useUserStore()
+
+// ── 当前主体状态 ──────────────────────────────
+// subjectMode: 'baby' | 'mother'
+const subjectMode = ref('baby')
+const showSwitcher = ref(false)
+
+// 直接从 store 取，不再手动维护本地 ref
+const babies = computed(() => userStore.babies)
+const currentBabyId = computed(() => userStore.currentBabyId)
+const currentBaby = computed(() => userStore.currentBaby)
+const mother = computed(() => userStore.mother)
+
+// ── 首页数据 ──────────────────────────────────
+const todayMeals = ref([])
+const recommendIngredients = ref([])
+
+const nutritionStats = ref([
+  { key: 'carb', icon: '🌾', label: '碳水', pct: 0, color: '#F5A85B' },
+  { key: 'protein', icon: '🥩', label: '蛋白', pct: 0, color: '#A3D9B1' },
+  { key: 'fat', icon: '🧈', label: '脂肪', pct: 0, color: '#FF8FA3' },
+  { key: 'vitamin', icon: '🥦', label: '维生素', pct: 0, color: '#A8D8EA' },
+])
+
+// ── 计算属性 ──────────────────────────────────
+const ageMonths = computed(() => {
+  if (subjectMode.value !== 'baby' || !currentBaby.value?.birthday) return 0
+  const birth = new Date(currentBaby.value.birthday)
+  return Math.floor((Date.now() - birth.getTime()) / (1000 * 60 * 60 * 24 * 30.4))
+})
+
+const ageText = computed(() => {
+  if (subjectMode.value !== 'baby') return ''
+  const m = ageMonths.value
+  if (m < 12) return `${m} 个月`
+  const y = Math.floor(m / 12)
+  const rem = m % 12
+  return rem > 0 ? `${y} 岁 ${rem} 个月` : `${y} 岁`
+})
+
+// 顶部显示名称
+const subjectName = computed(() => {
+  if (subjectMode.value === 'baby') return currentBaby.value?.name || '小宝贝'
+  return '我的营养'
+})
+
+// 顶部显示副标题
+const subjectSubtitle = computed(() => {
+  if (subjectMode.value === 'baby') return ageText.value ? `${ageText.value}` : '宝宝'
+  const phaseMap = {
+    preconception: '备孕期',
+    pregnancy_early: '孕早期',
+    pregnancy_mid: '孕中期',
+    pregnancy_late: '孕晚期',
+    lactation: '哺乳期',
+    adult_female: '日常营养',
+  }
+  return phaseMap[mother.value?.phase] || '妈妈'
+})
+
+const todayStr = computed(() => {
+  const d = new Date()
+  return `${d.getMonth() + 1}月${d.getDate()}日`
+})
+
+// ── 数据加载 ──────────────────────────────────
+async function loadTodayMeals() {
+  if (subjectMode.value !== 'baby' || !currentBaby.value?.id) return
+  try {
+    const list = await getMealList(currentBaby.value.id, 0, 10)
+    const todayDate = new Date().toISOString().split('T')[0]
+    todayMeals.value = (list || [])
+      .filter(m => m.mealTime && m.mealTime.startsWith(todayDate))
+      .map(m => ({
+        id: m.id,
+        mealType: m.mealType,
+        time: m.mealTime ? m.mealTime.substring(11, 16) : '',
+        score: m.aiScore,
+        photo: m.signedPhotoUrl || '',
+        ingredients: (m.ingredients || []).map(i => ({ id: i.name, name: i.name, isAllergy: false }))
+      }))
+  } catch (e) {
+    // 静默处理
+  }
+}
+
+async function loadRecommendIngredients() {
+  if (subjectMode.value !== 'baby' || !currentBaby.value?.id) return
+  try {
+    const list = await getIngredientsByAge(currentBaby.value.id)
+    recommendIngredients.value = (list || []).slice(0, 6).map(i => ({
+      id: i.id,
+      emoji: '🥗',
+      name: i.name,
+      tip: i.nutritionBrief || ''
+    }))
+  } catch (e) {
+    // 静默处理
+  }
+}
+
+function syncFromStore() {
+  // store 已从 storage 初始化，直接读 store 决定显示模式
+  if (userStore.currentBabyId && userStore.babies.length > 0) {
+    subjectMode.value = 'baby'
+  } else if (userStore.mother) {
+    subjectMode.value = 'mother'
+  }
+}
+
+onShow(() => {
+  syncFromStore()
+  todayMeals.value = []
+  recommendIngredients.value = []
+  loadTodayMeals()
+  loadRecommendIngredients()
+})
+
+// ── 切换器 ────────────────────────────────────
+function switchToBaby(baby) {
+  userStore.switchBaby(baby.id)
+  subjectMode.value = 'baby'
+  showSwitcher.value = false
+  todayMeals.value = []
+  recommendIngredients.value = []
+  loadTodayMeals()
+  loadRecommendIngredients()
+}
+
+function switchToMother() {
+  subjectMode.value = 'mother'
+  showSwitcher.value = false
+  todayMeals.value = []
+  recommendIngredients.value = []
+}
+
+function addBaby() {
+  showSwitcher.value = false
+  uni.navigateTo({ url: '/pages/profile/index' })
+}
+
+// ── 工具函数 ──────────────────────────────────
+function getScoreClass(score) {
+  if (score >= 80) return 'score-good'
+  if (score >= 60) return 'score-ok'
+  return 'score-low'
+}
+
+function babyAgeText(baby) {
+  if (!baby?.birthday) return ''
+  const m = Math.floor((Date.now() - new Date(baby.birthday).getTime()) / (1000 * 60 * 60 * 24 * 30.4))
+  if (m < 12) return `${m} 个月`
+  const y = Math.floor(m / 12)
+  const rem = m % 12
+  return rem > 0 ? `${y} 岁 ${rem} 个月` : `${y} 岁`
+}
+
+function goAllergy() { uni.navigateTo({ url: '/pages/allergy/index' }) }
+function goCamera() { uni.navigateTo({ url: '/pages/camera/index' }) }
+function goMealRecord() { uni.navigateTo({ url: '/pages/meal-record/index' }) }
+function goMealList() { uni.switchTab({ url: '/pages/meal-list/index' }) }
+function goPlan() { uni.switchTab({ url: '/pages/plan/index' }) }
+function goMealDetail(id) { uni.navigateTo({ url: `/pages/meal-record/index?id=${id}` }) }
+function goEditMother() {
+  showSwitcher.value = false
+  uni.navigateTo({ url: '/pages/mother-profile/index?edit=1' })
+}
+function addIngredient(item) {
+  uni.navigateTo({ url: `/pages/meal-record/index?ingredient=${item.id}` })
+}
+
+const motherNutritionTips = computed(() => {
+  const phase = mother.value?.phase
+  const tips = {
+    preconception: [
+      { key: 'folate', icon: '🟢', name: '叶酸', desc: '0.4mg/天，预防神经管畸形' },
+      { key: 'iron', icon: '🩸', name: '铁', desc: '增加储备，防贫血' },
+      { key: 'vitD', icon: '☀️', name: '维生素D', desc: '促进钙吸收' },
+    ],
+    pregnancy_early: [
+      { key: 'folate', icon: '🟢', name: '叶酸', desc: '继续补充至孕12周' },
+      { key: 'protein', icon: '🥩', name: '蛋白质', desc: '每天+25g，助胎儿发育' },
+      { key: 'iron', icon: '🩸', name: '铁', desc: '孕早期需求增加' },
+    ],
+    pregnancy_mid: [
+      { key: 'calcium', icon: '🦴', name: '钙', desc: '1000mg/天，胎儿骨骼发育' },
+      { key: 'dha', icon: '🐟', name: 'DHA', desc: '200mg/天，大脑和视网膜发育' },
+      { key: 'iron', icon: '🩸', name: '铁', desc: '24mg/天，预防贫血' },
+    ],
+    pregnancy_late: [
+      { key: 'calcium', icon: '🦴', name: '钙', desc: '1200mg/天，骨骼最后冲刺' },
+      { key: 'energy', icon: '⚡', name: '能量', desc: '+450kcal/天' },
+      { key: 'vitK', icon: '🥦', name: '维生素K', desc: '助凝血，深绿色蔬菜多吃' },
+    ],
+    lactation: [
+      { key: 'energy', icon: '⚡', name: '能量', desc: '+500kcal/天，维持奶量' },
+      { key: 'calcium', icon: '🦴', name: '钙', desc: '1000mg/天，防骨质流失' },
+      { key: 'dha', icon: '🐟', name: 'DHA', desc: '母乳中DHA助宝宝发育' },
+    ],
+    adult_female: [
+      { key: 'calcium', icon: '🦴', name: '钙', desc: '1000mg/天，骨密度维护' },
+      { key: 'iron', icon: '🩸', name: '铁', desc: '月经规律后注意补充' },
+      { key: 'vitD', icon: '☀️', name: '维生素D', desc: '促进钙吸收，户外活动少时尤其需要' },
+      { key: 'protein', icon: '🥩', name: '蛋白质', desc: '维持日常体力和免疫力' },
+    ],
+  }
+  return tips[phase] || tips['pregnancy_mid']
+})
+</script>
+
+<style lang="scss" scoped>
+.home-page {
+  min-height: 100vh;
+  background: #FAF7F2;
+}
+
+/* 顶部渐变区域 */
+.top-section {
+  background: linear-gradient(160deg, #F5A85B 0%, #F7BC7A 100%);
+  padding: 100rpx 40rpx 40rpx;
+  border-radius: 0 0 40rpx 40rpx;
+}
+
+.top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 32rpx;
+}
+
+/* 主体信息（替代原 baby-info） */
+.subject-info {
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+
+.subject-avatar {
+  width: 88rpx;
+  height: 88rpx;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 44rpx;
+  margin-right: 20rpx;
+  flex-shrink: 0;
+}
+
+.subject-detail { flex: 1; }
+
+.subject-name {
+  display: block;
+  font-size: 34rpx;
+  font-weight: 700;
+  color: #FFFFFF;
+  margin-bottom: 4rpx;
+}
+
+.subject-sub {
+  display: block;
+  font-size: 24rpx;
+  color: rgba(255,255,255,0.85);
+}
+
+.switch-btn {
+  display: flex;
+  align-items: center;
+  background: rgba(255,255,255,0.2);
+  border-radius: 24rpx;
+  padding: 8rpx 18rpx;
+  margin-right: 16rpx;
+}
+
+.switch-text { font-size: 24rpx; color: #FFFFFF; }
+.switch-arrow { font-size: 28rpx; color: #FFFFFF; margin-left: 4rpx; }
+
+.baby-avatar {
+  border: 3rpx solid rgba(255,255,255,0.6);
+  margin-right: 20rpx;
+}
+
+.baby-avatar-placeholder {
+  width: 88rpx;
+  height: 88rpx;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 44rpx;
+  margin-right: 20rpx;
+}
+
+.baby-name {
+  display: block;
+  font-size: 34rpx;
+  font-weight: 700;
+  color: #FFFFFF;
+  margin-bottom: 4rpx;
+}
+
+.baby-age {
+  font-size: 24rpx;
+  color: rgba(255,255,255,0.85);
+}
+
+.edit-icon {
+  font-size: 32rpx;
+  margin-left: 12rpx;
+}
+
+.allergy-btn {
+  background: rgba(255,255,255,0.25);
+  border-radius: 32rpx;
+  padding: 12rpx 24rpx;
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+}
+
+.allergy-btn-icon { font-size: 28rpx; }
+.allergy-btn-text { font-size: 26rpx; color: #FFFFFF; font-weight: 600; }
+
+/* 今日营养概览 */
+.today-summary {
+  background: rgba(255,255,255,0.2);
+  border-radius: 20rpx;
+  padding: 24rpx;
+}
+
+.summary-title {
+  display: flex;
+  justify-content: space-between;
+  font-size: 28rpx;
+  color: rgba(255,255,255,0.9);
+  font-weight: 600;
+  margin-bottom: 20rpx;
+}
+
+.summary-date { font-weight: 400; }
+
+.nutrition-row {
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+}
+
+.nutrition-item {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.nutrition-icon { font-size: 28rpx; }
+.nutrition-label { font-size: 24rpx; color: rgba(255,255,255,0.9); width: 80rpx; }
+
+.nutrition-bar {
+  flex: 1;
+  height: 10rpx;
+  background: rgba(255,255,255,0.25);
+  border-radius: 8rpx;
+  overflow: hidden;
+}
+
+.nutrition-fill {
+  height: 100%;
+  border-radius: 8rpx;
+  transition: width 0.5s ease;
+}
+
+.nutrition-val { font-size: 22rpx; color: rgba(255,255,255,0.8); width: 60rpx; text-align: right; }
+
+/* 快速操作 */
+.quick-actions {
+  margin: 32rpx 40rpx 0;
+  display: flex;
+  gap: 20rpx;
+}
+
+.action-primary {
+  flex: 1;
+  background: #FFFFFF;
+  border-radius: 20rpx;
+  box-shadow: 0 4rpx 16rpx rgba(245, 168, 91, 0.2);
+  padding: 28rpx 24rpx;
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.action-icon-big { font-size: 56rpx; }
+
+.action-title { display: block; font-size: 30rpx; font-weight: 700; color: #3D3935; margin-bottom: 4rpx; }
+.action-sub { font-size: 22rpx; color: #999; }
+
+.action-arrow { font-size: 44rpx; color: #F5A85B; margin-left: auto; }
+
+.action-secondary {
+  background: #FFFFFF;
+  border-radius: 20rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0,0,0,0.05);
+  padding: 28rpx 24rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8rpx;
+  min-width: 130rpx;
+}
+
+.action-icon { font-size: 44rpx; }
+.action-text { font-size: 24rpx; color: #666; }
+
+/* 通用 section */
+.section {
+  margin: 40rpx 40rpx 0;
+}
+
+.section-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 20rpx;
+}
+
+.section-title { font-size: 32rpx; font-weight: 700; color: #3D3935; }
+.section-more { font-size: 26rpx; color: #F5A85B; }
+.section-sub { font-size: 24rpx; color: #999; }
+
+/* 空状态 */
+.empty-meals {
+  background: #FFFFFF;
+  border-radius: 20rpx;
+  padding: 60rpx 40rpx;
+  text-align: center;
+  box-shadow: 0 4rpx 12rpx rgba(0,0,0,0.05);
+}
+
+.empty-icon { font-size: 80rpx; display: block; margin-bottom: 20rpx; }
+.empty-text { font-size: 28rpx; color: #999; display: block; margin-bottom: 32rpx; }
+
+.empty-btn {
+  display: inline-block;
+  background: #F5A85B;
+  color: #FFFFFF;
+  border-radius: 48rpx;
+  padding: 16rpx 48rpx;
+  font-size: 28rpx;
+  font-weight: 600;
+}
+
+/* 餐次卡片 */
+.meal-list { display: flex; flex-direction: column; gap: 20rpx; }
+
+.meal-card {
+  padding: 28rpx;
+}
+
+.meal-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  margin-bottom: 20rpx;
+}
+
+.meal-time { font-size: 30rpx; font-weight: 700; color: #3D3935; }
+.meal-hour { font-size: 24rpx; color: #999; flex: 1; }
+
+.score-badge {
+  padding: 6rpx 18rpx;
+  border-radius: 20rpx;
+  font-size: 24rpx;
+  font-weight: 700;
+
+  &.score-good { background: #E8F8EE; color: #5CB87A; }
+  &.score-ok { background: #FFF3E6; color: #F5A85B; }
+  &.score-low { background: #FDEEE9; color: #E07A5F; }
+}
+
+.ingredients-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+}
+
+.ingredient-chip {
+  background: #F5F5F5;
+  border-radius: 24rpx;
+  padding: 8rpx 20rpx;
+  font-size: 26rpx;
+  color: #555;
+  display: flex;
+  align-items: center;
+  gap: 4rpx;
+}
+
+.allergy-chip {
+  background: #FDEEE9;
+  color: #E07A5F;
+  font-weight: 600;
+}
+
+.allergy-icon { font-size: 22rpx; }
+
+.meal-photo {
+  width: 100%;
+  height: 200rpx;
+  border-radius: 12rpx;
+  margin-top: 16rpx;
+}
+
+/* 月龄推荐 */
+.recommend-scroll { white-space: nowrap; }
+
+.recommend-list {
+  display: flex;
+  gap: 16rpx;
+  padding-bottom: 8rpx;
+}
+
+.recommend-card {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  background: #FFFFFF;
+  border-radius: 16rpx;
+  padding: 24rpx 20rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0,0,0,0.05);
+  min-width: 120rpx;
+}
+
+.recommend-emoji { font-size: 48rpx; margin-bottom: 8rpx; }
+.recommend-name { font-size: 26rpx; font-weight: 600; color: #3D3935; margin-bottom: 4rpx; }
+.recommend-tip { font-size: 20rpx; color: #A3D9B1; font-weight: 600; }
+
+/* 周计划 banner */
+.plan-banner {
+  margin: 40rpx 40rpx 0;
+  background: linear-gradient(135deg, #A3D9B1 0%, #7ECFA0 100%);
+  border-radius: 20rpx;
+  padding: 32rpx;
+  display: flex;
+  align-items: center;
+}
+
+.plan-banner-content {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  flex: 1;
+}
+
+.plan-banner-icon { font-size: 56rpx; }
+
+.plan-banner-title { display: block; font-size: 30rpx; font-weight: 700; color: #FFFFFF; margin-bottom: 6rpx; }
+.plan-banner-sub { font-size: 24rpx; color: rgba(255,255,255,0.85); }
+.plan-banner-arrow { font-size: 44rpx; color: rgba(255,255,255,0.7); }
+
+.bottom-space { height: 120rpx; }
+
+/* 妈妈模式营养卡片 */
+.mother-tip-card { }
+.mother-tip-title { display: block; font-size: 30rpx; font-weight: 700; color: #3D3935; margin-bottom: 24rpx; }
+.mother-tip-list { display: flex; flex-direction: column; gap: 20rpx; margin-bottom: 24rpx; }
+.mother-tip-item { display: flex; align-items: flex-start; gap: 16rpx; }
+.tip-icon { font-size: 36rpx; flex-shrink: 0; }
+.tip-name { display: block; font-size: 28rpx; font-weight: 600; color: #3D3935; margin-bottom: 4rpx; }
+.tip-desc { display: block; font-size: 24rpx; color: #999; }
+.mother-tip-edit { font-size: 26rpx; color: #F5A85B; text-align: right; }
+
+/* 切换器遮罩 + Sheet */
+.switcher-mask {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  z-index: 1000;
+  display: flex;
+  align-items: flex-end;
+}
+
+.switcher-sheet {
+  width: 100%;
+  background: #FFFFFF;
+  border-radius: 32rpx 32rpx 0 0;
+  padding: 24rpx 40rpx 80rpx;
+}
+
+.sheet-handle {
+  width: 80rpx; height: 8rpx;
+  background: #E0E0E0;
+  border-radius: 4rpx;
+  margin: 0 auto 32rpx;
+}
+
+.sheet-title { display: block; font-size: 32rpx; font-weight: 700; color: #3D3935; margin-bottom: 24rpx; }
+.sheet-section-title { display: block; font-size: 24rpx; color: #999; margin: 20rpx 0 12rpx; }
+
+.switcher-item {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  padding: 20rpx 24rpx;
+  border-radius: 16rpx;
+  margin-bottom: 8rpx;
+  background: #F8F8F8;
+
+  &.active { background: #FFF3E6; }
+}
+
+.switcher-avatar {
+  width: 72rpx; height: 72rpx;
+  border-radius: 50%;
+  background: #F0F0F0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 36rpx;
+  flex-shrink: 0;
+}
+
+.switcher-info { flex: 1; }
+.switcher-name { display: block; font-size: 28rpx; font-weight: 600; color: #3D3935; margin-bottom: 4rpx; }
+.switcher-sub { display: block; font-size: 24rpx; color: #999; }
+.switcher-check { font-size: 28rpx; color: #F5A85B; font-weight: 700; }
+
+.switcher-add {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  padding: 20rpx 24rpx;
+  border-radius: 16rpx;
+  border: 2rpx dashed #E0E0E0;
+  margin-top: 8rpx;
+}
+
+.add-icon { font-size: 36rpx; color: #F5A85B; }
+.add-text { font-size: 28rpx; color: #F5A85B; flex: 1; }
+.add-tag {
+  font-size: 20rpx;
+  color: #F5A85B;
+  background: #FFF3E6;
+  border-radius: 16rpx;
+  padding: 4rpx 12rpx;
+}
+</style>

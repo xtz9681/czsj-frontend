@@ -1,0 +1,503 @@
+<template>
+  <view class="page-container" style="padding: 0 40rpx 80rpx;">
+    <!-- 餐次类型选择 -->
+    <view class="meal-type-row">
+      <view
+        v-for="t in mealTypes"
+        :key="t.value"
+        class="meal-type-btn"
+        :class="{ active: form.mealType === t.value }"
+        @tap="form.mealType = t.value"
+      >
+        <text>{{ t.icon }}</text>
+        <text>{{ t.label }}</text>
+      </view>
+    </view>
+
+    <!-- 已从相机带入的图片 -->
+    <view v-if="form.photo" class="photo-preview">
+      <image :src="form.photo" class="photo-img" mode="aspectFill" />
+      <view class="photo-remove" @tap="form.photo = ''">✕</view>
+    </view>
+
+    <!-- 食材列表 -->
+    <view class="section-title-row">
+      <text class="section-title">食材清单</text>
+      <text class="section-count">{{ form.ingredients.length }} 种</text>
+    </view>
+
+    <!-- 已选食材 -->
+    <view class="ingredient-list" v-if="form.ingredients.length > 0">
+      <view
+        class="ingredient-row"
+        v-for="(ing, idx) in form.ingredients"
+        :key="ing.id"
+      >
+        <text v-if="ing.isAllergy" class="row-allergy-icon">⚠️</text>
+        <text class="row-emoji">{{ ing.emoji || '🍴' }}</text>
+        <text class="row-name" :class="{ 'text-danger': ing.isAllergy }">{{ ing.name }}</text>
+        <view class="row-amount">
+          <view class="amount-btn" @tap="changeAmount(idx, -5)">-</view>
+          <text class="amount-val">{{ ing.amount }}g</text>
+          <view class="amount-btn" @tap="changeAmount(idx, 5)">+</view>
+        </view>
+        <view class="row-remove" @tap="removeIngredient(idx)">✕</view>
+      </view>
+    </view>
+
+    <!-- 添加食材入口 -->
+    <view class="add-ingredient-row" @tap="showIngredientPicker">
+      <text class="add-icon">＋</text>
+      <text class="add-text">添加食材</text>
+    </view>
+
+    <!-- 过敏警告 -->
+    <view v-if="allergyWarnings.length > 0" class="allergy-block">
+      <text class="allergy-block-title">⚠️ 过敏提醒</text>
+      <view v-for="w in allergyWarnings" :key="w.name" class="allergy-block-item">
+        <text class="allergy-name">{{ w.name }}</text>
+        <text class="allergy-desc">{{ w.desc }}</text>
+      </view>
+    </view>
+
+    <!-- 备注 -->
+    <view class="note-area">
+      <textarea
+        class="note-input"
+        v-model="form.note"
+        placeholder="备注这顿的情况，比如宝宝吃得很开心～"
+        placeholder-class="input-placeholder"
+        :maxlength="200"
+        :auto-height="true"
+      />
+    </view>
+
+    <!-- 保存按钮 -->
+    <button class="btn-primary" @tap="saveMeal" :loading="saving">
+      {{ scoreResult ? '重新评分' : '保存并获取 AI 评分' }}
+    </button>
+
+    <!-- AI 营养评分结果 -->
+    <view v-if="scoreResult" class="score-result">
+      <view class="score-header">
+        <view class="score-circle" :class="getScoreClass(scoreResult.score)">
+          <text class="score-num">{{ scoreResult.score }}</text>
+          <text class="score-unit">分</text>
+        </view>
+        <view class="score-summary">
+          <text class="score-label">AI 营养评分</text>
+          <text class="score-grade">{{ getScoreGrade(scoreResult.score) }}</text>
+        </view>
+      </view>
+
+      <!-- 营养覆盖 -->
+      <view class="nutrient-check-list">
+        <view
+          v-for="n in scoreResult.nutrients"
+          :key="n.key"
+          class="nutrient-check-item"
+        >
+          <text class="nutrient-icon">{{ n.icon }}</text>
+          <text class="nutrient-name">{{ n.name }}</text>
+          <text class="nutrient-status" :class="n.ok ? 'status-ok' : 'status-miss'">
+            {{ n.ok ? '✓' : '○' }}
+          </text>
+        </view>
+      </view>
+
+      <!-- AI 建议 -->
+      <view class="ai-suggestion">
+        <text class="suggestion-title">💡 小建议</text>
+        <text class="suggestion-text">{{ scoreResult.suggestion }}</text>
+      </view>
+
+      <text class="disclaimer">AI 评分仅供参考，不构成医疗建议，请咨询专业人员</text>
+    </view>
+  </view>
+</template>
+
+<script setup>
+import { ref, computed } from 'vue'
+import { onLoad } from '@dcloudio/uni-app'
+import { quickRecord } from '@/api/meal.js'
+
+const saving = ref(false)
+const scoreResult = ref(null)
+
+const form = ref({
+  mealType: 'breakfast',
+  ingredients: [],
+  note: '',
+  photo: ''
+})
+
+const mealTypes = [
+  { value: 'breakfast', icon: '🌅', label: '早餐' },
+  { value: 'lunch', icon: '☀️', label: '午餐' },
+  { value: 'dinner', icon: '🌙', label: '晚餐' },
+  { value: 'snack', icon: '🍪', label: '加餐' },
+]
+
+const allergyList = uni.getStorageSync('allergyList') || []
+
+const allergyWarnings = computed(() =>
+  form.value.ingredients.filter(i => i.isAllergy).map(i => ({
+    name: i.name,
+    desc: i.allergyDesc || '宝宝之前有过敏反应，请谨慎添加'
+  }))
+)
+
+onLoad((options) => {
+  // 从拍照页带入的食材
+  if (options?.from === 'camera') {
+    const pending = uni.getStorageSync('pendingMeal')
+    if (pending?.ingredients) {
+      form.value.ingredients = pending.ingredients.map(i => ({ ...i, amount: 30 }))
+      form.value.photo = pending.photo || ''
+    }
+    uni.removeStorageSync('pendingMeal')
+  }
+  // 从首页点击带入的单个食材
+  if (options?.ingredient) {
+    // 从首页食材快捷入口进入，暂不自动填充（食材库接口需要 babyId）
+  }
+})
+
+function changeAmount(idx, delta) {
+  const cur = form.value.ingredients[idx].amount || 30
+  form.value.ingredients[idx].amount = Math.max(5, cur + delta)
+}
+
+function removeIngredient(idx) {
+  form.value.ingredients.splice(idx, 1)
+  scoreResult.value = null
+}
+
+function showIngredientPicker() {
+  // 简单演示：用 actionSheet 模拟（实际可做成完整的食材选择弹窗）
+  const options = ['胡萝卜泥', '南瓜泥', '西兰花泥', '蛋黄', '猪肉泥', '鳕鱼泥', '米糊', '香蕉泥']
+  uni.showActionSheet({
+    itemList: options,
+    success(res) {
+      const name = options[res.tapIndex]
+      if (form.value.ingredients.some(i => i.name === name)) {
+        uni.showToast({ title: '已经添加过了~', icon: 'none' })
+        return
+      }
+      form.value.ingredients.push({
+        id: Date.now(),
+        name,
+        amount: 30,
+        isAllergy: allergyList.some(a => a.name === name)
+      })
+      scoreResult.value = null
+    }
+  })
+}
+
+async function saveMeal() {
+  if (form.value.ingredients.length === 0) {
+    uni.showToast({ title: '先添加食材吧~', icon: 'none' })
+    return
+  }
+
+  const baby = useUserStore().currentBaby
+  if (!baby?.id) {
+    uni.showToast({ title: '请先完善宝宝档案~', icon: 'none' })
+    return
+  }
+
+  saving.value = true
+  try {
+    const pending = uni.getStorageSync('pendingMeal') || {}
+    const payload = {
+      babyId: baby.id,
+      subjectType: 'BABY',
+      mealType: form.value.mealType.toUpperCase(),
+      ingredients: form.value.ingredients.map(i => ({ name: i.name, grams: i.amount || 30 })),
+      note: form.value.note || '',
+      photoKey: pending.photoKey || null,
+      recognitionId: pending.recognitionId || null,
+      source: pending.recognitionId ? 'PHOTO' : 'MANUAL'
+    }
+    const res = await quickRecord(payload)
+    scoreResult.value = buildScoreResult(res)
+    uni.showToast({ title: '已保存，评分出来了！', icon: 'success' })
+  } catch (e) {
+    uni.showToast({ title: e.message || '保存时遇到了点小问题~', icon: 'none' })
+  } finally {
+    saving.value = false
+  }
+}
+
+function buildScoreResult(res) {
+  // 后端直接返回 aiScore / aiFeedback / improvements / allergyWarning
+  if (!res.aiScore) return null
+  return {
+    score: res.aiScore,
+    nutrients: [],  // 后端目前未返回分项，aiFeedback 已包含全文
+    suggestion: res.aiFeedback || ''
+  }
+}
+
+function getScoreClass(score) {
+  if (score >= 80) return 'score-good'
+  if (score >= 60) return 'score-ok'
+  return 'score-low'
+}
+
+function getScoreGrade(score) {
+  if (score >= 90) return '优秀！营养均衡 🌟'
+  if (score >= 80) return '不错！继续保持~'
+  if (score >= 60) return '还可以，稍作调整'
+  return '食材种类可以再丰富一些'
+}
+</script>
+
+<style lang="scss" scoped>
+.meal-type-row {
+  display: flex;
+  gap: 16rpx;
+  padding: 32rpx 0 24rpx;
+}
+
+.meal-type-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20rpx 0;
+  border-radius: 16rpx;
+  background: #FFFFFF;
+  border: 3rpx solid transparent;
+  font-size: 26rpx;
+  color: #999;
+  gap: 6rpx;
+
+  &.active {
+    border-color: #F5A85B;
+    background: #FFF3E6;
+    color: #F5A85B;
+    font-weight: 600;
+  }
+
+  text:first-child { font-size: 36rpx; }
+}
+
+.photo-preview {
+  position: relative;
+  margin-bottom: 24rpx;
+}
+
+.photo-img {
+  width: 100%;
+  height: 280rpx;
+  border-radius: 16rpx;
+}
+
+.photo-remove {
+  position: absolute;
+  top: 12rpx;
+  right: 12rpx;
+  background: rgba(0,0,0,0.4);
+  color: #FFFFFF;
+  width: 48rpx;
+  height: 48rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24rpx;
+}
+
+.section-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16rpx;
+}
+
+.section-title { font-size: 30rpx; font-weight: 700; color: #3D3935; }
+.section-count { font-size: 26rpx; color: #999; }
+
+.ingredient-list {
+  background: #FFFFFF;
+  border-radius: 16rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0,0,0,0.05);
+  margin-bottom: 16rpx;
+  overflow: hidden;
+}
+
+.ingredient-row {
+  display: flex;
+  align-items: center;
+  padding: 24rpx 28rpx;
+  gap: 12rpx;
+  border-bottom: 1rpx solid #F0E9DE;
+
+  &:last-child { border-bottom: none; }
+}
+
+.row-allergy-icon { font-size: 28rpx; flex-shrink: 0; }
+.row-emoji { font-size: 36rpx; flex-shrink: 0; }
+.row-name { font-size: 28rpx; color: #3D3935; flex: 1; }
+.text-danger { color: #E07A5F; font-weight: 600; }
+
+.row-amount {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+}
+
+.amount-btn {
+  width: 48rpx;
+  height: 48rpx;
+  background: #F5F5F5;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32rpx;
+  color: #555;
+  flex-shrink: 0;
+}
+
+.amount-val { font-size: 26rpx; color: #666; min-width: 64rpx; text-align: center; }
+
+.row-remove {
+  font-size: 28rpx;
+  color: #C8C8C8;
+  flex-shrink: 0;
+  padding: 8rpx;
+}
+
+.add-ingredient-row {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  padding: 24rpx 28rpx;
+  background: #FFFFFF;
+  border-radius: 16rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0,0,0,0.05);
+  margin-bottom: 24rpx;
+}
+
+.add-icon { font-size: 36rpx; color: #F5A85B; }
+.add-text { font-size: 28rpx; color: #F5A85B; font-weight: 600; }
+
+.allergy-block {
+  background: #FDEEE9;
+  border-radius: 16rpx;
+  padding: 24rpx;
+  margin-bottom: 24rpx;
+  border-left: 6rpx solid #E07A5F;
+}
+
+.allergy-block-title { display: block; font-size: 28rpx; font-weight: 700; color: #E07A5F; margin-bottom: 12rpx; }
+.allergy-block-item { margin-bottom: 4rpx; }
+.allergy-name { font-size: 26rpx; font-weight: 600; color: #C04B32; }
+.allergy-desc { font-size: 24rpx; color: #C04B32; margin-left: 8rpx; }
+
+.note-area {
+  background: #FFFFFF;
+  border-radius: 16rpx;
+  padding: 24rpx 28rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0,0,0,0.05);
+  margin-bottom: 32rpx;
+}
+
+.note-input {
+  width: 100%;
+  font-size: 28rpx;
+  color: #3D3935;
+  min-height: 80rpx;
+}
+
+.input-placeholder { color: #C8C8C8; }
+
+/* 评分结果 */
+.score-result {
+  background: #FFFFFF;
+  border-radius: 16rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0,0,0,0.05);
+  padding: 32rpx;
+  margin-top: 32rpx;
+}
+
+.score-header {
+  display: flex;
+  align-items: center;
+  gap: 28rpx;
+  margin-bottom: 32rpx;
+}
+
+.score-circle {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  &.score-good { background: #E8F8EE; }
+  &.score-ok { background: #FFF3E6; }
+  &.score-low { background: #FDEEE9; }
+}
+
+.score-num {
+  font-size: 48rpx;
+  font-weight: 700;
+  line-height: 1;
+
+  .score-good & { color: #5CB87A; }
+  .score-ok & { color: #F5A85B; }
+  .score-low & { color: #E07A5F; }
+}
+
+.score-unit { font-size: 22rpx; color: #999; }
+
+.score-label { display: block; font-size: 26rpx; color: #999; margin-bottom: 8rpx; }
+.score-grade { display: block; font-size: 30rpx; font-weight: 700; color: #3D3935; }
+
+.nutrient-check-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+  margin-bottom: 24rpx;
+}
+
+.nutrient-check-item {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  background: #F5F5F5;
+  border-radius: 24rpx;
+  padding: 10rpx 20rpx;
+}
+
+.nutrient-icon { font-size: 28rpx; }
+.nutrient-name { font-size: 24rpx; color: #555; }
+.nutrient-status { font-size: 24rpx; font-weight: 700; }
+.status-ok { color: #5CB87A; }
+.status-miss { color: #C8C8C8; }
+
+.ai-suggestion {
+  background: #F5F9FF;
+  border-radius: 12rpx;
+  padding: 20rpx 24rpx;
+  margin-bottom: 16rpx;
+}
+
+.suggestion-title { display: block; font-size: 26rpx; font-weight: 700; color: #4A7FB5; margin-bottom: 10rpx; }
+.suggestion-text { font-size: 26rpx; color: #555; line-height: 1.8; }
+
+.disclaimer {
+  display: block;
+  text-align: center;
+  font-size: 22rpx;
+  color: #C8C8C8;
+  line-height: 1.6;
+}
+</style>

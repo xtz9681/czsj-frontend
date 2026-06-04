@@ -1,0 +1,249 @@
+<template>
+  <view class="login-page">
+    <!-- 顶部背景装饰 -->
+    <view class="top-bg">
+      <view class="bg-circle circle-1"></view>
+      <view class="bg-circle circle-2"></view>
+    </view>
+
+    <!-- 主内容 -->
+    <view class="content">
+      <!-- Logo 区域 -->
+      <view class="logo-area">
+        <view class="logo-icon">🌱</view>
+        <text class="app-name">成长食记</text>
+        <text class="app-slogan">从第一口辅食开始，记录宝宝的成长</text>
+      </view>
+
+      <!-- 特性介绍 -->
+      <view class="features">
+        <view class="feature-item" v-for="f in features" :key="f.icon">
+          <text class="feature-icon">{{ f.icon }}</text>
+          <view class="feature-text">
+            <text class="feature-title">{{ f.title }}</text>
+            <text class="feature-desc">{{ f.desc }}</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 登录按钮 -->
+      <view class="btn-area">
+        <button class="wx-login-btn" @tap="handleWxLogin" :loading="loading">
+          <text class="btn-icon">💬</text>
+          <text>微信一键登录</text>
+        </button>
+        <text class="privacy-tip">登录即同意<text class="link" @tap="showPrivacy">《隐私协议》</text>，AI 建议仅供参考，请咨询专业人员</text>
+      </view>
+    </view>
+  </view>
+</template>
+
+<script setup>
+import { ref } from 'vue'
+import { wxLogin } from '@/api/auth.js'
+import { useUserStore } from '@/store/user.js'
+
+const loading = ref(false)
+const userStore = useUserStore()
+
+const features = [
+  { icon: '📸', title: '拍照识食材', desc: '拍一拍，AI 自动识别今天吃了什么' },
+  { icon: '🌟', title: 'AI 营养评分', desc: '实时评估营养均衡度，小建议一目了然' },
+  { icon: '⚠️', title: '过敏预警', desc: '自动检测交叉过敏风险，宝宝更安全' },
+]
+
+async function handleWxLogin() {
+  if (loading.value) return
+  loading.value = true
+  try {
+    const [err, loginRes] = await new Promise(resolve => {
+      uni.login({
+        provider: 'weixin',
+        success: res => resolve([null, res]),
+        fail: err => resolve([err, null])
+      })
+    })
+    if (err || !loginRes?.code) {
+      uni.showToast({ title: '获取登录信息时出了点小问题~', icon: 'none' })
+      return
+    }
+
+    const res = await wxLogin(loginRes.code)
+    userStore.setLoginResult(res)
+
+    if (!res.babies?.length && !res.mother) {
+      uni.redirectTo({ url: '/pages/setup/index' })
+    } else {
+      uni.reLaunch({ url: '/pages/index/index' })
+    }
+  } catch (e) {
+    uni.showToast({ title: e.message || '登录遇到了点小问题~', icon: 'none' })
+  } finally {
+    loading.value = false
+  }
+}
+
+function showPrivacy() {
+  uni.showModal({
+    title: '隐私协议',
+    content: '我们仅收集必要的宝宝喂养数据，用于提供 AI 营养建议。数据不会用于商业分析或分享给第三方。AI 建议仅供参考，不构成医疗建议，请咨询专业人员。',
+    showCancel: false,
+    confirmText: '知道了'
+  })
+}
+</script>
+
+<style lang="scss" scoped>
+.login-page {
+  min-height: 100vh;
+  background: #FAF7F2;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.top-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 500rpx;
+  overflow: hidden;
+}
+
+.bg-circle {
+  position: absolute;
+  border-radius: 50%;
+}
+
+.circle-1 {
+  width: 600rpx;
+  height: 600rpx;
+  background: rgba(245, 168, 91, 0.12);
+  top: -200rpx;
+  right: -100rpx;
+}
+
+.circle-2 {
+  width: 400rpx;
+  height: 400rpx;
+  background: rgba(163, 217, 177, 0.15);
+  top: 100rpx;
+  left: -120rpx;
+}
+
+.content {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 0 48rpx;
+  padding-top: 160rpx;
+}
+
+.logo-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 80rpx;
+}
+
+.logo-icon {
+  font-size: 96rpx;
+  margin-bottom: 20rpx;
+}
+
+.app-name {
+  font-size: 56rpx;
+  font-weight: 700;
+  color: #3D3935;
+  margin-bottom: 16rpx;
+}
+
+.app-slogan {
+  font-size: 28rpx;
+  color: #999;
+  text-align: center;
+}
+
+.features {
+  background: #FFFFFF;
+  border-radius: 16rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.05);
+  padding: 16rpx 32rpx;
+  margin-bottom: 60rpx;
+}
+
+.feature-item {
+  display: flex;
+  align-items: center;
+  padding: 24rpx 0;
+  border-bottom: 1rpx solid #F0E9DE;
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.feature-icon {
+  font-size: 44rpx;
+  margin-right: 24rpx;
+  flex-shrink: 0;
+}
+
+.feature-title {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #3D3935;
+  display: block;
+  margin-bottom: 4rpx;
+}
+
+.feature-desc {
+  font-size: 24rpx;
+  color: #999;
+}
+
+.btn-area {
+  margin-top: auto;
+  padding-bottom: 80rpx;
+}
+
+.wx-login-btn {
+  background: #07C160;
+  color: #FFFFFF;
+  border-radius: 96rpx;
+  font-size: 34rpx;
+  font-weight: 600;
+  border: none;
+  height: 104rpx;
+  line-height: 104rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 24rpx;
+
+  &::after {
+    border: none;
+  }
+}
+
+.btn-icon {
+  font-size: 36rpx;
+  margin-right: 12rpx;
+}
+
+.privacy-tip {
+  font-size: 22rpx;
+  color: #BBBBBB;
+  text-align: center;
+  display: block;
+  line-height: 1.8;
+}
+
+.link {
+  color: #F5A85B;
+}
+</style>

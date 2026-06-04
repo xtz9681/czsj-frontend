@@ -1,0 +1,102 @@
+{
+  "pages": [
+    {
+      "path": "pages/login/index",
+      "style": {
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/index/index",
+      "style": {
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/profile/index",
+      "style": {
+        "navigationBarTitleText": "宝宝档案"
+      }
+    },
+    {
+      "path": "pages/camera/index",
+      "style": {
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/meal-record/index",
+      "style": {
+        "navigationBarTitleText": "记一餐"
+      }
+    },
+    {
+      "path": "pages/meal-list/index",
+      "style": {
+        "navigationBarTitleText": "饮食记录"
+      }
+    },
+    {
+      "path": "pages/allergy/index",
+      "style": {
+        "navigationBarTitleText": "过敏管理"
+      }
+    },
+    {
+      "path": "pages/plan/index",
+      "style": {
+        "navigationBarTitleText": "AI 周计划"
+      }
+    },
+    {
+      "path": "pages/setup/index",
+      "style": {
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/mother-profile/index",
+      "style": {
+        "navigationBarTitleText": "我的档案"
+      }
+    }
+  ],
+  "tabBar": {
+    "color": "#999999",
+    "selectedColor": "#F5A85B",
+    "backgroundColor": "#FFFFFF",
+    "borderStyle": "white",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "首页",
+        "iconPath": "static/images/tab-home.png",
+        "selectedIconPath": "static/images/tab-home-active.png"
+      },
+      {
+        "pagePath": "pages/meal-list/index",
+        "text": "记录",
+        "iconPath": "static/images/tab-record.png",
+        "selectedIconPath": "static/images/tab-record-active.png"
+      },
+      {
+        "pagePath": "pages/plan/index",
+        "text": "计划",
+        "iconPath": "static/images/tab-plan.png",
+        "selectedIconPath": "static/images/tab-plan-active.png"
+      },
+      {
+        "pagePath": "pages/allergy/index",
+        "text": "过敏",
+        "iconPath": "static/images/tab-allergy.png",
+        "selectedIconPath": "static/images/tab-allergy-active.png"
+      }
+    ]
+  },
+  "globalStyle": {
+    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "成长食记",
+    "navigationBarBackgroundColor": "#FAF7F2",
+    "backgroundColor": "#FAF7F2"
+  }
+}
