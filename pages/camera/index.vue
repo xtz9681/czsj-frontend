@@ -102,18 +102,28 @@
 
           <!-- 动作按钮 -->
           <view class="action-buttons">
-            <wd-button type="primary" @click="confirmIngredients" block round>
-              继续记为宝宝餐
-            </wd-button>
-            <wd-button
-              v-if="ageWarning || suggestedSubjectType === 'MOTHER'"
-              @click="confirmAsMotherMeal"
-              block
-              round
-              :type="suggestedSubjectType === 'MOTHER' ? 'primary' : 'default'"
-            >
-              记为我的营养
-            </wd-button>
+            <!-- 妈妈模式 -->
+            <template v-if="subjectMode === 'mother'">
+              <!-- 没有孩子：只显示"记录" -->
+              <wd-button v-if="userStore.babies.length === 0" type="primary" @click="recordToMother" block round>
+                记录
+              </wd-button>
+              <!-- 有孩子：显示"记录我的"和"记录多个" -->
+              <template v-else>
+                <wd-button type="primary" @click="recordToMother" block round>
+                  记录我的
+                </wd-button>
+                <wd-button @click="showMultipleSelect" block round>
+                  记录多个
+                </wd-button>
+              </template>
+            </template>
+            <!-- 宝宝模式：显示"记录" -->
+            <template v-else>
+              <wd-button type="primary" @click="recordToBaby" block round>
+                记录
+              </wd-button>
+            </template>
           </view>
         </view>
       </scroll-view>
@@ -188,26 +198,55 @@
           </view>
         </view>
 
-        <wd-button
-          type="primary"
-          :disabled="selectedIngredients.length === 0"
-          @click="confirmIngredients"
-          block
-          round
-        >
-          {{ selectedIngredients.length > 0 ? '确认，去看营养评分' : '请至少选一种食材' }}
-        </wd-button>
+        <!-- 动作按钮 -->
+        <view class="action-buttons">
+          <!-- 妈妈模式 -->
+          <template v-if="subjectMode === 'mother'">
+            <!-- 没有孩子：只显示"记录" -->
+            <wd-button v-if="userStore.babies.length === 0" type="primary" @click="recordToMother" block round :disabled="selectedIngredients.length === 0">
+              {{ selectedIngredients.length > 0 ? '记录' : '请至少选一种食材' }}
+            </wd-button>
+            <!-- 有孩子：显示"记录我的"和"记录多个" -->
+            <template v-else>
+              <wd-button type="primary" @click="recordToMother" block round :disabled="selectedIngredients.length === 0">
+                {{ selectedIngredients.length > 0 ? '记录我的' : '请至少选一种食材' }}
+              </wd-button>
+              <wd-button @click="showMultipleSelect" block round :disabled="selectedIngredients.length === 0">
+                记录多个
+              </wd-button>
+            </template>
+          </template>
+          <!-- 宝宝模式：显示"记录" -->
+          <template v-else>
+            <wd-button type="primary" @click="recordToBaby" block round :disabled="selectedIngredients.length === 0">
+              {{ selectedIngredients.length > 0 ? '记录' : '请至少选一种食材' }}
+            </wd-button>
+          </template>
+        </view>
       </view>
     </view>
+
+    <!-- 档案选择器 -->
+    <SubjectSelector
+      ref="subjectSelectorRef"
+      :visible="showSubjectSelector"
+      :ingredients="pendingIngredients"
+      @confirm="onSubjectSelectorConfirm"
+      @cancel="showSubjectSelector = false"
+    />
   </view>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, nextTick } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
+import SubjectSelector from '@/components/SubjectSelector.vue'
 import { photoRecord } from '@/api/ai.js'
 import { getIngredientsByAge } from '@/api/meal.js'
 import { useUserStore } from '@/store/user.js'
+
+const userStore = useUserStore()
+const subjectSelectorRef = ref(null)
 
 const stage = ref('init') // init | recognizing | high-confidence | low-confidence
 const capturedPhoto = ref('')
@@ -215,9 +254,12 @@ const customIngredient = ref('')
 const recognizedIngredients = ref([])
 const ageWarning = ref(null)
 const suggestedSubjectType = ref(null)
+const showSubjectSelector = ref(false)
+const pendingIngredients = ref([])
 
-const baby = useUserStore().currentBaby || { ageMonths: 8 }
+const baby = userStore.currentBaby || { ageMonths: 8 }
 const allergyList = uni.getStorageSync('allergyList') || []
+const subjectMode = ref('baby')
 
 const babyAgeText = computed(() => {
   const m = baby.ageMonths || 8
@@ -244,7 +286,22 @@ async function loadAgeIngredients() {
   }
 }
 
-onLoad(() => { loadAgeIngredients() })
+onLoad(() => {
+  loadAgeIngredients()
+  // 从 index 页面获取当前主体模式
+  const motherPhase = userStore.mother?.phase
+  const pregnancyAndLactationPhases = ['preconception', 'pregnancy_early', 'pregnancy_mid', 'pregnancy_late', 'lactation']
+
+  if (userStore.mother && pregnancyAndLactationPhases.includes(motherPhase)) {
+    subjectMode.value = 'mother'
+  } else if (motherPhase === 'adult_female' && userStore.currentBabyId && userStore.babies.length > 0) {
+    subjectMode.value = 'baby'
+  } else if (userStore.currentBabyId && userStore.babies.length > 0) {
+    subjectMode.value = 'baby'
+  } else {
+    subjectMode.value = 'mother'
+  }
+})
 
 const selectedIngredients = computed(() =>
   ageBasedIngredients.value.filter(i => i.selected)
@@ -377,6 +434,66 @@ function removeIngredient(ing) {
   ing.selected = false
 }
 
+function getFinalIngredients() {
+  return stage.value === 'high-confidence'
+    ? recognizedIngredients.value.filter(i => i.selected)
+    : selectedIngredients.value
+}
+
+function recordToMother() {
+  const finalIngredients = getFinalIngredients()
+  if (finalIngredients.length === 0) {
+    uni.showToast({ title: '请选择至少一种食材~', icon: 'none' })
+    return
+  }
+
+  // TODO: 调用妈妈餐快速记录接口
+  // 参数：ingredients, photoKey, recognitionId
+  uni.showToast({ title: '妈妈餐记录接口待后端补充~', icon: 'none' })
+}
+
+function recordToBaby() {
+  const finalIngredients = getFinalIngredients()
+  if (finalIngredients.length === 0) {
+    uni.showToast({ title: '请选择至少一种食材~', icon: 'none' })
+    return
+  }
+
+  uni.setStorageSync('pendingMeal', {
+    ingredients: finalIngredients,
+    photo: capturedPhoto.value,
+    recognitionId: pendingRecognition.value?.recognitionId || null,
+    photoKey: pendingRecognition.value?.photoKey || null,
+    subjectType: 'BABY'
+  })
+  uni.navigateTo({ url: '/pages/meal-record/index?from=camera' })
+}
+
+function showMultipleSelect() {
+  const finalIngredients = getFinalIngredients()
+  if (finalIngredients.length === 0) {
+    uni.showToast({ title: '请选择至少一种食材~', icon: 'none' })
+    return
+  }
+
+  pendingIngredients.value = finalIngredients
+  showSubjectSelector.value = true
+  nextTick(() => {
+    subjectSelectorRef.value?.open()
+  })
+}
+
+function onSubjectSelectorConfirm(selectedSubjectIds) {
+  const finalIngredients = getFinalIngredients()
+
+  // TODO: 调用多主体记录接口
+  // 参数：ingredients, subjects: [{ id, type }], photoKey, recognitionId
+  console.log('记录多个档案:', selectedSubjectIds, finalIngredients)
+  uni.showToast({ title: '多主体记录接口待后端补充~', icon: 'none' })
+
+  showSubjectSelector.value = false
+}
+
 function confirmIngredients() {
   const finalIngredients = stage.value === 'high-confidence'
     ? recognizedIngredients.value.filter(i => i.selected)
@@ -387,13 +504,12 @@ function confirmIngredients() {
     return
   }
 
-  // 将数据传递给记一餐页
   uni.setStorageSync('pendingMeal', {
     ingredients: finalIngredients,
     photo: capturedPhoto.value,
     recognitionId: pendingRecognition.value?.recognitionId || null,
     photoKey: pendingRecognition.value?.photoKey || null,
-    subjectType: 'BABY'  // 默认记为宝宝餐
+    subjectType: 'BABY'
   })
   uni.navigateTo({ url: '/pages/meal-record/index?from=camera' })
 }
@@ -405,16 +521,6 @@ function confirmAsMotherMeal() {
     uni.showToast({ title: '请选择至少一种食材~', icon: 'none' })
     return
   }
-
-  // TODO: 调用妈妈餐快速记录接口（后端同步补）
-  // 接口规范参考：/api/mother-meal/quick-record （待定）
-  // 参数示例：
-  // {
-  //   ingredients: [{ name, grams }],
-  //   photoKey: recognitionId.photoKey,
-  //   recognitionId: recognitionId.recognitionId,
-  //   note: ''
-  // }
 
   uni.showToast({ title: '妈妈餐记录接口待后端补充~', icon: 'none' })
 }

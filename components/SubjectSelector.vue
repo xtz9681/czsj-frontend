@@ -1,0 +1,301 @@
+<template>
+  <view v-if="visible" class="selector-mask" @tap="handleMaskTap">
+    <view class="selector-sheet" @tap.stop>
+      <view class="sheet-header">
+        <text class="sheet-title">这顿饭要记到哪些档案？</text>
+        <view class="sheet-close" @tap="onCancel">✕</view>
+      </view>
+
+      <scroll-view scroll-y class="selector-body">
+        <!-- 妈妈档案 -->
+        <view v-if="mother" class="subject-item">
+          <view class="subject-checkbox">
+            <view
+              class="checkbox"
+              :class="{ checked: selectedSubjects.includes(mother.id) }"
+              @tap="toggleSubject(mother.id)"
+            >
+              <text v-if="selectedSubjects.includes(mother.id)">✓</text>
+            </view>
+          </view>
+          <view class="subject-info">
+            <text class="subject-name">{{ motherPhaseLabel }}</text>
+            <text class="subject-sub">我的营养</text>
+          </view>
+        </view>
+
+        <!-- 孩子档案 -->
+        <view v-for="baby in babies" :key="baby.id" class="subject-item">
+          <view class="subject-checkbox">
+            <view
+              class="checkbox"
+              :class="{ checked: selectedSubjects.includes(baby.id) }"
+              @tap="toggleSubject(baby.id)"
+            >
+              <text v-if="selectedSubjects.includes(baby.id)">✓</text>
+            </view>
+          </view>
+          <view class="subject-info">
+            <text class="subject-name">{{ baby.name }}</text>
+            <text class="subject-sub">{{ babyPhaseLabel(baby) }}</text>
+          </view>
+        </view>
+      </scroll-view>
+
+      <view class="sheet-footer">
+        <wd-button plain @click="onCancel" block>取消</wd-button>
+        <wd-button type="primary" @click="onConfirm" block round>确认记录</wd-button>
+      </view>
+    </view>
+
+    <!-- nursing 孩子警告弹层 -->
+    <view v-if="showNursingWarning" class="warning-modal-mask" @tap.stop>
+      <view class="warning-modal" @tap.stop>
+        <text class="warning-modal-title">⚠️ 提示</text>
+        <text class="warning-modal-content">{{ nursingWarningText }}</text>
+        <wd-button type="primary" @click="closeNursingWarning" block round>确定</wd-button>
+      </view>
+    </view>
+  </view>
+</template>
+
+<script setup>
+import { ref, computed } from 'vue'
+import { useUserStore } from '@/store/user.js'
+
+const props = defineProps({
+  visible: {
+    type: Boolean,
+    default: false
+  },
+  ingredients: {
+    type: Array,
+    default: () => []
+  }
+})
+
+const emit = defineEmits(['confirm', 'cancel'])
+
+const userStore = useUserStore()
+const mother = computed(() => userStore.mother)
+const babies = computed(() => userStore.babies)
+
+const selectedSubjects = ref([])
+const showNursingWarning = ref(false)
+const nursingWarningText = ref('')
+
+const motherPhaseLabel = computed(() => {
+  const phaseMap = {
+    preconception: '备孕期',
+    pregnancy_early: '孕早期',
+    pregnancy_mid: '孕中期',
+    pregnancy_late: '孕晚期',
+    lactation: '哺乳期',
+    adult_female: '日常营养'
+  }
+  return phaseMap[mother.value?.phase] || '妈妈档案'
+})
+
+function babyPhaseLabel(baby) {
+  if (!baby.birthday) return baby.name
+  const months = Math.floor((Date.now() - new Date(baby.birthday).getTime()) / (1000 * 60 * 60 * 24 * 30.4))
+  if (months < 12) return `${months} 个月`
+  const years = Math.floor(months / 12)
+  const remainMonths = months % 12
+  return remainMonths > 0 ? `${years} 岁 ${remainMonths} 个月` : `${years} 岁`
+}
+
+function toggleSubject(id) {
+  const idx = selectedSubjects.value.indexOf(id)
+  if (idx > -1) {
+    selectedSubjects.value.splice(idx, 1)
+  } else {
+    selectedSubjects.value.push(id)
+  }
+}
+
+function handleMaskTap() {
+  onCancel()
+}
+
+function onCancel() {
+  selectedSubjects.value = []
+  emit('cancel')
+}
+
+function closeNursingWarning() {
+  showNursingWarning.value = false
+}
+
+function onConfirm() {
+  // 检查是否有 nursing 阶段的孩子被勾选
+  const nursingBabies = babies.value.filter(b => selectedSubjects.value.includes(b.id) && b.phase === 'nursing')
+
+  if (nursingBabies.length > 0) {
+    // 检查食材是否不适合 nursing 孩子（这里用简单逻辑，实际可能需要更复杂的判断）
+    const ingredientNames = props.ingredients.map(i => i.name || i).join('、')
+    nursingWarningText.value = `当前勾选的档案中包含哺乳期宝宝，${ingredientNames}等更像成人餐，请确认是否继续记录到该宝宝档案。`
+    showNursingWarning.value = true
+    return
+  }
+
+  // 没有 nursing 孩子或 nursing 孩子已被用户移除，直接提交
+  emit('confirm', selectedSubjects.value)
+  selectedSubjects.value = []
+}
+
+// 初始化时默认选中妈妈档案
+defineExpose({
+  open() {
+    selectedSubjects.value = mother.value ? [mother.value.id] : []
+  }
+})
+</script>
+
+<style lang="scss" scoped>
+.selector-mask {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  z-index: 1000;
+  display: flex;
+  align-items: flex-end;
+}
+
+.selector-sheet {
+  width: 100%;
+  background: #FFFFFF;
+  border-radius: 32rpx 32rpx 0 0;
+  display: flex;
+  flex-direction: column;
+  max-height: 80vh;
+  overflow: hidden;
+}
+
+.sheet-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24rpx 40rpx;
+  border-bottom: 1rpx solid #F0E9DE;
+}
+
+.sheet-title {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: #3D3935;
+}
+
+.sheet-close {
+  font-size: 32rpx;
+  color: #C8C8C8;
+  width: 40rpx;
+  height: 40rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.selector-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0;
+}
+
+.subject-item {
+  display: flex;
+  align-items: center;
+  padding: 24rpx 40rpx;
+  border-bottom: 1rpx solid #F0E9DE;
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.subject-checkbox {
+  margin-right: 20rpx;
+}
+
+.checkbox {
+  width: 48rpx;
+  height: 48rpx;
+  border: 2rpx solid #F5A85B;
+  border-radius: 8rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #FFFFFF;
+  font-size: 28rpx;
+  color: #F5A85B;
+
+  &.checked {
+    background: #F5A85B;
+    color: #FFFFFF;
+  }
+}
+
+.subject-info {
+  flex: 1;
+}
+
+.subject-name {
+  display: block;
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #3D3935;
+  margin-bottom: 4rpx;
+}
+
+.subject-sub {
+  display: block;
+  font-size: 24rpx;
+  color: #999;
+}
+
+.sheet-footer {
+  padding: 24rpx 40rpx 40rpx;
+  border-top: 1rpx solid #F0E9DE;
+  display: flex;
+  gap: 16rpx;
+
+  :deep(.wd-button) {
+    flex: 1;
+  }
+}
+
+/* nursing 警告弹层 */
+.warning-modal-mask {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 1001;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.warning-modal {
+  background: #FFFFFF;
+  border-radius: 20rpx;
+  padding: 40rpx;
+  width: 80%;
+  max-width: 600rpx;
+}
+
+.warning-modal-title {
+  display: block;
+  font-size: 32rpx;
+  font-weight: 700;
+  color: #3D3935;
+  margin-bottom: 20rpx;
+}
+
+.warning-modal-content {
+  display: block;
+  font-size: 28rpx;
+  color: #666;
+  line-height: 1.6;
+  margin-bottom: 32rpx;
+}
+</style>
