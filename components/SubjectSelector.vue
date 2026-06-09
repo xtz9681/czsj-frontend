@@ -43,8 +43,12 @@
       </scroll-view>
 
       <view class="sheet-footer">
-        <wd-button plain @click="onCancel" block>取消</wd-button>
-        <wd-button type="primary" @click="onConfirm" block round>确认记录</wd-button>
+        <view class="action-btn secondary" @tap="onCancel">
+          <text>取消</text>
+        </view>
+        <view class="action-btn primary" @tap="!isChecking && onConfirm()">
+          <text>{{ isChecking ? '检查中...' : '确认记录' }}</text>
+        </view>
       </view>
     </view>
 
@@ -274,9 +278,38 @@ defineExpose({
   border-top: 1rpx solid #F0E9DE;
   display: flex;
   gap: 16rpx;
+}
 
-  :deep(.wd-button) {
-    flex: 1;
+.action-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 88rpx;
+  border-radius: 16rpx;
+  font-size: 30rpx;
+  font-weight: 600;
+  transition: all 0.3s ease;
+
+  &.primary {
+    background: #F5A85B;
+    color: #FFFFFF;
+
+    &:active {
+      opacity: 0.8;
+      transform: scale(0.98);
+    }
+  }
+
+  &.secondary {
+    background: #FFFFFF;
+    color: #F5A85B;
+    border: 2rpx solid #F5A85B;
+
+    &:active {
+      background: #FFF9F5;
+      transform: scale(0.98);
+    }
   }
 }
 
