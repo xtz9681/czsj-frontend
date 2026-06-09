@@ -141,9 +141,18 @@ async function onConfirm() {
 
   isChecking.value = true
   try {
+    // 将选中的 ID 转换为 subjects 对象数组
+    const subjects = selectedSubjects.value.map(id => {
+      if (mother.value && id === mother.value.id) {
+        return { subjectType: 'MOTHER', subjectId: null }
+      } else {
+        return { subjectType: 'BABY', subjectId: id }
+      }
+    })
+
     // 调用后端 suitability 检查接口
     const res = await checkMultiRecordWarning({
-      subjectIds: selectedSubjects.value,
+      subjects,
       ingredients: props.ingredients.map(i => ({ name: i.name || i }))
     })
 

@@ -505,8 +505,17 @@ function showMultipleSelect() {
 function onSubjectSelectorConfirm(selectedSubjectIds) {
   const finalIngredients = getFinalIngredients()
 
+  // 将选中的 ID 转换为 subjects 对象数组
+  const subjects = selectedSubjectIds.map(id => {
+    if (userStore.mother && id === userStore.mother.id) {
+      return { subjectType: 'MOTHER', subjectId: null }
+    } else {
+      return { subjectType: 'BABY', subjectId: id }
+    }
+  })
+
   const payload = {
-    subjectIds: selectedSubjectIds,
+    subjects,
     ingredients: finalIngredients.map(i => ({ name: i.name || i, grams: i.amount || 30 })),
     photoKey: pendingRecognition.value?.photoKey || null,
     recognitionId: pendingRecognition.value?.recognitionId || null,
