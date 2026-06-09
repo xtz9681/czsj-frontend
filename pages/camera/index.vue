@@ -105,24 +105,24 @@
             <!-- 妈妈模式 -->
             <template v-if="subjectMode === 'mother'">
               <!-- 没有孩子：只显示"记录" -->
-              <wd-button v-if="userStore.babies.length === 0" type="primary" @click="recordToMother" block round>
-                记录
-              </wd-button>
+              <view v-if="userStore.babies.length === 0" class="action-btn primary" @tap="recordToMother">
+                <text>记录</text>
+              </view>
               <!-- 有孩子：显示"记录我的"和"记录多个" -->
               <template v-else>
-                <wd-button type="primary" @click="recordToMother" block round>
-                  记录我的
-                </wd-button>
-                <wd-button @click="showMultipleSelect" block round>
-                  记录多个
-                </wd-button>
+                <view class="action-btn primary" @tap="recordToMother">
+                  <text>记录我的</text>
+                </view>
+                <view class="action-btn secondary" @tap="showMultipleSelect">
+                  <text>记录多个</text>
+                </view>
               </template>
             </template>
             <!-- 宝宝模式：显示"记录" -->
             <template v-else>
-              <wd-button type="primary" @click="recordToBaby" block round>
-                记录
-              </wd-button>
+              <view class="action-btn primary" @tap="recordToBaby">
+                <text>记录</text>
+              </view>
             </template>
           </view>
         </view>
@@ -203,24 +203,24 @@
           <!-- 妈妈模式 -->
           <template v-if="subjectMode === 'mother'">
             <!-- 没有孩子：只显示"记录" -->
-            <wd-button v-if="userStore.babies.length === 0" type="primary" @click="recordToMother" block round :disabled="selectedIngredients.length === 0">
-              {{ selectedIngredients.length > 0 ? '记录' : '请至少选一种食材' }}
-            </wd-button>
+            <view v-if="userStore.babies.length === 0" class="action-btn primary" :class="{ disabled: selectedIngredients.length === 0 }" @tap="selectedIngredients.length > 0 && recordToMother()">
+              <text>{{ selectedIngredients.length > 0 ? '记录' : '请至少选一种食材' }}</text>
+            </view>
             <!-- 有孩子：显示"记录我的"和"记录多个" -->
             <template v-else>
-              <wd-button type="primary" @click="recordToMother" block round :disabled="selectedIngredients.length === 0">
-                {{ selectedIngredients.length > 0 ? '记录我的' : '请至少选一种食材' }}
-              </wd-button>
-              <wd-button @click="showMultipleSelect" block round :disabled="selectedIngredients.length === 0">
-                记录多个
-              </wd-button>
+              <view class="action-btn primary" :class="{ disabled: selectedIngredients.length === 0 }" @tap="selectedIngredients.length > 0 && recordToMother()">
+                <text>{{ selectedIngredients.length > 0 ? '记录我的' : '请至少选一种食材' }}</text>
+              </view>
+              <view class="action-btn secondary" :class="{ disabled: selectedIngredients.length === 0 }" @tap="selectedIngredients.length > 0 && showMultipleSelect()">
+                <text>记录多个</text>
+              </view>
             </template>
           </template>
           <!-- 宝宝模式：显示"记录" -->
           <template v-else>
-            <wd-button type="primary" @click="recordToBaby" block round :disabled="selectedIngredients.length === 0">
-              {{ selectedIngredients.length > 0 ? '记录' : '请至少选一种食材' }}
-            </wd-button>
+            <view class="action-btn primary" :class="{ disabled: selectedIngredients.length === 0 }" @tap="selectedIngredients.length > 0 && recordToBaby()">
+              <text>{{ selectedIngredients.length > 0 ? '记录' : '请至少选一种食材' }}</text>
+            </view>
           </template>
         </view>
       </view>
@@ -527,37 +527,6 @@ function onSubjectSelectorConfirm(selectedSubjectIds) {
       uni.hideLoading()
       uni.showToast({ title: e.message || '保存失败，请重试', icon: 'none' })
     })
-}
-
-function confirmIngredients() {
-  const finalIngredients = stage.value === 'high-confidence'
-    ? recognizedIngredients.value.filter(i => i.selected)
-    : selectedIngredients.value
-
-  if (finalIngredients.length === 0) {
-    uni.showToast({ title: '请选择至少一种食材~', icon: 'none' })
-    return
-  }
-
-  uni.setStorageSync('pendingMeal', {
-    ingredients: finalIngredients,
-    photo: capturedPhoto.value,
-    recognitionId: pendingRecognition.value?.recognitionId || null,
-    photoKey: pendingRecognition.value?.photoKey || null,
-    subjectType: 'BABY'
-  })
-  uni.navigateTo({ url: '/pages/meal-record/index?from=camera' })
-}
-
-function confirmAsMotherMeal() {
-  const finalIngredients = recognizedIngredients.value.filter(i => i.selected)
-
-  if (finalIngredients.length === 0) {
-    uni.showToast({ title: '请选择至少一种食材~', icon: 'none' })
-    return
-  }
-
-  uni.showToast({ title: '妈妈餐记录接口待后端补充~', icon: 'none' })
 }
 
 function goManual() {
@@ -1003,5 +972,50 @@ function goBack() {
   display: flex;
   flex-direction: column;
   gap: 16rpx;
+  padding: 20rpx 0 0 0;
+}
+
+.action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 96rpx;
+  border-radius: 16rpx;
+  font-size: 30rpx;
+  font-weight: 600;
+  transition: all 0.3s ease;
+
+  &.primary {
+    background: #F5A85B;
+    color: #FFFFFF;
+
+    &:active:not(.disabled) {
+      background: #E89645;
+      transform: scale(0.98);
+    }
+
+    &.disabled {
+      background: #E8D5BE;
+      color: rgba(255, 255, 255, 0.6);
+      opacity: 0.6;
+    }
+  }
+
+  &.secondary {
+    background: #FFFFFF;
+    color: #F5A85B;
+    border: 2rpx solid #F5A85B;
+
+    &:active:not(.disabled) {
+      background: #FFF9F5;
+      transform: scale(0.98);
+    }
+
+    &.disabled {
+      color: #E8D5BE;
+      border-color: #E8D5BE;
+      opacity: 0.6;
+    }
+  }
 }
 </style>
