@@ -131,15 +131,13 @@
       <view class="section">
         <view class="mother-tip-card card">
           <text class="mother-tip-title">{{ subjectSubtitle }}营养重点</text>
-          <view class="mother-tip-content">
+          <text class="mother-tip-content">
             <text
               v-for="(fragment, idx) in motherNutritionTips"
               :key="idx"
               :class="fragment.highlight ? 'nutrition-highlight' : 'nutrition-normal'"
-            >
-              {{ fragment.text }}
-            </text>
-          </view>
+            >{{ fragment.text }}</text>
+          </text>
           <view class="mother-tip-edit" @tap="goEditMother">
             <text>修改我的阶段 ›</text>
           </view>
@@ -858,19 +856,16 @@ const motherNutritionTips = computed(() => {
 .mother-tip-title { display: block; font-size: 30rpx; font-weight: 700; color: #3D3935; margin-bottom: 24rpx; }
 
 .mother-tip-content {
-  display: flex;
-  flex-wrap: wrap;
+  display: block;
   font-size: 28rpx;
   color: #3D3935;
   line-height: 1.8;
   margin-bottom: 24rpx;
-  word-spacing: 0;
-  letter-spacing: 0;
+  word-break: break-word;
 }
 
 .nutrition-normal {
   color: #3D3935;
-  word-break: break-word;
 }
 
 .nutrition-highlight {
