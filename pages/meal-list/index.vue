@@ -99,9 +99,7 @@
     <view style="height: 120rpx;"></view>
 
     <!-- 悬浮记录按钮 -->
-    <view class="fab" @tap="goCamera">
-      <text class="fab-icon">📸</text>
-    </view>
+    <wd-fab icon="camera-fill" @click="goCamera" />
   </view>
 </template>
 

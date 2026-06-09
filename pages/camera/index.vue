@@ -24,12 +24,12 @@
       </view>
 
       <view class="init-actions">
-        <view class="init-btn primary-btn" @tap="takePhoto">
-          <text>📷 拍照</text>
-        </view>
-        <view class="init-btn secondary-btn" @tap="chooseFromAlbum">
-          <text>🖼️ 相册</text>
-        </view>
+        <wd-button type="primary" block @click="takePhoto">
+          📷 拍照
+        </wd-button>
+        <wd-button block @click="chooseFromAlbum">
+          🖼️ 相册
+        </wd-button>
       </view>
 
       <view class="divider-row">
@@ -93,7 +93,9 @@
           </view>
         </view>
 
-        <button class="btn-primary" @tap="confirmIngredients">确认，去看营养评分</button>
+        <wd-button type="primary" @click="confirmIngredients" block round>
+          确认，去看营养评分
+        </wd-button>
       </view>
     </view>
 
@@ -131,14 +133,13 @@
 
         <!-- 自定义输入 -->
         <view class="custom-input-area">
-          <input
-            class="custom-input"
+          <wd-input
             v-model="customIngredient"
             placeholder="输入其他食材名称"
-            placeholder-class="input-placeholder"
+            clearable
             @confirm="addCustomIngredient"
           />
-          <view class="custom-add-btn" @tap="addCustomIngredient">添加</view>
+          <wd-button @click="addCustomIngredient" type="primary">添加</wd-button>
         </view>
 
         <!-- 已选食材展示 -->
@@ -167,13 +168,15 @@
           </view>
         </view>
 
-        <button
-          class="btn-primary"
+        <wd-button
+          type="primary"
           :disabled="selectedIngredients.length === 0"
-          @tap="confirmIngredients"
+          @click="confirmIngredients"
+          block
+          round
         >
           {{ selectedIngredients.length > 0 ? '确认，去看营养评分' : '请至少选一种食材' }}
-        </button>
+        </wd-button>
       </view>
     </view>
   </view>
@@ -266,13 +269,17 @@ const pendingRecognition = ref(null)
 async function startRecognition(filePath) {
   stage.value = 'recognizing'
   const babyId = baby.id
+  console.log('🐛 开始识别，baby:', baby)
+  console.log('🐛 babyId:', babyId)
   if (!babyId) {
-    // 没有 babyId 就直接 fallback，不报错
+    console.warn('⚠️ 没有宝宝 ID，跳过识别')
     stage.value = 'low-confidence'
     return
   }
   try {
+    console.log('🚀 调用 photoRecord API...')
     const result = await photoRecord(filePath, babyId)
+    console.log('📸 识别结果:', result)
     pendingRecognition.value = { recognitionId: result.recognitionId, photoKey: result.photoKey }
 
     if (result.mode === 'confirm' || result.mode === 'review') {
@@ -298,6 +305,7 @@ async function startRecognition(filePath) {
       stage.value = 'low-confidence'
     }
   } catch (e) {
+    console.error('❌ 识别失败:', e)
     // 配额不足时 e.message 是友好提示，其他错误无缝 fallback
     if (e.message?.includes('次数')) {
       uni.showToast({ title: e.message, icon: 'none' })

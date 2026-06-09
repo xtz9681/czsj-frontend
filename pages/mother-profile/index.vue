@@ -203,16 +203,32 @@
       </view>
     </view>
 
-    <button class="btn-primary" @tap="save" :loading="saving">
-      {{ isEdit ? '保存修改' : (needsBabyProfile ? '下一步，填宝宝信息' : '完成，进入首页') }}
-    </button>
+    <view v-if="isEdit || form.phase === 'preconception' || form.phase === 'pregnancy_early' || form.phase === 'pregnancy_mid' || form.phase === 'pregnancy_late'">
+      <button class="btn-primary" @tap="save" :loading="saving">
+        {{ isEdit ? '保存修改' : '完成，进入首页' }}
+      </button>
+    </view>
+
+    <!-- 日常管理：两个按钮 -->
+    <view v-else-if="!isEdit && form.phase === 'adult_female'" class="btn-group">
+      <button class="btn-secondary" @tap="saveAndGoHome" :loading="saving">进入首页</button>
+      <button class="btn-primary" @tap="save" :loading="saving">下一步，填宝宝信息</button>
+    </view>
+
+    <!-- 哺乳期/其他有宝宝的：一个按钮 -->
+    <view v-else>
+      <button class="btn-primary" @tap="save" :loading="saving">
+        {{ isEdit ? '保存修改' : '下一步，填宝宝信息' }}
+      </button>
+    </view>
+
     <text class="skip-hint" v-if="!isEdit" @tap="skip">先跳过，稍后完善</text>
   </view>
 </template>
 
 <script setup>
 import { ref, computed } from 'vue'
-import { onLoad } from '@dcloudio/uni-app'
+import { onLoad, onBackPress } from '@dcloudio/uni-app'
 import { createMother, updateMother } from '@/api/mother.js'
 import { useUserStore } from '@/store/user.js'
 
@@ -316,8 +332,6 @@ function onBirthYearChange(e) {
 
 const babyPhaseFromSetup = ref('')
 
-const babyPhaseFromSetup = ref('')
-
 onLoad((options) => {
   if (options?.stage) {
     if (options.stage === 'pregnancy') form.value.phase = 'pregnancy_mid'
@@ -333,6 +347,12 @@ onLoad((options) => {
       })
     }
   }
+})
+
+// 返回时用 navigateBack
+onBackPress(() => {
+  uni.navigateBack()
+  return true
 })
 
 async function save() {
@@ -379,8 +399,10 @@ async function save() {
 
     if (!isEdit.value && needsBabyProfile.value) {
       // 首次：保存宝妈档案后继续创建宝宝档案
+      // 哺乳期时带宝宝出生日期过去
+      const babyDeliveryDate = form.value.phase === 'lactation' ? form.value.deliveryDate : ''
       uni.showToast({ title: '宝妈档案已保存，接下来填宝宝信息～', icon: 'success' })
-      setTimeout(() => uni.navigateTo({ url: '/pages/profile/index' }), 1000)
+      setTimeout(() => uni.navigateTo({ url: `/pages/profile/index?babyDeliveryDate=${babyDeliveryDate}` }), 1000)
     } else {
       uni.showToast({ title: isEdit.value ? '修改成功~' : '设置完成！', icon: 'success' })
       setTimeout(() => uni.reLaunch({ url: '/pages/index/index' }), 1000)
@@ -394,6 +416,27 @@ async function save() {
 
 function skip() {
   uni.reLaunch({ url: '/pages/index/index' })
+}
+
+// 日常管理模式直接进首页
+async function saveAndGoHome() {
+  saving.value = true
+  try {
+    const payload = {
+      phase: form.value.phase,
+      birthYear: form.value.birthYear || null,
+      heightCm: form.value.heightCm ? Number(form.value.heightCm) : null,
+      weightKg: form.value.weightKg ? Number(form.value.weightKg) : null,
+    }
+    const res = await createMother(payload)
+    userStore.setMother(res)
+    uni.showToast({ title: '设置完成！', icon: 'success' })
+    setTimeout(() => uni.reLaunch({ url: '/pages/index/index' }), 1000)
+  } catch (e) {
+    uni.showToast({ title: e.message || '保存失败，请稍后再试~', icon: 'none' })
+  } finally {
+    saving.value = false
+  }
 }
 </script>
 
@@ -568,6 +611,29 @@ function skip() {
   line-height: 104rpx;
   margin-top: 48rpx;
   &::after { border: none; }
+}
+
+.btn-secondary {
+  background: #FFFFFF;
+  color: #F5A85B;
+  border: 3rpx solid #F5A85B;
+  border-radius: 96rpx;
+  font-size: 34rpx;
+  font-weight: 600;
+  height: 104rpx;
+  line-height: 104rpx;
+  margin-top: 48rpx;
+  &::after { border: none; }
+}
+
+.btn-group {
+  display: flex;
+  gap: 24rpx;
+  margin-top: 48rpx;
+  button {
+    flex: 1;
+    margin-top: 0 !important;
+  }
 }
 
 .skip-hint {

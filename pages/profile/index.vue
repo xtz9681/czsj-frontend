@@ -34,12 +34,12 @@
       <!-- 姓名/昵称 -->
       <view class="form-item">
         <text class="form-label">宝贝叫什么</text>
-        <input
-          class="form-input"
+        <wd-input
           v-model="form.name"
           placeholder="给宝宝起个昵称"
-          placeholder-class="input-placeholder"
-          maxlength="10"
+          :maxlength="10"
+          type="text"
+          clearable
         />
       </view>
       <view class="divider"></view>
@@ -81,7 +81,7 @@
       <view class="form-item">
         <text class="form-label">身高</text>
         <view class="input-inline">
-          <input class="num-input" type="digit" v-model="form.heightCm" placeholder="如 65" />
+          <wd-input class="num-input" type="digit" v-model="form.heightCm" placeholder="如 65" clearable />
           <text class="unit">cm</text>
         </view>
       </view>
@@ -91,7 +91,7 @@
       <view class="form-item">
         <text class="form-label">体重</text>
         <view class="input-inline">
-          <input class="num-input" type="digit" v-model="form.weightG" placeholder="如 8500" />
+          <wd-input class="num-input" type="digit" v-model="form.weightG" placeholder="如 8500" clearable />
           <text class="unit">g</text>
         </view>
       </view>
@@ -124,18 +124,20 @@
     </view>
 
     <!-- 保存按钮 -->
-    <button class="btn-primary" @tap="saveBaby" :loading="saving">
+    <wd-button type="primary" @click="saveBaby" :loading="saving" block round>
       {{ isEdit ? '保存修改' : '开始记录吧~' }}
-    </button>
+    </wd-button>
 
     <!-- 跳过（仅新建时） -->
-    <text v-if="!isEdit" class="skip-btn" @tap="skipToHome">先去看看再说</text>
+    <wd-button v-if="!isEdit" plain block @click="skipToHome" style="margin-top: 24rpx;">
+      先去看看再说
+    </wd-button>
   </view>
 </template>
 
 <script setup>
 import { ref, computed } from 'vue'
-import { onLoad } from '@dcloudio/uni-app'
+import { onLoad, onBackPress } from '@dcloudio/uni-app'
 import { createBaby, updateBaby } from '@/api/baby.js'
 import { useUserStore } from '@/store/user.js'
 
@@ -182,6 +184,9 @@ const displayAge = computed(() => {
 })
 
 onLoad((options) => {
+  if (options?.babyDeliveryDate) {
+    form.value.birthday = options.babyDeliveryDate
+  }
   if (options?.babyId || options?.edit) {
     isEdit.value = true
     const targetId = options?.babyId ? Number(options.babyId) : null
@@ -190,6 +195,12 @@ onLoad((options) => {
       : userStore.currentBaby
     if (baby) form.value = { ...baby }
   }
+})
+
+// 返回时用 navigateBack
+onBackPress(() => {
+  uni.navigateBack()
+  return true
 })
 
 function onBirthdayChange(e) {

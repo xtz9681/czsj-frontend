@@ -5,6 +5,11 @@ import { request } from './request'
 export function photoRecord(filePath, babyId) {
   return new Promise((resolve, reject) => {
     const token = uni.getStorageSync('token')
+    console.log('📤 photoRecord 开始上传')
+    console.log('  token:', token ? '✓ 存在' : '✗ 不存在')
+    console.log('  babyId:', babyId)
+    console.log('  filePath:', filePath)
+
     uni.uploadFile({
       url: 'http://localhost:8080/meal/photo-record',
       filePath,
@@ -12,16 +17,30 @@ export function photoRecord(filePath, babyId) {
       formData: { babyId: String(babyId) },
       header: { 'Authorization': 'Bearer ' + token },
       success(res) {
+        console.log('✅ uploadFile success, statusCode:', res.statusCode)
+        console.log('  response data:', res.data)
         if (res.statusCode === 200) {
-          resolve(JSON.parse(res.data))
+          try {
+            const parsed = JSON.parse(res.data)
+            console.log('✅ 解析成功:', parsed)
+            resolve(parsed)
+          } catch (e) {
+            console.error('❌ JSON 解析失败:', e)
+            reject(new Error('服务器返回格式错误'))
+          }
         } else if (res.statusCode === 402) {
           reject(new Error('今日拍照次数已用完，可以手动选择食材~'))
         } else {
-          const body = JSON.parse(res.data)
-          reject(new Error(body?.message || '识别遇到了点问题~'))
+          try {
+            const body = JSON.parse(res.data)
+            reject(new Error(body?.message || '识别遇到了点问题~'))
+          } catch (e) {
+            reject(new Error('识别遇到了点问题~'))
+          }
         }
       },
-      fail() {
+      fail(err) {
+        console.error('❌ uploadFile fail:', err)
         reject(new Error('网络开小差了，请检查网络~'))
       }
     })

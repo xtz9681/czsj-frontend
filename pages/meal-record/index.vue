@@ -2,16 +2,14 @@
   <view class="page-container" style="padding: 0 40rpx 80rpx;">
     <!-- 餐次类型选择 -->
     <view class="meal-type-row">
-      <view
+      <wd-button
         v-for="t in mealTypes"
         :key="t.value"
-        class="meal-type-btn"
-        :class="{ active: form.mealType === t.value }"
-        @tap="form.mealType = t.value"
+        :type="form.mealType === t.value ? 'primary' : 'default'"
+        @click="form.mealType = t.value"
       >
-        <text>{{ t.icon }}</text>
-        <text>{{ t.label }}</text>
-      </view>
+        {{ t.icon }} {{ t.label }}
+      </wd-button>
     </view>
 
     <!-- 已从相机带入的图片 -->
@@ -62,20 +60,19 @@
 
     <!-- 备注 -->
     <view class="note-area">
-      <textarea
-        class="note-input"
+      <wd-input
         v-model="form.note"
+        type="textarea"
         placeholder="备注这顿的情况，比如宝宝吃得很开心～"
-        placeholder-class="input-placeholder"
         :maxlength="200"
-        :auto-height="true"
+        show-word-limit
       />
     </view>
 
     <!-- 保存按钮 -->
-    <button class="btn-primary" @tap="saveMeal" :loading="saving">
+    <wd-button type="primary" @click="saveMeal" :loading="saving" block round>
       {{ scoreResult ? '重新评分' : '保存并获取 AI 评分' }}
-    </button>
+    </wd-button>
 
     <!-- AI 营养评分结果 -->
     <view v-if="scoreResult" class="score-result">

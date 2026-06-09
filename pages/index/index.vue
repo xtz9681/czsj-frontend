@@ -8,7 +8,12 @@
             <text>{{ subjectMode === 'baby' ? (currentBaby?.gender === 'female' ? '👧' : '👦') : '🤱' }}</text>
           </view>
           <view class="subject-detail">
-            <text class="subject-name">{{ subjectName }}</text>
+            <view class="subject-name-row">
+              <text class="subject-name">{{ subjectName }}</text>
+              <view class="edit-btn" @tap.stop="goEditProfile">
+                <text>✏️</text>
+              </view>
+            </view>
             <text class="subject-sub">{{ subjectSubtitle }}</text>
           </view>
           <view class="switch-btn">
@@ -67,7 +72,7 @@
         <view v-if="todayMeals.length === 0" class="empty-meals">
           <text class="empty-icon">🍽️</text>
           <text class="empty-text">今天还没记录，快去拍一拍吧~</text>
-          <view class="empty-btn" @tap="goCamera">记第一餐</view>
+        <view class="empty-btn" @tap="goCamera">记第一餐</view>
         </view>
         <view v-else class="meal-list">
           <view
@@ -371,8 +376,14 @@ function goPlan() { uni.switchTab({ url: '/pages/plan/index' }) }
 function goMealDetail(id) { uni.navigateTo({ url: `/pages/meal-record/index?id=${id}` }) }
 function goEditMother() {
   showSwitcher.value = false
-  uni.navigateTo({ url: '/pages/mother-profile/index?edit=1' })
+  if (subjectMode.value === 'mother') {
+    uni.navigateTo({ url: '/pages/mother-profile/index?edit=1' })
+  } else if (subjectMode.value === 'baby' && currentBaby.value?.id) {
+    uni.navigateTo({ url: `/pages/profile/index?babyId=${currentBaby.value.id}&edit=1` })
+  }
 }
+
+const goEditProfile = goEditMother
 function addIngredient(item) {
   uni.navigateTo({ url: `/pages/meal-record/index?ingredient=${item.id}` })
 }
@@ -458,18 +469,38 @@ const motherNutritionTips = computed(() => {
 
 .subject-detail { flex: 1; }
 
+.subject-name-row {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  margin-bottom: 4rpx;
+}
+
 .subject-name {
   display: block;
   font-size: 34rpx;
   font-weight: 700;
   color: #FFFFFF;
-  margin-bottom: 4rpx;
 }
 
 .subject-sub {
   display: block;
   font-size: 24rpx;
   color: rgba(255,255,255,0.85);
+}
+
+.edit-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36rpx;
+  height: 36rpx;
+  background: rgba(255,255,255,0.2);
+  border-radius: 50%;
+  font-size: 20rpx;
+  &:active {
+    background: rgba(255,255,255,0.3);
+  }
 }
 
 .switch-btn {

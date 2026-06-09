@@ -46,7 +46,7 @@ const motherStages = [
   { value: 'preconception', icon: '💕', label: '备孕中', desc: '正在为迎接宝宝做准备' },
   { value: 'pregnancy',     icon: '🤰', label: '孕期',   desc: '孕早期 / 孕中期 / 孕晚期' },
   { value: 'lactation',     icon: '🤱', label: '哺乳期', desc: '刚生产，正在哺乳' },
-  { value: 'adult_female',  icon: '👩', label: '日常营养', desc: '已断奶，日常营养管理' },
+  { value: 'adult_female',  icon: '👩', label: '日常管理', desc: '日常营养管理' },
 ]
 
 function handleNext() {

@@ -14,11 +14,10 @@
     <view class="search-row">
       <view class="search-input-wrap">
         <text class="search-icon">🔍</text>
-        <input
-          class="search-input"
+        <wd-input
           v-model="searchKeyword"
           placeholder="搜索食材名称"
-          placeholder-class="input-placeholder"
+          clearable
           @input="onSearchInput"
         />
       </view>
