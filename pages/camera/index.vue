@@ -56,7 +56,8 @@
     <view v-if="stage === 'high-confidence'" class="result-stage">
       <image :src="capturedPhoto" class="result-photo" mode="aspectFill" />
 
-      <view class="result-card">
+      <scroll-view class="result-card-scroll">
+        <view class="result-card">
         <view class="result-header">
           <text class="result-icon">✅</text>
           <text class="result-title">识别到这些食材</text>
@@ -114,7 +115,7 @@
             记为我的营养
           </wd-button>
         </view>
-      </view>
+      </scroll-view>
     </view>
 
     <!-- === 状态4：低置信度 — fallback 勾选 === -->
@@ -591,19 +592,26 @@ function goBack() {
 .result-stage {
   display: flex;
   flex-direction: column;
+  height: 100vh;
 }
 
 .result-photo {
   width: 100%;
   height: 400rpx;
+  flex-shrink: 0;
+}
+
+.result-card-scroll {
+  flex: 1;
+  overflow-y: auto;
+  border-radius: 40rpx 40rpx 0 0;
+  background: #FFFFFF;
+  margin-top: -40rpx;
 }
 
 .result-card {
-  background: #FFFFFF;
+  padding: 40rpx 40rpx 80rpx;
   border-radius: 40rpx 40rpx 0 0;
-  margin-top: -40rpx;
-  padding: 40rpx 40rpx 60rpx;
-  flex: 1;
 }
 
 .result-header {

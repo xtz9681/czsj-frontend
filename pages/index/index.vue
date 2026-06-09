@@ -313,11 +313,24 @@ async function loadRecommendIngredients() {
 }
 
 function syncFromStore() {
-  // store 已从 storage 初始化，直接读 store 决定显示模式
-  if (userStore.currentBabyId && userStore.babies.length > 0) {
+  // 妈妈阶段优先级：孕期/哺乳期默认进入妈妈模式；adult_female 才能优先进入宝宝模式
+  if (userStore.mother) {
+    const motherPhase = userStore.mother.phase
+    const pregnancyAndLactationPhases = ['preconception', 'pregnancy_early', 'pregnancy_mid', 'pregnancy_late', 'lactation']
+
+    // 孕期/备孕期/哺乳期：默认妈妈模式
+    if (pregnancyAndLactationPhases.includes(motherPhase)) {
+      subjectMode.value = 'mother'
+    } else if (motherPhase === 'adult_female' && userStore.currentBabyId && userStore.babies.length > 0) {
+      // adult_female 且有宝宝：优先宝宝模式
+      subjectMode.value = 'baby'
+    } else {
+      // adult_female 但没有宝宝：回退妈妈模式
+      subjectMode.value = 'mother'
+    }
+  } else if (userStore.currentBabyId && userStore.babies.length > 0) {
+    // 没有妈妈档案，有宝宝：宝宝模式
     subjectMode.value = 'baby'
-  } else if (userStore.mother) {
-    subjectMode.value = 'mother'
   }
 }
 
