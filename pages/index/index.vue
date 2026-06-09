@@ -131,14 +131,14 @@
       <view class="section">
         <view class="mother-tip-card card">
           <text class="mother-tip-title">{{ subjectSubtitle }}营养重点</text>
-          <view class="mother-tip-list">
-            <view v-for="tip in motherNutritionTips" :key="tip.key" class="mother-tip-item">
-              <text class="tip-icon">{{ tip.icon }}</text>
-              <view>
-                <text class="tip-name">{{ tip.name }}</text>
-                <text class="tip-desc">{{ tip.desc }}</text>
-              </view>
-            </view>
+          <view class="mother-tip-content">
+            <text
+              v-for="(fragment, idx) in motherNutritionTips"
+              :key="idx"
+              :class="fragment.highlight ? 'nutrition-highlight' : 'nutrition-normal'"
+            >
+              {{ fragment.text }}
+            </text>
           </view>
           <view class="mother-tip-edit" @tap="goEditMother">
             <text>修改我的阶段 ›</text>
@@ -405,35 +405,76 @@ const motherNutritionTips = computed(() => {
   const phase = mother.value?.phase
   const tips = {
     preconception: [
-      { key: 'folate', icon: '🟢', name: '叶酸', desc: '0.4mg/天，预防神经管畸形' },
-      { key: 'iron', icon: '🩸', name: '铁', desc: '增加储备，防贫血' },
-      { key: 'vitD', icon: '☀️', name: '维生素D', desc: '促进钙吸收' },
+      { text: '这段时间不用急着"补很多"，更重要的是先把身体慢慢养稳。', highlight: false },
+      { text: '叶酸', highlight: true },
+      { text: '、', highlight: false },
+      { text: '铁', highlight: true },
+      { text: '和', highlight: false },
+      { text: '优质蛋白', highlight: true },
+      { text: '可以开始有意识地跟上，', highlight: false },
+      { text: '三餐尽量规律', highlight: true },
+      { text: '一点，少熬夜、少凑合，身体状态稳定下来，比短时间内吃得特别"用力"更重要。你现在做的每一点准备，都是在给后面的怀孕过程打基础。', highlight: false },
     ],
     pregnancy_early: [
-      { key: 'folate', icon: '🟢', name: '叶酸', desc: '继续补充至孕12周' },
-      { key: 'protein', icon: '🥩', name: '蛋白质', desc: '每天+25g，助胎儿发育' },
-      { key: 'iron', icon: '🩸', name: '铁', desc: '孕早期需求增加' },
+      { text: '孕早期胃口忽上忽下、闻到味道不舒服、吃不下东西都很常见，所以这时候不需要逼自己"必须吃得很标准"。先保证能吃得下，再慢慢把', highlight: false },
+      { text: '叶酸', highlight: true },
+      { text: '、', highlight: false },
+      { text: '蛋白质', highlight: true },
+      { text: '和一些', highlight: false },
+      { text: '清淡好消化', highlight: true },
+      { text: '的食物顾上就已经很好了。别因为一两天吃得不理想就焦虑，看整体、慢慢来，比每一顿都完美更重要。', highlight: false },
     ],
     pregnancy_mid: [
-      { key: 'calcium', icon: '🦴', name: '钙', desc: '1000mg/天，胎儿骨骼发育' },
-      { key: 'dha', icon: '🐟', name: 'DHA', desc: '200mg/天，大脑和视网膜发育' },
-      { key: 'iron', icon: '🩸', name: '铁', desc: '24mg/天，预防贫血' },
+      { text: '到了孕中期，很多妈妈的胃口会慢慢稳定一些，宝宝也进入长得更快的阶段。这时候可以更有意识地把', highlight: false },
+      { text: 'DHA', highlight: true },
+      { text: '、', highlight: false },
+      { text: '钙', highlight: true },
+      { text: '、', highlight: false },
+      { text: '铁', highlight: true },
+      { text: '和', highlight: false },
+      { text: '优质蛋白', highlight: true },
+      { text: '补起来，让每一餐都尽量更均衡一点。你不用一下子记住很多复杂规则，只要记得"', highlight: false },
+      { text: '主食、蛋白质、蔬菜', highlight: true },
+      { text: '"尽量搭配着来，身体和宝宝都会更舒服。', highlight: false },
     ],
     pregnancy_late: [
-      { key: 'calcium', icon: '🦴', name: '钙', desc: '1200mg/天，骨骼最后冲刺' },
-      { key: 'energy', icon: '⚡', name: '能量', desc: '+450kcal/天' },
-      { key: 'vitK', icon: '🥦', name: '维生素K', desc: '助凝血，深绿色蔬菜多吃' },
+      { text: '越到后面，身体的负担会越明显，这时候吃得', highlight: false },
+      { text: '规律', highlight: true },
+      { text: '、稳定供能，比一时多吃更重要。', highlight: false },
+      { text: '钙', highlight: true },
+      { text: '、', highlight: false },
+      { text: '蛋白质', highlight: true },
+      { text: '和', highlight: false },
+      { text: '整体能量', highlight: true },
+      { text: '要慢慢跟上，既是为了宝宝最后阶段的发育，也是为了让你自己更有力气面对生产和产后恢复。这个阶段不需要逼自己吃撑，舒服地吃、规律地吃，反而更容易坚持下来。', highlight: false },
     ],
     lactation: [
-      { key: 'energy', icon: '⚡', name: '能量', desc: '+500kcal/天，维持奶量' },
-      { key: 'calcium', icon: '🦴', name: '钙', desc: '1000mg/天，防骨质流失' },
-      { key: 'dha', icon: '🐟', name: 'DHA', desc: '母乳中DHA助宝宝发育' },
+      { text: '你现在吃进去的，不只是"自己的一餐"，也在支持', highlight: false },
+      { text: '奶量', highlight: true },
+      { text: '、', highlight: false },
+      { text: '体力', highlight: true },
+      { text: '和身体恢复。很多时候妈妈会只顾着宝宝，忘了自己其实也很需要被照顾，所以', highlight: false },
+      { text: '能量', highlight: true },
+      { text: '、', highlight: false },
+      { text: '钙', highlight: true },
+      { text: '、', highlight: false },
+      { text: '水分', highlight: true },
+      { text: '和', highlight: false },
+      { text: '优质蛋白', highlight: true },
+      { text: '都要记得跟上。哪怕做不到每顿都很精致，也尽量别总是随便对付，先让自己别太亏，身体和状态会慢慢更稳。', highlight: false },
     ],
     adult_female: [
-      { key: 'calcium', icon: '🦴', name: '钙', desc: '1000mg/天，骨密度维护' },
-      { key: 'iron', icon: '🩸', name: '铁', desc: '月经规律后注意补充' },
-      { key: 'vitD', icon: '☀️', name: '维生素D', desc: '促进钙吸收，户外活动少时尤其需要' },
-      { key: 'protein', icon: '🥩', name: '蛋白质', desc: '维持日常体力和免疫力' },
+      { text: '到了日常管理阶段，不代表就要一下子把自己要求得特别严格，而是可以把关注点放回到"我怎么吃得更舒服、更稳定"。', highlight: false },
+      { text: '三餐尽量规律', highlight: true },
+      { text: '一点，', highlight: false },
+      { text: '蛋白质', highlight: true },
+      { text: '、', highlight: false },
+      { text: '蔬菜水果', highlight: true },
+      { text: '和', highlight: false },
+      { text: '水分', highlight: true },
+      { text: '慢慢搭起来，不必追求每一顿都完美，只要', highlight: false },
+      { text: '整体越来越均衡', highlight: true },
+      { text: '，身体状态就会一点点变好。营养管理不是短跑，更像是慢慢把自己照顾回来的过程。', highlight: false },
     ],
   }
   return tips[phase] || tips['pregnancy_mid']
@@ -815,11 +856,28 @@ const motherNutritionTips = computed(() => {
 /* 妈妈模式营养卡片 */
 .mother-tip-card { }
 .mother-tip-title { display: block; font-size: 30rpx; font-weight: 700; color: #3D3935; margin-bottom: 24rpx; }
-.mother-tip-list { display: flex; flex-direction: column; gap: 20rpx; margin-bottom: 24rpx; }
-.mother-tip-item { display: flex; align-items: flex-start; gap: 16rpx; }
-.tip-icon { font-size: 36rpx; flex-shrink: 0; }
-.tip-name { display: block; font-size: 28rpx; font-weight: 600; color: #3D3935; margin-bottom: 4rpx; }
-.tip-desc { display: block; font-size: 24rpx; color: #999; }
+
+.mother-tip-content {
+  display: flex;
+  flex-wrap: wrap;
+  font-size: 28rpx;
+  color: #3D3935;
+  line-height: 1.8;
+  margin-bottom: 24rpx;
+  word-spacing: 0;
+  letter-spacing: 0;
+}
+
+.nutrition-normal {
+  color: #3D3935;
+  word-break: break-word;
+}
+
+.nutrition-highlight {
+  color: #D4644C;
+  font-weight: 600;
+}
+
 .mother-tip-edit { font-size: 26rpx; color: #F5A85B; text-align: right; }
 
 /* 切换器遮罩 + Sheet */
