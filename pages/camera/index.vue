@@ -84,6 +84,12 @@
           </view>
         </view>
 
+        <!-- 年龄警告（如果有） -->
+        <view v-if="ageWarning" class="age-warning-card">
+          <text class="warning-title">💡 食材提示</text>
+          <text class="warning-text">{{ ageWarning }}</text>
+        </view>
+
         <!-- 过敏预警 -->
         <view v-if="allergyWarnings.length > 0" class="allergy-warning-card">
           <text class="warning-title">⚠️ 过敏提醒</text>
@@ -93,9 +99,21 @@
           </view>
         </view>
 
-        <wd-button type="primary" @click="confirmIngredients" block round>
-          确认，去看营养评分
-        </wd-button>
+        <!-- 动作按钮 -->
+        <view class="action-buttons">
+          <wd-button type="primary" @click="confirmIngredients" block round>
+            继续记为宝宝餐
+          </wd-button>
+          <wd-button
+            v-if="ageWarning || suggestedSubjectType === 'MOTHER'"
+            @click="confirmAsMotherMeal"
+            block
+            round
+            :type="suggestedSubjectType === 'MOTHER' ? 'primary' : 'default'"
+          >
+            记为我的营养
+          </wd-button>
+        </view>
       </view>
     </view>
 
@@ -193,6 +211,8 @@ const stage = ref('init') // init | recognizing | high-confidence | low-confiden
 const capturedPhoto = ref('')
 const customIngredient = ref('')
 const recognizedIngredients = ref([])
+const ageWarning = ref(null)
+const suggestedSubjectType = ref(null)
 
 const baby = useUserStore().currentBaby || { ageMonths: 8 }
 const allergyList = uni.getStorageSync('allergyList') || []
@@ -269,21 +289,20 @@ const pendingRecognition = ref(null)
 async function startRecognition(filePath) {
   stage.value = 'recognizing'
   const babyId = baby.id
-  console.log('🐛 开始识别，baby:', baby)
-  console.log('🐛 babyId:', babyId)
   if (!babyId) {
-    console.warn('⚠️ 没有宝宝 ID，跳过识别')
     stage.value = 'low-confidence'
     return
   }
   try {
-    console.log('🚀 调用 photoRecord API...')
     const result = await photoRecord(filePath, babyId)
-    console.log('📸 识别结果:', result)
     pendingRecognition.value = { recognitionId: result.recognitionId, photoKey: result.photoKey }
 
-    if (result.mode === 'confirm' || result.mode === 'review') {
-      // 高/中置信度：展示识别结果
+    // 保存年龄警告和建议的记录归属
+    ageWarning.value = result.ageWarning || null
+    suggestedSubjectType.value = result.suggestedSubjectType || null
+
+    // 只要 recognized 不为空，就展示高置信度页面（即使有 ageWarning）
+    if ((result.recognized && result.recognized.length > 0) && (result.mode === 'confirm' || result.mode === 'review')) {
       recognizedIngredients.value = (result.recognized || []).map((name, idx) => ({
         id: idx,
         name,
@@ -292,7 +311,7 @@ async function startRecognition(filePath) {
       }))
       stage.value = 'high-confidence'
     } else {
-      // fallback：低置信度，展示月龄勾选
+      // fallback：低置信度或无识别结果，展示月龄勾选
       if (result.ageIngredients?.length) {
         ageBasedIngredients.value = result.ageIngredients.map((i, idx) => ({
           id: idx,
@@ -305,7 +324,6 @@ async function startRecognition(filePath) {
       stage.value = 'low-confidence'
     }
   } catch (e) {
-    console.error('❌ 识别失败:', e)
     // 配额不足时 e.message 是友好提示，其他错误无缝 fallback
     if (e.message?.includes('次数')) {
       uni.showToast({ title: e.message, icon: 'none' })
@@ -372,9 +390,31 @@ function confirmIngredients() {
     ingredients: finalIngredients,
     photo: capturedPhoto.value,
     recognitionId: pendingRecognition.value?.recognitionId || null,
-    photoKey: pendingRecognition.value?.photoKey || null
+    photoKey: pendingRecognition.value?.photoKey || null,
+    subjectType: 'BABY'  // 默认记为宝宝餐
   })
   uni.navigateTo({ url: '/pages/meal-record/index?from=camera' })
+}
+
+function confirmAsMotherMeal() {
+  const finalIngredients = recognizedIngredients.value.filter(i => i.selected)
+
+  if (finalIngredients.length === 0) {
+    uni.showToast({ title: '请选择至少一种食材~', icon: 'none' })
+    return
+  }
+
+  // TODO: 调用妈妈餐快速记录接口（后端同步补）
+  // 接口规范参考：/api/mother-meal/quick-record （待定）
+  // 参数示例：
+  // {
+  //   ingredients: [{ name, grams }],
+  //   photoKey: recognitionId.photoKey,
+  //   recognitionId: recognitionId.recognitionId,
+  //   note: ''
+  // }
+
+  uni.showToast({ title: '妈妈餐记录接口待后端补充~', icon: 'none' })
 }
 
 function goManual() {
@@ -784,4 +824,34 @@ function goBack() {
 }
 
 .remove-tag { color: #C8C8C8; margin-left: 4rpx; }
+
+/* 年龄警告卡 */
+.age-warning-card {
+  background: #FFF8F0;
+  border-radius: 16rpx;
+  padding: 24rpx;
+  margin-bottom: 20rpx;
+  border-left: 6rpx solid #F5A85B;
+}
+
+.warning-title {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: #F5A85B;
+  display: block;
+  margin-bottom: 12rpx;
+}
+
+.warning-text {
+  font-size: 26rpx;
+  color: #666;
+  line-height: 1.6;
+}
+
+/* 动作按钮组 */
+.action-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
 </style>
