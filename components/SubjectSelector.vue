@@ -61,6 +61,7 @@
 
 <script setup>
 import { ref, computed } from 'vue'
+import { checkMultiRecordWarning } from '@/api/meal.js'
 import { useUserStore } from '@/store/user.js'
 
 const props = defineProps({
@@ -83,6 +84,7 @@ const babies = computed(() => userStore.babies)
 const selectedSubjects = ref([])
 const showNursingWarning = ref(false)
 const nursingWarningText = ref('')
+const isChecking = ref(false)
 
 const motherPhaseLabel = computed(() => {
   const phaseMap = {
@@ -127,21 +129,35 @@ function closeNursingWarning() {
   showNursingWarning.value = false
 }
 
-function onConfirm() {
-  // 检查是否有 nursing 阶段的孩子被勾选
-  const nursingBabies = babies.value.filter(b => selectedSubjects.value.includes(b.id) && b.phase === 'nursing')
-
-  if (nursingBabies.length > 0) {
-    // 检查食材是否不适合 nursing 孩子（这里用简单逻辑，实际可能需要更复杂的判断）
-    const ingredientNames = props.ingredients.map(i => i.name || i).join('、')
-    nursingWarningText.value = `当前勾选的档案中包含哺乳期宝宝，${ingredientNames}等更像成人餐，请确认是否继续记录到该宝宝档案。`
-    showNursingWarning.value = true
+async function onConfirm() {
+  if (selectedSubjects.value.length === 0) {
+    uni.showToast({ title: '请至少选择一个档案', icon: 'none' })
     return
   }
 
-  // 没有 nursing 孩子或 nursing 孩子已被用户移除，直接提交
-  emit('confirm', selectedSubjects.value)
-  selectedSubjects.value = []
+  isChecking.value = true
+  try {
+    // 调用后端 suitability 检查接口
+    const res = await checkMultiRecordWarning({
+      subjectIds: selectedSubjects.value,
+      ingredients: props.ingredients.map(i => ({ name: i.name || i }))
+    })
+
+    if (res.hasWarning && res.warningMessage) {
+      // 有 nursing 孩子警告，先弹提示
+      nursingWarningText.value = res.warningMessage
+      showNursingWarning.value = true
+      return
+    }
+
+    // 没有警告或用户已确认，直接提交
+    emit('confirm', selectedSubjects.value)
+    selectedSubjects.value = []
+  } catch (e) {
+    uni.showToast({ title: e.message || '检查失败，请重试', icon: 'none' })
+  } finally {
+    isChecking.value = false
+  }
 }
 
 // 初始化时默认选中妈妈档案

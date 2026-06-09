@@ -5,6 +5,16 @@ export function quickRecord(data) {
   return request({ url: '/meal/quick-record', method: 'POST', data })
 }
 
+// 多主体记录前的 suitability 检查（检查 nursing 孩子警告）
+export function checkMultiRecordWarning(data) {
+  return request({ url: '/meal/check-multi-record-warning', method: 'POST', data })
+}
+
+// 多主体记录（一次记录到多个档案）
+export function recordMultiple(data) {
+  return request({ url: '/meal/record-multiple', method: 'POST', data })
+}
+
 // 餐次历史列表
 export function getMealList(babyId, page = 0, size = 20) {
   return request({ url: '/meal/list', data: { babyId, page, size } })

@@ -242,7 +242,7 @@ import { ref, computed, nextTick } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
 import SubjectSelector from '@/components/SubjectSelector.vue'
 import { photoRecord } from '@/api/ai.js'
-import { getIngredientsByAge } from '@/api/meal.js'
+import { getIngredientsByAge, quickRecord, recordMultiple } from '@/api/meal.js'
 import { useUserStore } from '@/store/user.js'
 
 const userStore = useUserStore()
@@ -447,9 +447,28 @@ function recordToMother() {
     return
   }
 
-  // TODO: 调用妈妈餐快速记录接口
-  // 参数：ingredients, photoKey, recognitionId
-  uni.showToast({ title: '妈妈餐记录接口待后端补充~', icon: 'none' })
+  // 调用妈妈餐快速记录接口
+  const payload = {
+    subjectType: 'MOTHER',
+    ingredients: finalIngredients.map(i => ({ name: i.name || i, grams: i.amount || 30 })),
+    photoKey: pendingRecognition.value?.photoKey || null,
+    recognitionId: pendingRecognition.value?.recognitionId || null,
+    note: ''
+  }
+
+  uni.showLoading({ title: '保存中...' })
+  quickRecord(payload)
+    .then(() => {
+      uni.hideLoading()
+      uni.showToast({ title: '保存成功~', icon: 'success' })
+      setTimeout(() => {
+        uni.navigateBack()
+      }, 1200)
+    })
+    .catch(e => {
+      uni.hideLoading()
+      uni.showToast({ title: e.message || '保存失败，请重试', icon: 'none' })
+    })
 }
 
 function recordToBaby() {
@@ -486,12 +505,28 @@ function showMultipleSelect() {
 function onSubjectSelectorConfirm(selectedSubjectIds) {
   const finalIngredients = getFinalIngredients()
 
-  // TODO: 调用多主体记录接口
-  // 参数：ingredients, subjects: [{ id, type }], photoKey, recognitionId
-  console.log('记录多个档案:', selectedSubjectIds, finalIngredients)
-  uni.showToast({ title: '多主体记录接口待后端补充~', icon: 'none' })
+  const payload = {
+    subjectIds: selectedSubjectIds,
+    ingredients: finalIngredients.map(i => ({ name: i.name || i, grams: i.amount || 30 })),
+    photoKey: pendingRecognition.value?.photoKey || null,
+    recognitionId: pendingRecognition.value?.recognitionId || null,
+    note: ''
+  }
 
-  showSubjectSelector.value = false
+  uni.showLoading({ title: '保存中...' })
+  recordMultiple(payload)
+    .then(() => {
+      uni.hideLoading()
+      uni.showToast({ title: '保存成功~', icon: 'success' })
+      showSubjectSelector.value = false
+      setTimeout(() => {
+        uni.navigateBack()
+      }, 1200)
+    })
+    .catch(e => {
+      uni.hideLoading()
+      uni.showToast({ title: e.message || '保存失败，请重试', icon: 'none' })
+    })
 }
 
 function confirmIngredients() {
