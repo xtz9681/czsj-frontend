@@ -58,62 +58,63 @@
 
       <scroll-view class="result-card-scroll">
         <view class="result-card">
-        <view class="result-header">
-          <text class="result-icon">✅</text>
-          <text class="result-title">识别到这些食材</text>
-          <text class="result-sub">点击可以调整</text>
-        </view>
-
-        <view class="ingredient-tags">
-          <view
-            v-for="ing in recognizedIngredients"
-            :key="ing.id"
-            class="ingredient-tag"
-            :class="{
-              selected: ing.selected,
-              'allergy-tag': ing.isAllergy
-            }"
-            @tap="toggleIngredient(ing)"
-          >
-            <text v-if="ing.isAllergy" class="tag-warning">⚠️</text>
-            <text>{{ ing.name }}</text>
-            <text v-if="ing.selected" class="tag-check">✓</text>
-            <text v-else class="tag-remove">✕</text>
+          <view class="result-header">
+            <text class="result-icon">✅</text>
+            <text class="result-title">识别到这些食材</text>
+            <text class="result-sub">点击可以调整</text>
           </view>
-          <view class="ingredient-tag add-tag" @tap="showAddIngredient">
-            <text>+ 添加</text>
+
+          <view class="ingredient-tags">
+            <view
+              v-for="ing in recognizedIngredients"
+              :key="ing.id"
+              class="ingredient-tag"
+              :class="{
+                selected: ing.selected,
+                'allergy-tag': ing.isAllergy
+              }"
+              @tap="toggleIngredient(ing)"
+            >
+              <text v-if="ing.isAllergy" class="tag-warning">⚠️</text>
+              <text>{{ ing.name }}</text>
+              <text v-if="ing.selected" class="tag-check">✓</text>
+              <text v-else class="tag-remove">✕</text>
+            </view>
+            <view class="ingredient-tag add-tag" @tap="showAddIngredient">
+              <text>+ 添加</text>
+            </view>
           </view>
-        </view>
 
-        <!-- 年龄警告（如果有） -->
-        <view v-if="ageWarning" class="age-warning-card">
-          <text class="warning-title">💡 食材提示</text>
-          <text class="warning-text">{{ ageWarning }}</text>
-        </view>
-
-        <!-- 过敏预警 -->
-        <view v-if="allergyWarnings.length > 0" class="allergy-warning-card">
-          <text class="warning-title">⚠️ 过敏提醒</text>
-          <view v-for="w in allergyWarnings" :key="w.name" class="warning-item">
-            <text class="warning-name">{{ w.name }}</text>
-            <text class="warning-desc">{{ w.desc }}</text>
+          <!-- 年龄警告（如果有） -->
+          <view v-if="ageWarning" class="age-warning-card">
+            <text class="warning-title">💡 食材提示</text>
+            <text class="warning-text">{{ ageWarning }}</text>
           </view>
-        </view>
 
-        <!-- 动作按钮 -->
-        <view class="action-buttons">
-          <wd-button type="primary" @click="confirmIngredients" block round>
-            继续记为宝宝餐
-          </wd-button>
-          <wd-button
-            v-if="ageWarning || suggestedSubjectType === 'MOTHER'"
-            @click="confirmAsMotherMeal"
-            block
-            round
-            :type="suggestedSubjectType === 'MOTHER' ? 'primary' : 'default'"
-          >
-            记为我的营养
-          </wd-button>
+          <!-- 过敏预警 -->
+          <view v-if="allergyWarnings.length > 0" class="allergy-warning-card">
+            <text class="warning-title">⚠️ 过敏提醒</text>
+            <view v-for="w in allergyWarnings" :key="w.name" class="warning-item">
+              <text class="warning-name">{{ w.name }}</text>
+              <text class="warning-desc">{{ w.desc }}</text>
+            </view>
+          </view>
+
+          <!-- 动作按钮 -->
+          <view class="action-buttons">
+            <wd-button type="primary" @click="confirmIngredients" block round>
+              继续记为宝宝餐
+            </wd-button>
+            <wd-button
+              v-if="ageWarning || suggestedSubjectType === 'MOTHER'"
+              @click="confirmAsMotherMeal"
+              block
+              round
+              :type="suggestedSubjectType === 'MOTHER' ? 'primary' : 'default'"
+            >
+              记为我的营养
+            </wd-button>
+          </view>
         </view>
       </scroll-view>
     </view>
