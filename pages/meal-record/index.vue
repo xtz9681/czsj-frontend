@@ -69,9 +69,35 @@
       />
     </view>
 
+    <!-- 记给谁 -->
+    <view class="subject-select-area">
+      <view class="subject-select-header">
+        <text class="subject-select-title">记给谁</text>
+        <view v-if="showSubjectSelectorBtn" class="subject-select-more" @tap="openSubjectSelector">
+          <text>更多 ›</text>
+        </view>
+      </view>
+      <view class="subject-tags">
+        <view
+          v-if="!useMultipleSubjects"
+          class="subject-tag active"
+        >
+          <text>{{ currentTargetLabel }}</text>
+        </view>
+        <view
+          v-for="label in selectedSubjectLabels"
+          v-else
+          :key="label"
+          class="subject-tag active"
+        >
+          <text>{{ label }}</text>
+        </view>
+      </view>
+    </view>
+
     <!-- 保存按钮 -->
     <wd-button type="primary" @click="saveMeal" :loading="saving" block round>
-      {{ scoreResult ? '重新评分' : '保存并获取 AI 评分' }}
+      {{ useMultipleSubjects && selectedSubjectIds.length > 0 ? `保存到 ${selectedSubjectIds.length} 个档案` : (scoreResult ? '重新评分' : '保存并获取 AI 评分') }}
     </wd-button>
 
     <!-- AI 营养评分结果 -->
@@ -110,13 +136,29 @@
 
       <text class="disclaimer">AI 评分仅供参考，不构成医疗建议，请咨询专业人员</text>
     </view>
+
+    <SubjectSelector
+      ref="subjectSelectorRef"
+      :visible="showSubjectSelector"
+      :ingredients="form.ingredients"
+      @confirm="onSubjectSelectorConfirm"
+      @cancel="showSubjectSelector = false"
+    />
   </view>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, nextTick } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
-import { quickRecord } from '@/api/meal.js'
+import SubjectSelector from '@/components/SubjectSelector.vue'
+import { quickRecord, recordMultiple } from '@/api/meal.js'
+import { useUserStore } from '@/store/user.js'
+
+const userStore = useUserStore()
+const subjectSelectorRef = ref(null)
+const showSubjectSelector = ref(false)
+const useMultipleSubjects = ref(false)
+const selectedSubjectIds = ref([])
 
 const saving = ref(false)
 const scoreResult = ref(null)
@@ -143,6 +185,32 @@ const allergyWarnings = computed(() =>
     desc: i.allergyDesc || '宝宝之前有过敏反应，请谨慎添加'
   }))
 )
+
+const showSubjectSelectorBtn = computed(() => userStore.babies.length > 1 || !!userStore.mother)
+
+const currentTargetLabel = computed(() => {
+  const baby = userStore.currentBaby
+  if (baby?.id) {
+    return `${baby.gender === 'female' ? '👧' : '👦'} ${baby.name}`
+  }
+  if (userStore.mother) {
+    return '🤱 妈妈'
+  }
+  return '未选择'
+})
+
+const selectedSubjectLabels = computed(() => {
+  return selectedSubjectIds.value.map(id => {
+    if (userStore.mother && id === userStore.mother.id) {
+      return '🤱 妈妈'
+    }
+    const baby = userStore.babies.find(b => b.id === id)
+    if (baby) {
+      return `${baby.gender === 'female' ? '👧' : '👦'} ${baby.name}`
+    }
+    return ''
+  }).filter(Boolean)
+})
 
 onLoad((options) => {
   // 从拍照页带入的食材
@@ -171,7 +239,6 @@ function removeIngredient(idx) {
 }
 
 function showIngredientPicker() {
-  // 简单演示：用 actionSheet 模拟（实际可做成完整的食材选择弹窗）
   const options = ['胡萝卜泥', '南瓜泥', '西兰花泥', '蛋黄', '猪肉泥', '鳕鱼泥', '米糊', '香蕉泥']
   uni.showActionSheet({
     itemList: options,
@@ -192,13 +259,58 @@ function showIngredientPicker() {
   })
 }
 
+function openSubjectSelector() {
+  showSubjectSelector.value = true
+  nextTick(() => {
+    subjectSelectorRef.value?.open()
+  })
+}
+
+function onSubjectSelectorConfirm(ids) {
+  selectedSubjectIds.value = ids
+  useMultipleSubjects.value = true
+  showSubjectSelector.value = false
+}
+
 async function saveMeal() {
   if (form.value.ingredients.length === 0) {
     uni.showToast({ title: '先添加食材吧~', icon: 'none' })
     return
   }
 
-  const baby = useUserStore().currentBaby
+  if (useMultipleSubjects.value && selectedSubjectIds.value.length > 0) {
+    saving.value = true
+    try {
+      const pending = uni.getStorageSync('pendingMeal') || {}
+      const subjects = selectedSubjectIds.value.map(id => {
+        if (userStore.mother && id === userStore.mother.id) {
+          return { subjectType: 'MOTHER', subjectId: null }
+        }
+        return { subjectType: 'BABY', subjectId: id }
+      })
+
+      const payload = {
+        subjects,
+        ingredients: form.value.ingredients.map(i => ({ name: i.name, grams: i.amount || 30 })),
+        photoKey: pending.photoKey || null,
+        recognitionId: pending.recognitionId || null,
+        note: form.value.note || ''
+      }
+
+      await recordMultiple(payload)
+      uni.showToast({ title: '保存成功', icon: 'success' })
+      setTimeout(() => {
+        uni.navigateBack()
+      }, 1200)
+    } catch (e) {
+      uni.showToast({ title: e.message || '保存时遇到了点小问题~', icon: 'none' })
+    } finally {
+      saving.value = false
+    }
+    return
+  }
+
+  const baby = userStore.currentBaby
   if (!baby?.id) {
     uni.showToast({ title: '请先完善宝宝档案~', icon: 'none' })
     return
@@ -228,11 +340,10 @@ async function saveMeal() {
 }
 
 function buildScoreResult(res) {
-  // 后端直接返回 aiScore / aiFeedback / improvements / allergyWarning
   if (!res.aiScore) return null
   return {
     score: res.aiScore,
-    nutrients: [],  // 后端目前未返回分项，aiFeedback 已包含全文
+    nutrients: [],
     suggestion: res.aiFeedback || ''
   }
 }
@@ -400,7 +511,50 @@ function getScoreGrade(score) {
   border-radius: 16rpx;
   padding: 24rpx 28rpx;
   box-shadow: 0 4rpx 12rpx rgba(0,0,0,0.05);
+  margin-bottom: 24rpx;
+}
+
+.subject-select-area {
+  background: #FFFFFF;
+  border-radius: 16rpx;
+  padding: 24rpx 28rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0,0,0,0.05);
   margin-bottom: 32rpx;
+}
+
+.subject-select-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16rpx;
+}
+
+.subject-select-title {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #3D3935;
+}
+
+.subject-select-more {
+  font-size: 24rpx;
+  color: #F5A85B;
+}
+
+.subject-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+}
+
+.subject-tag {
+  border-radius: 24rpx;
+  padding: 8rpx 24rpx;
+  font-size: 24rpx;
+
+  &.active {
+    background: #F5A85B;
+    color: #FFFFFF;
+  }
 }
 
 .note-input {
@@ -412,7 +566,6 @@ function getScoreGrade(score) {
 
 .input-placeholder { color: #C8C8C8; }
 
-/* 评分结果 */
 .score-result {
   background: #FFFFFF;
   border-radius: 16rpx;
