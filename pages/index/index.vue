@@ -10,15 +10,12 @@
           <view class="subject-detail">
             <view class="subject-name-row">
               <text class="subject-name">{{ subjectName }}</text>
+              <text class="name-arrow">▾</text>
               <view class="edit-btn" @tap.stop="goEditProfile">
                 <text>✏️</text>
               </view>
             </view>
             <text class="subject-sub">{{ subjectSubtitle }}</text>
-          </view>
-          <view class="switch-btn">
-            <text class="switch-text">切换</text>
-            <text class="switch-arrow">⌄</text>
           </view>
         </view>
       </view>
@@ -540,6 +537,9 @@ const motherNutritionTips = computed(() => {
   display: flex;
   align-items: center;
   flex: 1;
+  &:active {
+    opacity: 0.85;
+  }
 }
 
 .subject-avatar {
@@ -571,6 +571,13 @@ const motherNutritionTips = computed(() => {
   color: #FFFFFF;
 }
 
+.name-arrow {
+  font-size: 24rpx;
+  color: rgba(255, 255, 255, 0.7);
+  margin-left: 8rpx;
+  margin-right: 16rpx;
+}
+
 .subject-sub {
   display: block;
   font-size: 24rpx;
@@ -590,18 +597,6 @@ const motherNutritionTips = computed(() => {
     background: rgba(255,255,255,0.3);
   }
 }
-
-.switch-btn {
-  display: flex;
-  align-items: center;
-  background: rgba(255,255,255,0.2);
-  border-radius: 24rpx;
-  padding: 8rpx 18rpx;
-  margin-right: 16rpx;
-}
-
-.switch-text { font-size: 24rpx; color: #FFFFFF; }
-.switch-arrow { font-size: 28rpx; color: #FFFFFF; margin-left: 4rpx; }
 
 .baby-avatar {
   border: 3rpx solid rgba(255,255,255,0.6);
