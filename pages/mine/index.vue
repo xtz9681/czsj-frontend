@@ -46,7 +46,7 @@
           <view class="feature-icon">⚠️</view>
           <view class="feature-content">
             <text class="feature-title">过敏管理</text>
-            <text class="feature-desc">{{ allergyCount }} 项过敏记录</text>
+            <text class="feature-desc">{{ allergyCount > 0 ? allergyCount + ' 项过敏记录' : '暂无记录' }}</text>
           </view>
           <text class="feature-arrow">›</text>
         </view>
@@ -109,7 +109,7 @@ const motherPhaseText = computed(() => {
 
 const allergyCount = computed(() => {
   const allergyList = uni.getStorageSync('allergyList') || []
-  return allergyList.length > 0 ? `${allergyList.length} 项` : '无'
+  return allergyList.length
 })
 
 // ── 页面初始化 ──────────────────────────────
@@ -169,7 +169,7 @@ initUserMode()
 .mine-page {
   min-height: 100vh;
   background: #FAF7F2;
-  padding: 0 40rpx 100rpx;
+  padding: 0 40rpx 200rpx;
 }
 
 /* 用户信息卡片 */
@@ -217,7 +217,7 @@ initUserMode()
 
 /* 功能列表 */
 .features-section {
-  margin: 40rpx 0;
+  margin: 40rpx 0 0;
 }
 
 .section-title {
@@ -293,10 +293,7 @@ initUserMode()
 
 /* 底部操作区 */
 .bottom-actions {
-  position: fixed;
-  bottom: 20rpx;
-  left: 40rpx;
-  right: 40rpx;
+  margin-top: 80rpx;
 }
 
 .logout-btn {
