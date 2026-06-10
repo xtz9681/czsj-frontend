@@ -44,14 +44,26 @@
   ├── pages/                # 页面
   │   ├── index/            # 首页
   │   ├── login/            # 微信登录
+  │   ├── profile/          # 宝宝档案
+  │   ├── setup/            # 初始设置引导
+  │   ├── mother-profile/   # 妈妈档案
+  │   ├── mine/             # 我的
   │   ├── meal-record/      # 记一餐（主路径）
   │   ├── camera/           # 拍照识食材
   │   ├── meal-list/        # 历史记录
   │   ├── allergy/          # 过敏管理
   │   ├── plan/             # AI 周计划
-  │   └── profile/          # 宝宝档案
+  │   ├── growth-record/    # 宝宝生长记录
+  │   └── weight-record/    # 妈妈体重记录
   ├── components/           # 公共组件
   ├── api/                  # 后端 API 封装
+  │   ├── request.js        # 基础请求封装
+  │   ├── auth.js           # wxLogin、getUserInfo
+  │   ├── baby.js           # getBabyList、createBaby、updateBaby、deleteBaby、getGrowthRecords、addGrowthRecord
+  │   ├── meal.js           # quickRecord、checkMultiRecordWarning、recordMultiple、getMealList、getIngredientsByAge、getDailySummary、getWeekSummary、deleteMeal、updateMeal、getFrequentIngredients
+  │   ├── ai.js             # photoRecord、getWeeklyPlan、getLatestPlan
+  │   ├── allergy.js        # getAllergyList、addAllergy、removeAllergy
+  │   └── mother.js         # getMother、createMother、updateMother、getWeightRecords、addWeightRecord
   ├── store/                # Pinia 状态
   ├── utils/                # 工具函数
   ├── static/               # 图片字体等
@@ -59,6 +71,15 @@
   ├── main.js
   ├── manifest.json
   └── pages.json
+
+  ## TabBar 结构
+
+  - 首页 → `pages/index/index`
+  - 记录 → `pages/meal-list/index`
+  - 计划 → `pages/plan/index`
+  - 我的 → `pages/mine/index`
+
+  **注**：过敏管理从 TabBar 降为「我的」页面的子入口
 
   ## 关键产品决策
 
@@ -84,3 +105,15 @@
   - ❌ 不要弹「错误」「失败」类负面提示，用温和措辞
   - ❌ 不要添加 TypeScript（除非明确要求）
   - ❌ 不要写过度复杂的状态管理（Stage 1 简单 ref 够用）
+
+  ## 已实现的关键功能
+
+  1. **多主体支持**：`SubjectSelector` 组件，支持宝宝+妈妈档案切换
+  2. **首页营养概览**：调用 daily-summary 接口展示餐次/均分/食材/覆盖率四个指标
+  3. **食材库**：从后端接口加载，支持搜索+分类+自定义输入
+  4. **常用食材**：食材选择弹窗顶部展示最近 14 天高频食材
+  5. **餐食编辑/删除**：meal-list 页支持删除，meal-record 页支持编辑
+  6. **生长记录**：记录宝宝身高体重，查看历史
+  7. **体重记录**：记录妈妈体重（支持孕周/产后天数），查看历史
+  8. **Loading 状态**：所有异步加载页面均有 loading 提示，区分"加载中"和"确实为空"
+  9. **返回确认**：meal-record 页有 onBackPress 防误触
