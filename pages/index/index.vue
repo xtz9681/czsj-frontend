@@ -21,10 +21,6 @@
             <text class="switch-arrow">⌄</text>
           </view>
         </view>
-        <view class="allergy-btn" @tap="goAllergy">
-          <text class="allergy-btn-icon">⚠️</text>
-          <text class="allergy-btn-text">过敏</text>
-        </view>
       </view>
 
       <!-- 今日营养概览 -->
@@ -379,7 +375,6 @@ function babyAgeText(baby) {
   return rem > 0 ? `${y} 岁 ${rem} 个月` : `${y} 岁`
 }
 
-function goAllergy() { uni.navigateTo({ url: '/pages/allergy/index' }) }
 function goCamera() { uni.navigateTo({ url: '/pages/camera/index' }) }
 function goMealRecord() { uni.navigateTo({ url: '/pages/meal-record/index' }) }
 function goMealList() { uni.switchTab({ url: '/pages/meal-list/index' }) }
@@ -602,17 +597,6 @@ const motherNutritionTips = computed(() => {
   margin-left: 12rpx;
 }
 
-.allergy-btn {
-  background: rgba(255,255,255,0.25);
-  border-radius: 32rpx;
-  padding: 12rpx 24rpx;
-  display: flex;
-  align-items: center;
-  gap: 8rpx;
-}
-
-.allergy-btn-icon { font-size: 28rpx; }
-.allergy-btn-text { font-size: 26rpx; color: #FFFFFF; font-weight: 600; }
 
 /* 今日营养概览 */
 .today-summary {
