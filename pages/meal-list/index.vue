@@ -107,7 +107,7 @@
 import { ref, computed } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
 import { useUserStore } from '@/store/user.js'
-import { getMealList, getWeekSummary } from '@/api/meal.js'
+import { getMealList, getWeekSummary, deleteMeal } from '@/api/meal.js'
 
 const activeFilter = ref('week')
 const filterOptions = [
@@ -244,20 +244,31 @@ function goCamera() {
 
 function showMealMenu(meal) {
   uni.showActionSheet({
-    itemList: ['编辑', '删除这餐'],
-    success(res) {
-      if (res.tapIndex === 1) {
-        uni.showModal({
-          title: '确认删除',
-          content: '删除后不可恢复哦~',
-          confirmText: '删除',
-          confirmColor: '#E07A5F',
-          success(r) {
-            if (r.confirm) {
-              allMeals.value = allMeals.value.filter(m => m.id !== meal.id)
-            }
-          }
-        })
+    itemList: ['删除此记录'],
+    success: (res) => {
+      if (res.tapIndex === 0) {
+        confirmDeleteMeal(meal)
+      }
+    }
+  })
+}
+
+function confirmDeleteMeal(meal) {
+  uni.showModal({
+    title: '确认删除',
+    content: '删除后无法恢复，确定要删除这条记录吗？',
+    confirmText: '删除',
+    confirmColor: '#E07A5F',
+    success: async (res) => {
+      if (res.confirm) {
+        try {
+          await deleteMeal(meal.id)
+          uni.showToast({ title: '已删除', icon: 'success' })
+          loadMeals()
+          loadWeekSummary()
+        } catch (e) {
+          uni.showToast({ title: '删除失败，请重试', icon: 'none' })
+        }
       }
     }
   })
@@ -407,7 +418,7 @@ function getDateStr(offset) {
   &.score-low { background: #FDEEE9; color: #E07A5F; }
 }
 
-.mc-menu { font-size: 32rpx; color: #C8C8C8; padding: 0 8rpx; }
+.mc-menu { font-size: 32rpx; color: #999; padding: 8rpx 16rpx; letter-spacing: 4rpx; }
 
 .mc-ingredients {
   display: flex;

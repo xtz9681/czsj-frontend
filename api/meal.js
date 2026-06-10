@@ -35,3 +35,14 @@ export function getWeekSummary(subjectId, subjectType) {
   return request({ url: '/meal/week-summary', data: { subjectId, subjectType } })
 }
 
+// 删除餐食记录
+export function deleteMeal(mealId) {
+  return request({ url: '/meal/' + mealId, method: 'DELETE' })
+}
+
+// 编辑餐食记录
+export function updateMeal(mealId, data) {
+  return request({ url: '/meal/' + mealId, method: 'PUT', data })
+}
+
+
