@@ -45,4 +45,10 @@ export function updateMeal(mealId, data) {
   return request({ url: '/meal/' + mealId, method: 'PUT', data })
 }
 
+// 常吃食材统计
+export function getFrequentIngredients(subjectId, subjectType) {
+  return request({ url: '/meal/frequent-ingredients', data: { subjectId, subjectType, days: 14 } })
+}
+
+
 

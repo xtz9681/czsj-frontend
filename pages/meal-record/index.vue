@@ -161,6 +161,23 @@
           />
         </view>
 
+        <!-- 最近常用 -->
+        <view v-if="frequentIngredients.length > 0" class="frequent-section">
+          <text class="frequent-title">最近常用</text>
+          <scroll-view scroll-x class="frequent-scroll">
+            <view class="frequent-list">
+              <view
+                v-for="item in frequentIngredients"
+                :key="item.name"
+                class="frequent-chip"
+                @tap="selectIngredient(item)"
+              >
+                <text>{{ item.name }}</text>
+              </view>
+            </view>
+          </scroll-view>
+        </view>
+
         <!-- 分类 tab -->
         <scroll-view scroll-x class="category-tabs">
           <view class="category-tab-list">
@@ -206,7 +223,7 @@
 import { ref, computed, nextTick } from 'vue'
 import { onLoad, onBackPress } from '@dcloudio/uni-app'
 import SubjectSelector from '@/components/SubjectSelector.vue'
-import { quickRecord, recordMultiple, getIngredientsByAge } from '@/api/meal.js'
+import { quickRecord, recordMultiple, getIngredientsByAge, getFrequentIngredients } from '@/api/meal.js'
 import { useUserStore } from '@/store/user.js'
 
 const userStore = useUserStore()
@@ -223,6 +240,7 @@ const showIngredientSheet = ref(false)
 const ingredientSearch = ref('')
 const selectedCategory = ref('全部')
 const allIngredients = ref([])
+const frequentIngredients = ref([])
 const customIngredientName = ref('')
 
 const form = ref({
@@ -349,6 +367,26 @@ async function showIngredientPicker() {
       uni.showToast({ title: '加载食材库失败', icon: 'none' })
     }
   }
+  // 加载常用食材
+  loadFrequentIngredients()
+}
+
+async function loadFrequentIngredients() {
+  const userStore = useUserStore()
+  const baby = userStore.currentBaby
+  const mother = userStore.mother
+
+  if (!baby?.id && !mother?.id) return
+
+  try {
+    const subject = baby ? { subjectId: baby.id, subjectType: 'BABY' } : { subjectId: mother.id, subjectType: 'MOTHER' }
+    const list = await getFrequentIngredients(subject.subjectId, subject.subjectType)
+    // 过滤掉已经在 form.ingredients 中的食材
+    const selectedNames = form.value.ingredients.map(i => i.name)
+    frequentIngredients.value = (list || []).filter(item => !selectedNames.includes(item.name))
+  } catch (e) {
+    // 静默处理
+  }
 }
 
 function selectIngredient(item) {
@@ -366,6 +404,8 @@ function selectIngredient(item) {
     isAllergy: item.allergyRisk === 'high'
   })
   scoreResult.value = null
+  // 从常用列表中移除
+  frequentIngredients.value = frequentIngredients.value.filter(i => i.name !== item.name)
   showIngredientSheet.value = false
   ingredientSearch.value = ''
 }
@@ -906,4 +946,37 @@ function getScoreGrade(score) {
   padding: 16rpx 24rpx calc(40rpx + env(safe-area-inset-bottom));
 }
 
+/* 最近常用 */
+.frequent-section {
+  padding: 16rpx 24rpx;
+}
+
+.frequent-title {
+  display: block;
+  font-size: 26rpx;
+  color: #999;
+  margin-bottom: 12rpx;
+}
+
+.frequent-scroll {
+  white-space: nowrap;
+}
+
+.frequent-list {
+  display: flex;
+  gap: 12rpx;
+}
+
+.frequent-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #FFF5E6;
+  color: #F5A85B;
+  border-radius: 20rpx;
+  padding: 8rpx 20rpx;
+  font-size: 24rpx;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
 </style>
