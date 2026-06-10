@@ -67,7 +67,7 @@
       <view class="record-list">
         <view v-for="record in records" :key="record.id" class="record-card card">
           <view class="record-header">
-            <text class="record-date">{{ formatDate(record.date) }}</text>
+            <text class="record-date">{{ formatDate(record.recordDate) }}</text>
             <view class="record-actions">
               <text class="delete-btn" @tap="deleteRecord(record.id)">删除</text>
             </view>
@@ -75,15 +75,15 @@
           <view class="record-data">
             <view class="data-item">
               <text class="data-label">身高</text>
-              <text class="data-value">{{ record.height }} cm</text>
+              <text class="data-value">{{ record.heightCm }} cm</text>
             </view>
             <view class="data-item">
               <text class="data-label">体重</text>
-              <text class="data-value">{{ record.weight }} g</text>
+              <text class="data-value">{{ record.weightG }} g</text>
             </view>
           </view>
-          <view v-if="record.note" class="record-note">
-            <text>{{ record.note }}</text>
+          <view v-if="record.notes" class="record-note">
+            <text>{{ record.notes }}</text>
           </view>
         </view>
       </view>
@@ -141,7 +141,7 @@ async function loadRecords() {
   if (!babyId.value) return
   try {
     const list = await getGrowthRecords(babyId.value)
-    records.value = (list || []).sort((a, b) => new Date(b.date) - new Date(a.date))
+    records.value = (list || []).sort((a, b) => new Date(b.recordDate) - new Date(a.recordDate))
   } catch (e) {
     uni.showToast({ title: '加载记录失败', icon: 'none' })
   }
@@ -156,10 +156,10 @@ async function submitRecord() {
   saving.value = true
   try {
     await addGrowthRecord(babyId.value, {
-      date: formData.value.date,
-      height: parseInt(formData.value.height),
-      weight: parseInt(formData.value.weight),
-      note: formData.value.note
+      recordDate: formData.value.date,
+      heightCm: parseFloat(formData.value.height),
+      weightG: parseInt(formData.value.weight),
+      notes: formData.value.note
     })
     uni.showToast({ title: '记录已保存', icon: 'success' })
     formData.value = {

@@ -79,7 +79,7 @@
       <view class="record-list">
         <view v-for="record in records" :key="record.id" class="record-card card">
           <view class="record-header">
-            <text class="record-date">{{ formatDate(record.date) }}</text>
+            <text class="record-date">{{ formatDate(record.recordDate) }}</text>
             <view class="record-actions">
               <text class="delete-btn" @tap="deleteRecord(record.id)">删除</text>
             </view>
@@ -87,19 +87,19 @@
           <view class="record-data">
             <view class="data-item">
               <text class="data-label">体重</text>
-              <text class="data-value">{{ record.weight }} kg</text>
+              <text class="data-value">{{ record.weightKg }} kg</text>
             </view>
             <view v-if="record.weekOfPregnancy" class="data-item">
               <text class="data-label">孕周</text>
               <text class="data-value">{{ record.weekOfPregnancy }} 周</text>
             </view>
-            <view v-if="record.daysPostpartum" class="data-item">
+            <view v-if="record.postpartumDays" class="data-item">
               <text class="data-label">产后</text>
-              <text class="data-value">{{ record.daysPostpartum }} 天</text>
+              <text class="data-value">{{ record.postpartumDays }} 天</text>
             </view>
           </view>
-          <view v-if="record.note" class="record-note">
-            <text>{{ record.note }}</text>
+          <view v-if="record.notes" class="record-note">
+            <text>{{ record.notes }}</text>
           </view>
         </view>
       </view>
@@ -164,7 +164,7 @@ onShow(() => {
 async function loadRecords() {
   try {
     const list = await getWeightRecords()
-    records.value = (list || []).sort((a, b) => new Date(b.date) - new Date(a.date))
+    records.value = (list || []).sort((a, b) => new Date(b.recordDate) - new Date(a.recordDate))
   } catch (e) {
     uni.showToast({ title: '加载记录失败', icon: 'none' })
   }
@@ -177,9 +177,9 @@ async function submitRecord() {
   }
 
   const data = {
-    date: formData.value.date,
-    weight: parseFloat(formData.value.weight),
-    note: formData.value.note
+    recordDate: formData.value.date,
+    weightKg: parseFloat(formData.value.weight),
+    notes: formData.value.note
   }
 
   if (isPregnancy.value && formData.value.weekOfPregnancy) {
@@ -187,7 +187,7 @@ async function submitRecord() {
   }
 
   if (isLactation.value && formData.value.daysPostpartum) {
-    data.daysPostpartum = parseInt(formData.value.daysPostpartum)
+    data.postpartumDays = parseInt(formData.value.daysPostpartum)
   }
 
   saving.value = true
