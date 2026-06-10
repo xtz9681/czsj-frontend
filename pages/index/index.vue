@@ -492,6 +492,7 @@ const motherNutritionTips = computed(() => {
   align-items: center;
   justify-content: space-between;
   margin-bottom: 32rpx;
+  padding-right: 160rpx;
 }
 
 /* 主体信息（替代原 baby-info） */
