@@ -149,7 +149,7 @@
 
 <script setup>
 import { ref, computed, nextTick } from 'vue'
-import { onLoad } from '@dcloudio/uni-app'
+import { onLoad, onBackPress } from '@dcloudio/uni-app'
 import SubjectSelector from '@/components/SubjectSelector.vue'
 import { quickRecord, recordMultiple } from '@/api/meal.js'
 import { useUserStore } from '@/store/user.js'
@@ -226,6 +226,28 @@ onLoad((options) => {
   if (options?.ingredient) {
     // 从首页食材快捷入口进入，暂不自动填充（食材库接口需要 babyId）
   }
+})
+
+onBackPress(() => {
+  // 判断用户是否已填写了内容
+  const hasContent = form.value.ingredients.length > 0 || form.value.note || form.value.photo
+
+  if (hasContent && !scoreResult.value) {
+    uni.showModal({
+      title: '提示',
+      content: '当前记录尚未保存，确定要离开吗？',
+      confirmText: '离开',
+      cancelText: '继续填写',
+      confirmColor: '#E07A5F',
+      success: (res) => {
+        if (res.confirm) {
+          uni.navigateBack()
+        }
+      }
+    })
+    return true  // 阻止默认返回
+  }
+  return false  // 没填内容或已保存，正常返回
 })
 
 function changeAmount(idx, delta) {
