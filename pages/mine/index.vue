@@ -52,13 +52,23 @@
         </view>
 
         <!-- 生长记录 -->
-        <view class="feature-item card disabled">
+        <view v-if="currentBaby?.id" class="feature-item card" @tap="goToGrowthRecord">
           <view class="feature-icon">📊</view>
           <view class="feature-content">
             <text class="feature-title">生长记录</text>
-            <text class="feature-desc">即将开放</text>
+            <text class="feature-desc">记录宝宝成长数据</text>
           </view>
-          <text class="feature-tag">Coming Soon</text>
+          <text class="feature-arrow">›</text>
+        </view>
+
+        <!-- 体重管理 -->
+        <view v-if="mother" class="feature-item card" @tap="goToWeightRecord">
+          <view class="feature-icon">🏋️</view>
+          <view class="feature-content">
+            <text class="feature-title">体重管理</text>
+            <text class="feature-desc">记录妈妈体重</text>
+          </view>
+          <text class="feature-arrow">›</text>
         </view>
       </view>
     </view>
@@ -142,6 +152,22 @@ function goToMotherProfile() {
 function goToAllergy() {
   uni.navigateTo({
     url: '/pages/allergy/index'
+  })
+}
+
+function goToGrowthRecord() {
+  if (currentBaby.value?.id) {
+    uni.navigateTo({
+      url: `/pages/growth-record/index?babyId=${currentBaby.value.id}`
+    })
+  } else {
+    uni.showToast({ title: '请先添加宝宝档案', icon: 'none' })
+  }
+}
+
+function goToWeightRecord() {
+  uni.navigateTo({
+    url: '/pages/weight-record/index'
   })
 }
 

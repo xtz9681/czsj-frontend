@@ -15,3 +15,14 @@ export function updateBaby(id, data) {
 export function deleteBaby(id) {
   return request({ url: `/baby/${id}`, method: 'DELETE' })
 }
+
+// 查询宝宝生长记录
+export function getGrowthRecords(babyId) {
+  return request({ url: '/baby/' + babyId + '/growth-records' })
+}
+
+// 新增宝宝生长记录
+export function addGrowthRecord(babyId, data) {
+  return request({ url: '/baby/' + babyId + '/growth-records', method: 'POST', data })
+}
+
