@@ -32,11 +32,13 @@
         <view class="nutrition-row">
           <view class="nutrition-item" v-for="n in nutritionStats" :key="n.key">
             <text class="nutrition-icon">{{ n.icon }}</text>
-            <text class="nutrition-label">{{ n.label }}</text>
-            <view class="nutrition-bar">
-              <view class="nutrition-fill" :style="{ width: n.pct + '%', background: n.color }"></view>
+            <view class="nutrition-data">
+              <view class="nutrition-num-row">
+                <text class="nutrition-num" :style="{ color: n.color }">{{ n.value }}</text>
+                <text class="nutrition-unit">{{ n.unit }}</text>
+              </view>
+              <text class="nutrition-label">{{ n.label }}</text>
             </view>
-            <text class="nutrition-val">{{ n.pct }}%</text>
           </view>
         </view>
       </view>
@@ -202,7 +204,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
-import { getMealList, getIngredientsByAge } from '@/api/meal.js'
+import { getMealList, getIngredientsByAge, getDailySummary } from '@/api/meal.js'
 import { useUserStore } from '@/store/user.js'
 
 const userStore = useUserStore()
@@ -233,10 +235,10 @@ const todayMeals = ref([])
 const recommendIngredients = ref([])
 
 const nutritionStats = ref([
-  { key: 'carb', icon: '🌾', label: '碳水', pct: 0, color: '#F5A85B' },
-  { key: 'protein', icon: '🥩', label: '蛋白', pct: 0, color: '#A3D9B1' },
-  { key: 'fat', icon: '🧈', label: '脂肪', pct: 0, color: '#FF8FA3' },
-  { key: 'vitamin', icon: '🥦', label: '维生素', pct: 0, color: '#A8D8EA' },
+  { key: 'meals', icon: '🍽️', label: '餐次', value: '-', unit: '餐', color: '#F5A85B' },
+  { key: 'score', icon: '⭐', label: '均分', value: '-', unit: '分', color: '#A3D9B1' },
+  { key: 'ingredients', icon: '🥗', label: '食材', value: '-', unit: '种', color: '#FF8FA3' },
+  { key: 'coverage', icon: '🎯', label: '营养覆盖', value: '-', unit: '%', color: '#A8D8EA' },
 ])
 
 // ── 计算属性 ──────────────────────────────────
@@ -301,6 +303,28 @@ async function loadTodayMeals() {
   }
 }
 
+async function loadDailySummary() {
+  try {
+    let subjectId, subjectType
+    if (subjectMode.value === 'baby' && currentBaby.value?.id) {
+      subjectId = currentBaby.value.id
+      subjectType = 'BABY'
+    } else if (subjectMode.value === 'mother') {
+      subjectId = userStore.userId
+      subjectType = 'MOTHER'
+    } else {
+      return
+    }
+    const res = await getDailySummary(subjectId, subjectType)
+    nutritionStats.value[0].value = res.mealCount || 0
+    nutritionStats.value[1].value = res.avgScore != null ? res.avgScore : '-'
+    nutritionStats.value[2].value = res.ingredientCount || 0
+    nutritionStats.value[3].value = res.nutritionCoverage || 0
+  } catch (e) {
+    // 静默处理，保持 '-' 显示
+  }
+}
+
 async function loadRecommendIngredients() {
   if (subjectMode.value !== 'baby' || !currentBaby.value?.id) return
   try {
@@ -344,6 +368,7 @@ onShow(() => {
   recommendIngredients.value = []
   loadTodayMeals()
   loadRecommendIngredients()
+  loadDailySummary()
 })
 
 // ── 切换器 ────────────────────────────────────
@@ -355,6 +380,7 @@ function switchToBaby(baby) {
   recommendIngredients.value = []
   loadTodayMeals()
   loadRecommendIngredients()
+  loadDailySummary()
 }
 
 function switchToMother() {
@@ -362,6 +388,7 @@ function switchToMother() {
   showSwitcher.value = false
   todayMeals.value = []
   recommendIngredients.value = []
+  loadDailySummary()
 }
 
 function addBaby() {
@@ -640,23 +667,33 @@ const motherNutritionTips = computed(() => {
 }
 
 .nutrition-icon { font-size: 28rpx; }
-.nutrition-label { font-size: 24rpx; color: rgba(255,255,255,0.9); width: 80rpx; }
 
-.nutrition-bar {
-  flex: 1;
-  height: 10rpx;
-  background: rgba(255,255,255,0.25);
-  border-radius: 8rpx;
-  overflow: hidden;
+.nutrition-data {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
-.nutrition-fill {
-  height: 100%;
-  border-radius: 8rpx;
-  transition: width 0.5s ease;
+.nutrition-num-row {
+  display: flex;
+  align-items: baseline;
+  gap: 4rpx;
 }
 
-.nutrition-val { font-size: 22rpx; color: rgba(255,255,255,0.8); width: 60rpx; text-align: right; }
+.nutrition-num {
+  font-size: 44rpx;
+  font-weight: 700;
+}
+
+.nutrition-unit {
+  font-size: 20rpx;
+  color: #999;
+}
+
+.nutrition-label {
+  font-size: 24rpx;
+  color: rgba(255,255,255,0.9);
+}
 
 /* 快速操作 */
 .quick-actions {

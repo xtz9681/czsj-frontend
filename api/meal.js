@@ -24,3 +24,14 @@ export function getMealList(babyId, page = 0, size = 20) {
 export function getIngredientsByAge(babyId) {
   return request({ url: '/meal/ingredients/by-age', data: { babyId } })
 }
+
+// 今日营养统计
+export function getDailySummary(subjectId, subjectType) {
+  return request({ url: '/meal/daily-summary', data: { subjectId, subjectType } })
+}
+
+// 周营养统计
+export function getWeekSummary(subjectId, subjectType) {
+  return request({ url: '/meal/week-summary', data: { subjectId, subjectType } })
+}
+

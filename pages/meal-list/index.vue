@@ -107,7 +107,7 @@
 import { ref, computed } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
 import { useUserStore } from '@/store/user.js'
-import { getMealList } from '@/api/meal.js'
+import { getMealList, getWeekSummary } from '@/api/meal.js'
 
 const activeFilter = ref('week')
 const filterOptions = [
@@ -118,13 +118,7 @@ const filterOptions = [
 
 const allMeals = ref([])
 
-const weekNutrition = ref([
-  { key: 'carb', icon: '🌾', name: '碳水', days: 0, ok: false },
-  { key: 'protein', icon: '🥩', name: '蛋白', days: 0, ok: false },
-  { key: 'iron', icon: '🩸', name: '铁', days: 0, ok: false },
-  { key: 'vitA', icon: '🥕', name: '维A', days: 0, ok: false },
-  { key: 'vitC', icon: '🥦', name: '维C', days: 0, ok: false },
-])
+const weekNutrition = ref([])
 
 async function loadMeals() {
   const baby = useUserStore().currentBaby
@@ -146,7 +140,37 @@ async function loadMeals() {
   }
 }
 
-onShow(() => { loadMeals() })
+async function loadWeekSummary() {
+  const userStore = useUserStore()
+  const baby = userStore.currentBaby
+  if (!baby?.id) return
+  try {
+    const res = await getWeekSummary(baby.id, 'BABY')
+    weekNutrition.value = (res.nutritionItems || []).map(item => ({
+      key: item.name,
+      icon: getNutritionIcon(item.name),
+      name: item.name,
+      days: item.days,
+      ok: item.ok
+    }))
+  } catch (e) {
+    // 静默
+  }
+}
+
+function getNutritionIcon(name) {
+  const iconMap = {
+    '蛋白质': '🥩', '铁': '🔴', '钙': '🦴', '锌': '💊',
+    '维生素A': '🥕', '维生素C': '🍊', '维生素D': '☀️', 'DHA': '🐟',
+    '碳水化合物': '🌾', '膳食纤维': '🥦', '叶酸': '💚', '碘': '🧂'
+  }
+  return iconMap[name] || '🔘'
+}
+
+onShow(() => {
+  loadMeals()
+  loadWeekSummary()
+})
 
 const filteredMeals = computed(() => {
   const today = getTodayStr()
