@@ -36,16 +36,21 @@
             {{ planReady ? '✓ 计划已生成' : '⏳ 生成中...' }}
           </text>
         </view>
-        <view class="regenerate-btn" @tap="generatePlan">重新生成</view>
+        <view class="regenerate-btn" :class="{ disabled: planLoading }" @tap="!planLoading && generatePlan">{{ planLoading ? '生成中...' : '重新生成' }}</view>
       </view>
 
       <view class="plan-days" style="padding: 0 40rpx;">
-        <view
-          class="plan-day-card card"
-          v-for="day in weekPlan"
-          :key="day.date"
-          :class="{ today: day.isToday }"
-        >
+        <view v-if="planLoading" class="loading-state">
+          <text class="loading-icon">⏳</text>
+          <text class="loading-text">AI 正在准备中...</text>
+        </view>
+        <template v-else>
+          <view
+            class="plan-day-card card"
+            v-for="day in weekPlan"
+            :key="day.date"
+            :class="{ today: day.isToday }"
+          >
           <view class="pdc-header">
             <view class="pdc-date-badge" :class="{ today: day.isToday }">
               <text>{{ day.dayLabel }}</text>
@@ -71,6 +76,7 @@
             <view class="pdc-record-btn" @tap="recordDay(day)">记这天</view>
           </view>
         </view>
+        </template>
       </view>
     </view>
 
@@ -162,6 +168,7 @@ const isPremium = ref(true)  // dev-mode: 测试期间默认全部放行，上�
 const showPay = ref(false)
 const selectedPlan = ref('year')
 const planReady = ref(false)
+const planLoading = ref(false)
 
 const benefits = [
   '无限次 AI 拍照识食材',
@@ -224,6 +231,7 @@ function parsePlanJson(raw) {
 async function loadLatestPlan() {
   const baby = useUserStore().currentBaby
   if (!baby?.id) return
+  planLoading.value = true
   try {
     const res = await getLatestPlan(baby.id)
     if (res?.planJson) {
@@ -232,6 +240,8 @@ async function loadLatestPlan() {
     }
   } catch (e) {
     // 暂无计划，保持空
+  } finally {
+    planLoading.value = false
   }
 }
 
@@ -249,8 +259,10 @@ function confirmPay() {
 }
 
 async function generatePlan() {
+  if (planLoading.value) return
   const baby = useUserStore().currentBaby
   if (!baby?.id) { uni.showToast({ title: '请先完善宝宝档案~', icon: 'none' }); return }
+  planLoading.value = true
   planReady.value = false
   try {
     const res = await getWeeklyPlan(baby.id)
@@ -266,6 +278,8 @@ async function generatePlan() {
     } else {
       uni.showToast({ title: e.message || '生成失败，请稍后再试~', icon: 'none' })
     }
+  } finally {
+    planLoading.value = false
   }
 }
 
@@ -397,6 +411,11 @@ onShow(() => { loadLatestPlan() })
   border-radius: 20rpx;
   padding: 10rpx 24rpx;
   font-size: 24rpx;
+
+  &.disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
 }
 
 .plan-days { display: flex; flex-direction: column; gap: 16rpx; }
@@ -580,4 +599,29 @@ onShow(() => { loadLatestPlan() })
 }
 
 .pay-disclaimer { display: block; text-align: center; font-size: 22rpx; color: #C8C8C8; }
+
+/* Loading 状态 */
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 120rpx 0;
+}
+
+.loading-icon {
+  font-size: 60rpx;
+  margin-bottom: 16rpx;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.loading-text {
+  font-size: 26rpx;
+  color: #999;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
 </style>
