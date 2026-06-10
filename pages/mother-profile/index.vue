@@ -1,5 +1,5 @@
 <template>
-  <view class="page-container" style="padding: 0 48rpx 80rpx;">
+  <view class="page-container">
     <view class="header">
       <text class="header-title">{{ isEdit ? '编辑我的档案' : '告诉我更多' }}</text>
     </view>
@@ -441,6 +441,11 @@ async function saveAndGoHome() {
 </script>
 
 <style lang="scss" scoped>
+.page-container {
+  padding: 0 48rpx calc(80rpx + constant(safe-area-inset-bottom));
+  padding: 0 48rpx calc(80rpx + env(safe-area-inset-bottom));
+}
+
 .header {
   padding: 40rpx 0 32rpx;
 }

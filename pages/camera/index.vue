@@ -991,7 +991,8 @@ function goBack() {
   display: flex;
   flex-direction: column;
   gap: 16rpx;
-  padding: 20rpx 0 0 0;
+  padding: 20rpx 0 constant(safe-area-inset-bottom) 0;
+  padding: 20rpx 0 env(safe-area-inset-bottom) 0;
 }
 
 .action-btn {

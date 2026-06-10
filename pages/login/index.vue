@@ -218,7 +218,8 @@ function showPrivacy() {
 
 .btn-area {
   margin-top: auto;
-  padding-bottom: 80rpx;
+  padding-bottom: calc(80rpx + constant(safe-area-inset-bottom));
+  padding-bottom: calc(80rpx + env(safe-area-inset-bottom));
 }
 
 .wx-login-btn {

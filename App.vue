@@ -22,6 +22,8 @@
     background-color: #FAF7F2;
     color: #3D3935;
     font-family: 'PingFang SC', 'OPPO Sans', sans-serif;
+    padding-bottom: constant(safe-area-inset-bottom);
+    padding-bottom: env(safe-area-inset-bottom);
   }
 
   .page-container {

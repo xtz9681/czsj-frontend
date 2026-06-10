@@ -1,5 +1,5 @@
 <template>
-  <view class="page-container" style="padding: 0 40rpx 80rpx;">
+  <view class="page-container">
     <!-- 餐次类型选择 -->
     <view class="meal-type-row">
       <wd-button
@@ -363,6 +363,11 @@ function getScoreGrade(score) {
 </script>
 
 <style lang="scss" scoped>
+.page-container {
+  padding: 0 40rpx calc(80rpx + constant(safe-area-inset-bottom));
+  padding: 0 40rpx calc(80rpx + env(safe-area-inset-bottom));
+}
+
 .meal-type-row {
   display: flex;
   gap: 16rpx;

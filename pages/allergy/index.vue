@@ -1,5 +1,5 @@
 <template>
-  <view class="page-container" style="padding: 0 0 80rpx;">
+  <view class="page-container">
     <!-- 说明卡 -->
     <view class="explain-card card" style="margin: 24rpx 40rpx;">
       <text class="explain-title">⚠️ 过敏管理</text>
@@ -245,6 +245,11 @@ function doRemove(item) {
 </script>
 
 <style lang="scss" scoped>
+.page-container {
+  padding: 0 0 calc(80rpx + constant(safe-area-inset-bottom));
+  padding: 0 0 calc(80rpx + env(safe-area-inset-bottom));
+}
+
 .explain-card {
   padding: 28rpx;
 }

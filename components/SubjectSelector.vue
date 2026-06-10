@@ -283,7 +283,8 @@ defineExpose({
 }
 
 .sheet-footer {
-  padding: 24rpx 40rpx 40rpx;
+  padding: 24rpx 40rpx calc(40rpx + constant(safe-area-inset-bottom));
+  padding: 24rpx 40rpx calc(40rpx + env(safe-area-inset-bottom));
   border-top: 1rpx solid #F0E9DE;
   display: flex;
   gap: 16rpx;

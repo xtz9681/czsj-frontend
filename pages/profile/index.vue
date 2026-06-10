@@ -1,5 +1,5 @@
 <template>
-  <view class="page-container" style="padding: 0 40rpx 60rpx;">
+  <view class="page-container">
     <view class="header-tip">
       <text class="tip-title">{{ isEdit ? '修改宝宝档案' : '先来认识一下小宝贝~' }}</text>
       <text class="tip-sub">{{ isEdit ? '随时可以更新哦' : '填写正确月龄，AI 推荐才准确' }}</text>
@@ -272,6 +272,11 @@ function skipToHome() {
 </script>
 
 <style lang="scss" scoped>
+.page-container {
+  padding: 0 40rpx calc(60rpx + constant(safe-area-inset-bottom));
+  padding: 0 40rpx calc(60rpx + env(safe-area-inset-bottom));
+}
+
 .header-tip {
   padding: 60rpx 0 40rpx;
   text-align: center;
