@@ -103,24 +103,26 @@
       </view>
 
       <view class="section">
-        <view class="section-header">
-          <text class="section-title">本月龄推荐食材</text>
-          <text class="section-sub">{{ ageText }}适合</text>
+        <view class="section-header" @tap="showRecommend = !showRecommend" style="cursor: pointer;">
+          <text class="section-title">推荐食材</text>
+          <text class="section-toggle">{{ showRecommend ? '收起 ⌃' : '展开 ⌄' }}</text>
         </view>
-        <scroll-view scroll-x class="recommend-scroll">
-          <view class="recommend-list">
-            <view
-              class="recommend-card"
-              v-for="item in recommendIngredients"
-              :key="item.id"
-              @tap="addIngredient(item)"
-            >
-              <text class="recommend-emoji">{{ item.emoji }}</text>
-              <text class="recommend-name">{{ item.name }}</text>
-              <text class="recommend-tip">{{ item.tip }}</text>
+        <view v-if="showRecommend">
+          <scroll-view scroll-x class="recommend-scroll">
+            <view class="recommend-list">
+              <view
+                class="recommend-card"
+                v-for="item in recommendIngredients"
+                :key="item.id"
+                @tap="addIngredient(item)"
+              >
+                <text class="recommend-emoji">{{ item.emoji }}</text>
+                <text class="recommend-name">{{ item.name }}</text>
+                <text class="recommend-tip">{{ item.tip }}</text>
+              </view>
             </view>
-          </view>
-        </scroll-view>
+          </scroll-view>
+        </view>
       </view>
     </template>
 
@@ -233,6 +235,7 @@ const mother = computed(() => userStore.mother)
 // ── 首页数据 ──────────────────────────────────
 const todayMeals = ref([])
 const recommendIngredients = ref([])
+const showRecommend = ref(false)
 
 const nutritionStats = ref([
   { key: 'meals', icon: '🍽️', label: '餐次', value: '-', unit: '餐', color: '#F5A85B' },
@@ -751,6 +754,7 @@ const motherNutritionTips = computed(() => {
 .section-title { font-size: 32rpx; font-weight: 700; color: #3D3935; }
 .section-more { font-size: 26rpx; color: #F5A85B; }
 .section-sub { font-size: 24rpx; color: #999; }
+.section-toggle { font-size: 24rpx; color: #999; }
 
 /* 空状态 */
 .empty-meals {
