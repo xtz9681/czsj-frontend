@@ -1,7 +1,7 @@
 <template>
   <view class="home-page">
     <!-- 顶部主体卡片 -->
-    <view class="top-section">
+    <view class="top-section" :style="topSectionStyle">
       <view class="top-bar">
         <view class="subject-info" @tap="showSwitcher = true">
           <view class="subject-avatar">
@@ -206,6 +206,16 @@ import { getMealList, getIngredientsByAge } from '@/api/meal.js'
 import { useUserStore } from '@/store/user.js'
 
 const userStore = useUserStore()
+
+// ── 安全区适配 ──────────────────────────────
+const systemInfo = uni.getSystemInfoSync()
+const menuButton = uni.getMenuButtonBoundingClientRect?.() || null
+const safeTop = menuButton
+  ? (menuButton.bottom + 8) + 'px'
+  : (systemInfo.statusBarHeight + 44) + 'px'
+const topSectionStyle = computed(() => ({
+  paddingTop: safeTop
+}))
 
 // ── 当前主体状态 ──────────────────────────────
 // subjectMode: 'baby' | 'mother'
@@ -483,7 +493,7 @@ const motherNutritionTips = computed(() => {
 /* 顶部渐变区域 */
 .top-section {
   background: linear-gradient(160deg, #F5A85B 0%, #F7BC7A 100%);
-  padding: 100rpx 40rpx 40rpx;
+  padding: 0 40rpx 40rpx;
   border-radius: 0 0 40rpx 40rpx;
 }
 

@@ -1,7 +1,7 @@
 <template>
   <view class="camera-page">
     <!-- 自定义导航栏 -->
-    <view class="nav-bar">
+    <view class="nav-bar" :style="navBarStyle">
       <view class="nav-back" @tap="goBack">‹</view>
       <text class="nav-title">拍照识食材</text>
       <view class="nav-placeholder"></view>
@@ -247,6 +247,16 @@ import { useUserStore } from '@/store/user.js'
 
 const userStore = useUserStore()
 const subjectSelectorRef = ref(null)
+
+// ── 安全区适配 ──────────────────────────────
+const systemInfo = uni.getSystemInfoSync()
+const menuButton = uni.getMenuButtonBoundingClientRect?.() || null
+const safeTop = menuButton
+  ? (menuButton.bottom + 8) + 'px'
+  : (systemInfo.statusBarHeight + 44) + 'px'
+const navBarStyle = computed(() => ({
+  paddingTop: safeTop
+}))
 
 const stage = ref('init') // init | recognizing | high-confidence | low-confidence
 const capturedPhoto = ref('')
@@ -559,7 +569,7 @@ function goBack() {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 88rpx 40rpx 20rpx;
+  padding: 0 40rpx 20rpx;
   background: #FAF7F2;
 }
 
