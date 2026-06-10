@@ -144,6 +144,61 @@
       @confirm="onSubjectSelectorConfirm"
       @cancel="showSubjectSelector = false"
     />
+
+    <!-- 食材选择弹窗 -->
+    <view v-if="showIngredientSheet" class="ingredient-sheet-mask" @tap="showIngredientSheet = false">
+      <view class="ingredient-sheet" @tap.stop>
+        <view class="sheet-handle"></view>
+        <text class="sheet-title">选择食材</text>
+
+        <!-- 搜索框 -->
+        <view class="search-bar">
+          <wd-input
+            v-model="ingredientSearch"
+            placeholder="搜索食材..."
+            clearable
+            prefix-icon="search"
+          />
+        </view>
+
+        <!-- 分类 tab -->
+        <scroll-view scroll-x class="category-tabs">
+          <view class="category-tab-list">
+            <view
+              v-for="cat in ingredientCategories"
+              :key="cat"
+              class="category-tab"
+              :class="{ active: selectedCategory === cat }"
+              @tap="selectedCategory = cat"
+            >{{ cat }}</view>
+          </view>
+        </scroll-view>
+
+        <!-- 食材列表 -->
+        <scroll-view scroll-y class="ingredient-grid" style="max-height: 500rpx;">
+          <view
+            v-for="item in filteredIngredients"
+            :key="item.name"
+            class="ingredient-option"
+            :class="{ 'allergy-option': item.allergyRisk === 'high' }"
+            @tap="selectIngredient(item)"
+          >
+            <text class="option-name">{{ item.name }}</text>
+            <text v-if="item.allergyRisk === 'high'" class="option-allergy">⚠️</text>
+            <text class="option-brief">{{ item.nutritionBrief }}</text>
+          </view>
+          <view v-if="filteredIngredients.length === 0" class="empty-search">
+            <text>没有找到相关食材</text>
+          </view>
+        </scroll-view>
+
+        <!-- 自定义输入 -->
+        <view class="custom-input-row">
+          <wd-input v-model="customIngredientName" placeholder="没找到？手动输入食材名" />
+          <wd-button size="small" type="primary" @click="addCustomIngredient" :disabled="!customIngredientName">添加</wd-button>
+        </view>
+      </view>
+    </view>
   </view>
 </template>
 
@@ -151,7 +206,7 @@
 import { ref, computed, nextTick } from 'vue'
 import { onLoad, onBackPress } from '@dcloudio/uni-app'
 import SubjectSelector from '@/components/SubjectSelector.vue'
-import { quickRecord, recordMultiple } from '@/api/meal.js'
+import { quickRecord, recordMultiple, getIngredientsByAge } from '@/api/meal.js'
 import { useUserStore } from '@/store/user.js'
 
 const userStore = useUserStore()
@@ -162,6 +217,13 @@ const selectedSubjectIds = ref([])
 
 const saving = ref(false)
 const scoreResult = ref(null)
+
+// 食材选择相关
+const showIngredientSheet = ref(false)
+const ingredientSearch = ref('')
+const selectedCategory = ref('全部')
+const allIngredients = ref([])
+const customIngredientName = ref('')
 
 const form = ref({
   mealType: 'breakfast',
@@ -185,6 +247,23 @@ const allergyWarnings = computed(() =>
     desc: i.allergyDesc || '宝宝之前有过敏反应，请谨慎添加'
   }))
 )
+
+const ingredientCategories = computed(() => {
+  const cats = [...new Set(allIngredients.value.map(i => i.category).filter(Boolean))]
+  return ['全部', ...cats]
+})
+
+const filteredIngredients = computed(() => {
+  let list = allIngredients.value
+  if (selectedCategory.value !== '全部') {
+    list = list.filter(i => i.category === selectedCategory.value)
+  }
+  if (ingredientSearch.value) {
+    const keyword = ingredientSearch.value.toLowerCase()
+    list = list.filter(i => i.name.toLowerCase().includes(keyword))
+  }
+  return list
+})
 
 const showSubjectSelectorBtn = computed(() => userStore.babies.length > 1 || !!userStore.mother)
 
@@ -260,25 +339,55 @@ function removeIngredient(idx) {
   scoreResult.value = null
 }
 
-function showIngredientPicker() {
-  const options = ['胡萝卜泥', '南瓜泥', '西兰花泥', '蛋黄', '猪肉泥', '鳕鱼泥', '米糊', '香蕉泥']
-  uni.showActionSheet({
-    itemList: options,
-    success(res) {
-      const name = options[res.tapIndex]
-      if (form.value.ingredients.some(i => i.name === name)) {
-        uni.showToast({ title: '已经添加过了~', icon: 'none' })
-        return
-      }
-      form.value.ingredients.push({
-        id: Date.now(),
-        name,
-        amount: 30,
-        isAllergy: allergyList.some(a => a.name === name)
-      })
-      scoreResult.value = null
+async function showIngredientPicker() {
+  showIngredientSheet.value = true
+  if (allIngredients.value.length === 0) {
+    try {
+      const list = await getIngredientsByAge()
+      allIngredients.value = list || []
+    } catch (e) {
+      uni.showToast({ title: '加载食材库失败', icon: 'none' })
     }
+  }
+}
+
+function selectIngredient(item) {
+  // 检查是否已添加
+  const exists = form.value.ingredients.find(i => i.name === item.name)
+  if (exists) {
+    uni.showToast({ title: '已添加过该食材', icon: 'none' })
+    return
+  }
+  form.value.ingredients.push({
+    id: item.name,
+    name: item.name,
+    emoji: '🍴',
+    amount: 30,
+    isAllergy: item.allergyRisk === 'high'
   })
+  scoreResult.value = null
+  showIngredientSheet.value = false
+  ingredientSearch.value = ''
+}
+
+function addCustomIngredient() {
+  if (!customIngredientName.value) return
+  const name = customIngredientName.value.trim()
+  const exists = form.value.ingredients.find(i => i.name === name)
+  if (exists) {
+    uni.showToast({ title: '已添加过该食材', icon: 'none' })
+    return
+  }
+  form.value.ingredients.push({
+    id: name,
+    name: name,
+    emoji: '🍴',
+    amount: 30,
+    isAllergy: false
+  })
+  scoreResult.value = null
+  customIngredientName.value = ''
+  showIngredientSheet.value = false
 }
 
 function openSubjectSelector() {
@@ -677,4 +786,124 @@ function getScoreGrade(score) {
   color: #C8C8C8;
   line-height: 1.6;
 }
+
+/* 食材选择弹窗 */
+.ingredient-sheet-mask {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  z-index: 1000;
+  display: flex;
+  align-items: flex-end;
+}
+
+.ingredient-sheet {
+  width: 100%;
+  background: #FFFFFF;
+  border-radius: 32rpx 32rpx 0 0;
+  padding: 24rpx 0 0;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.sheet-handle {
+  width: 80rpx;
+  height: 8rpx;
+  background: #E0E0E0;
+  border-radius: 4rpx;
+  margin: 0 auto 24rpx;
+}
+
+.sheet-title {
+  display: block;
+  font-size: 32rpx;
+  font-weight: 700;
+  color: #3D3935;
+  padding: 0 24rpx 24rpx;
+}
+
+.search-bar {
+  padding: 16rpx 24rpx;
+}
+
+.category-tabs {
+  white-space: nowrap;
+  padding: 0 24rpx 16rpx;
+}
+
+.category-tab-list {
+  display: flex;
+  gap: 16rpx;
+}
+
+.category-tab {
+  padding: 8rpx 24rpx;
+  border-radius: 24rpx;
+  background: #F5F5F5;
+  font-size: 24rpx;
+  color: #666;
+  flex-shrink: 0;
+  &.active {
+    background: #F5A85B;
+    color: white;
+  }
+}
+
+.ingredient-grid {
+  padding: 0 24rpx;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.ingredient-option {
+  display: flex;
+  align-items: center;
+  padding: 20rpx 16rpx;
+  border-bottom: 1rpx solid #F0E9DE;
+  gap: 12rpx;
+  &:active {
+    background: #FFF5EB;
+  }
+}
+
+.option-name {
+  font-size: 28rpx;
+  color: #333;
+  font-weight: 500;
+}
+
+.option-allergy {
+  font-size: 24rpx;
+}
+
+.option-brief {
+  font-size: 22rpx;
+  color: #999;
+  margin-left: auto;
+  max-width: 300rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.allergy-option {
+  background: #FFF5F0;
+}
+
+.empty-search {
+  text-align: center;
+  padding: 40rpx;
+  color: #999;
+  font-size: 26rpx;
+}
+
+.custom-input-row {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  padding: 16rpx 24rpx calc(40rpx + constant(safe-area-inset-bottom));
+  padding: 16rpx 24rpx calc(40rpx + env(safe-area-inset-bottom));
+}
+
 </style>
