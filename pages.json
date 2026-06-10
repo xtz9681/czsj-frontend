@@ -59,6 +59,12 @@
       "style": {
         "navigationBarTitleText": "我的档案"
       }
+    },
+    {
+      "path": "pages/mine/index",
+      "style": {
+        "navigationBarTitleText": "我的"
+      }
     }
   ],
   "tabBar": {
@@ -86,10 +92,10 @@
         "selectedIconPath": "static/images/tab-plan-active.png"
       },
       {
-        "pagePath": "pages/allergy/index",
-        "text": "过敏",
-        "iconPath": "static/images/tab-allergy.png",
-        "selectedIconPath": "static/images/tab-allergy-active.png"
+        "pagePath": "pages/mine/index",
+        "text": "我的",
+        "iconPath": "static/images/tab-mine.png",
+        "selectedIconPath": "static/images/tab-mine-active.png"
       }
     ]
   },
