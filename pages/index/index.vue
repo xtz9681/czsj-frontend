@@ -26,7 +26,11 @@
           <text>今日饮食</text>
           <text class="summary-date">{{ todayStr }}</text>
         </view>
-        <view class="nutrition-row">
+        <view v-if="pageLoading" class="loading-state">
+          <text class="loading-icon">⏳</text>
+          <text class="loading-text">加载中...</text>
+        </view>
+        <view v-else class="nutrition-row">
           <view class="nutrition-item" v-for="n in nutritionStats" :key="n.key">
             <text class="nutrition-icon">{{ n.icon }}</text>
             <view class="nutrition-data">
@@ -64,10 +68,14 @@
           <text class="section-title">今天吃了</text>
           <text class="section-more" @tap="goMealList">全部记录 ›</text>
         </view>
-        <view v-if="todayMeals.length === 0" class="empty-meals">
+        <view v-if="pageLoading" class="loading-state">
+          <text class="loading-icon">⏳</text>
+          <text class="loading-text">加载中...</text>
+        </view>
+        <view v-else-if="todayMeals.length === 0" class="empty-meals">
           <text class="empty-icon">🍽️</text>
           <text class="empty-text">今天还没记录，快去拍一拍吧~</text>
-        <view class="empty-btn" @tap="goCamera">记第一餐</view>
+          <view class="empty-btn" @tap="goCamera">记第一餐</view>
         </view>
         <view v-else class="meal-list">
           <view
@@ -233,6 +241,7 @@ const mother = computed(() => userStore.mother)
 const todayMeals = ref([])
 const recommendIngredients = ref([])
 const showRecommend = ref(false)
+const pageLoading = ref(false)
 
 const nutritionStats = ref([
   { key: 'meals', icon: '🍽️', label: '餐次', value: '-', unit: '餐', color: '#F5A85B' },
@@ -364,11 +373,16 @@ function syncFromStore() {
 
 onShow(() => {
   syncFromStore()
+  pageLoading.value = true
   todayMeals.value = []
   recommendIngredients.value = []
-  loadTodayMeals()
-  loadRecommendIngredients()
-  loadDailySummary()
+  Promise.allSettled([
+    loadTodayMeals(),
+    loadRecommendIngredients(),
+    loadDailySummary()
+  ]).finally(() => {
+    pageLoading.value = false
+  })
 })
 
 // ── 切换器 ────────────────────────────────────
@@ -378,9 +392,14 @@ function switchToBaby(baby) {
   showSwitcher.value = false
   todayMeals.value = []
   recommendIngredients.value = []
-  loadTodayMeals()
-  loadRecommendIngredients()
-  loadDailySummary()
+  pageLoading.value = true
+  Promise.allSettled([
+    loadTodayMeals(),
+    loadRecommendIngredients(),
+    loadDailySummary()
+  ]).finally(() => {
+    pageLoading.value = false
+  })
 }
 
 function switchToMother() {
@@ -388,7 +407,12 @@ function switchToMother() {
   showSwitcher.value = false
   todayMeals.value = []
   recommendIngredients.value = []
-  loadDailySummary()
+  pageLoading.value = true
+  Promise.allSettled([
+    loadDailySummary()
+  ]).finally(() => {
+    pageLoading.value = false
+  })
 }
 
 function addBaby() {
@@ -881,6 +905,31 @@ const motherNutritionTips = computed(() => {
 .plan-banner-arrow { font-size: 44rpx; color: rgba(255,255,255,0.7); }
 
 .bottom-space { height: 120rpx; }
+
+/* Loading 状态 */
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 120rpx 0;
+}
+
+.loading-icon {
+  font-size: 60rpx;
+  margin-bottom: 16rpx;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.loading-text {
+  font-size: 26rpx;
+  color: #999;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
 
 /* 妈妈模式营养卡片 */
 .mother-tip-card { }

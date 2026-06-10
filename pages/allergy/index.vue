@@ -49,7 +49,12 @@
       <text class="section-count">{{ allergyList.length }} 种</text>
     </view>
 
-    <view v-if="allergyList.length === 0" class="empty-allergy">
+    <view v-if="allergyLoading" class="loading-state">
+      <text class="loading-icon">⏳</text>
+      <text class="loading-text">加载中...</text>
+    </view>
+
+    <view v-else-if="allergyList.length === 0" class="empty-allergy">
       <text class="empty-icon">🌿</text>
       <text class="empty-text">还没有标记过敏食材，宝宝目前没有已知过敏~</text>
     </view>
@@ -116,6 +121,7 @@ import { useUserStore } from '@/store/user.js'
 
 const searchKeyword = ref('')
 const allergyList = ref([])
+const allergyLoading = ref(false)
 
 function getBabyId() {
   return useUserStore().currentBaby?.id
@@ -124,6 +130,7 @@ function getBabyId() {
 async function loadAllergyList() {
   const babyId = getBabyId()
   if (!babyId) return
+  allergyLoading.value = true
   try {
     const list = await getAllergyList(babyId)
     allergyList.value = list
@@ -131,6 +138,8 @@ async function loadAllergyList() {
   } catch (e) {
     // 网络失败时降级读 storage
     allergyList.value = uni.getStorageSync('allergyList') || []
+  } finally {
+    allergyLoading.value = false
   }
 }
 
@@ -435,4 +444,30 @@ function doRemove(item) {
 .forbidden-item { display: flex; align-items: center; justify-content: space-between; }
 .f-name { font-size: 28rpx; color: #3D3935; }
 .f-reason { font-size: 22rpx; color: #E07A5F; }
+
+/* Loading 状态 */
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 120rpx 0;
+  margin: 0 40rpx;
+}
+
+.loading-icon {
+  font-size: 60rpx;
+  margin-bottom: 16rpx;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.loading-text {
+  font-size: 26rpx;
+  color: #999;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
 </style>

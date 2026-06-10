@@ -28,14 +28,18 @@
     </view>
 
     <!-- 空状态 -->
-    <view v-if="mealGroups.length === 0" class="empty-state">
+    <view v-if="mealsLoading" class="loading-state">
+      <text class="loading-icon">⏳</text>
+      <text class="loading-text">加载中...</text>
+    </view>
+    <view v-else-if="mealGroups.length === 0" class="empty-state">
       <text class="empty-icon">📒</text>
       <text class="empty-text">还没有记录，去记第一餐吧~</text>
       <view class="empty-btn" @tap="goRecord">开始记录</view>
     </view>
 
     <!-- 按日期分组的餐次列表 -->
-    <view class="meal-groups" v-else>
+    <view v-else class="meal-groups">
       <view v-for="group in mealGroups" :key="group.date" class="date-group">
         <!-- 日期行 -->
         <view class="date-row">
@@ -117,12 +121,14 @@ const filterOptions = [
 ]
 
 const allMeals = ref([])
+const mealsLoading = ref(false)
 
 const weekNutrition = ref([])
 
 async function loadMeals() {
   const baby = useUserStore().currentBaby
   if (!baby?.id) return
+  mealsLoading.value = true
   try {
     const list = await getMealList(baby.id, 0, 100)
     allMeals.value = (list || []).map(m => ({
@@ -137,6 +143,8 @@ async function loadMeals() {
     }))
   } catch (e) {
     uni.showToast({ title: '加载记录失败，请稍后再试~', icon: 'none' })
+  } finally {
+    mealsLoading.value = false
   }
 }
 
@@ -154,7 +162,7 @@ async function loadWeekSummary() {
       ok: item.ok
     }))
   } catch (e) {
-    // 静默
+    uni.showToast({ title: '加载周统计失败', icon: 'none' })
   }
 }
 
@@ -474,4 +482,29 @@ function getDateStr(offset) {
 }
 
 .fab-icon { font-size: 52rpx; }
+
+/* Loading 状态 */
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 120rpx 0;
+}
+
+.loading-icon {
+  font-size: 60rpx;
+  margin-bottom: 16rpx;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.loading-text {
+  font-size: 26rpx;
+  color: #999;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
 </style>

@@ -62,7 +62,12 @@
     </view>
 
     <!-- 历史记录 -->
-    <view v-if="records.length > 0" class="history-section">
+    <view v-if="recordsLoading" class="loading-state">
+      <text class="loading-icon">⏳</text>
+      <text class="loading-text">加载中...</text>
+    </view>
+
+    <view v-else-if="records.length > 0" class="history-section">
       <text class="section-title">历史记录</text>
       <view class="record-list">
         <view v-for="record in records" :key="record.id" class="record-card card">
@@ -127,6 +132,7 @@ const formData = ref({
 })
 
 const records = ref([])
+const recordsLoading = ref(false)
 const saving = ref(false)
 
 onLoad((options) => {
@@ -139,11 +145,14 @@ onShow(() => {
 
 async function loadRecords() {
   if (!babyId.value) return
+  recordsLoading.value = true
   try {
     const list = await getGrowthRecords(babyId.value)
     records.value = (list || []).sort((a, b) => new Date(b.recordDate) - new Date(a.recordDate))
   } catch (e) {
     uni.showToast({ title: '加载记录失败', icon: 'none' })
+  } finally {
+    recordsLoading.value = false
   }
 }
 
@@ -386,5 +395,30 @@ function formatDate(dateStr) {
 .empty-sub {
   font-size: 24rpx;
   color: #999;
+}
+
+/* Loading 状态 */
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 120rpx 0;
+}
+
+.loading-icon {
+  font-size: 60rpx;
+  margin-bottom: 16rpx;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.loading-text {
+  font-size: 26rpx;
+  color: #999;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
 }
 </style>
