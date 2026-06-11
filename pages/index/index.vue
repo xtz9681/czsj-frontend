@@ -135,14 +135,40 @@
     <template v-else>
       <view class="section">
         <view class="mother-tip-card card">
-          <text class="mother-tip-title">{{ subjectSubtitle }}营养重点</text>
-          <text class="mother-tip-content">
-            <text
-              v-for="(fragment, idx) in motherNutritionTips"
-              :key="idx"
-              :class="fragment.highlight ? 'nutrition-highlight' : 'nutrition-normal'"
-            >{{ fragment.text }}</text>
-          </text>
+          <view class="mother-tip-header">
+            <text class="mother-tip-title">{{ phaseEmoji }} {{ subjectSubtitle }}</text>
+            <text class="mother-tip-stage-desc">{{ phaseDesc }}</text>
+          </view>
+
+          <!-- 营养素标签 -->
+          <view class="nutrient-tags">
+            <view class="nutrient-tag" v-for="n in phaseNutrients" :key="n.name">
+              <text class="nutrient-emoji">{{ n.emoji }}</text>
+              <text class="nutrient-name">{{ n.name }}</text>
+            </view>
+          </view>
+
+          <!-- 一句话口诀 -->
+          <view class="tip-slogan">
+            <text class="slogan-icon">💡</text>
+            <text class="slogan-text">{{ phaseSlogan }}</text>
+          </view>
+
+          <!-- 折叠详情 -->
+          <view class="tip-expand" @tap="showMotherDetail = !showMotherDetail">
+            <text class="expand-text">{{ showMotherDetail ? '收起详情 ⌃' : '查看详细说明 ⌄' }}</text>
+          </view>
+
+          <view v-if="showMotherDetail" class="tip-detail">
+            <text class="mother-tip-content">
+              <text
+                v-for="(fragment, idx) in motherNutritionTips"
+                :key="idx"
+                :class="fragment.highlight ? 'nutrition-highlight' : 'nutrition-normal'"
+              >{{ fragment.text }}</text>
+            </text>
+          </view>
+
           <view class="mother-tip-edit" @tap="goEditMother">
             <text>修改我的阶段 ›</text>
           </view>
@@ -242,6 +268,7 @@ const todayMeals = ref([])
 const recommendIngredients = ref([])
 const showRecommend = ref(false)
 const pageLoading = ref(false)
+const showMotherDetail = ref(false)
 
 const nutritionStats = ref([
   { key: 'meals', icon: '🍽️', label: '餐次', value: '-', unit: '餐', color: '#F5A85B' },
@@ -454,6 +481,82 @@ const goEditProfile = goEditMother
 function addIngredient(item) {
   uni.navigateTo({ url: `/pages/meal-record/index?ingredient=${item.id}` })
 }
+
+const phaseEmoji = computed(() => {
+  const map = {
+    preconception: '🌱',
+    pregnancy_early: '🤰',
+    pregnancy_mid: '🤰',
+    pregnancy_late: '🤰',
+    lactation: '🤱',
+    adult_female: '💪'
+  }
+  return map[mother.value?.phase] || '🤰'
+})
+
+const phaseDesc = computed(() => {
+  const map = {
+    preconception: '身体慢慢养稳的阶段',
+    pregnancy_early: '胃口波动期，吃得下就好',
+    pregnancy_mid: '宝宝快速发育阶段',
+    pregnancy_late: '规律供能，为生产蓄力',
+    lactation: '支持奶量和身体恢复',
+    adult_female: '让自己越来越均衡'
+  }
+  return map[mother.value?.phase] || ''
+})
+
+const phaseNutrients = computed(() => {
+  const map = {
+    preconception: [
+      { emoji: '💊', name: '叶酸' },
+      { emoji: '🩸', name: '铁' },
+      { emoji: '🥩', name: '优质蛋白' }
+    ],
+    pregnancy_early: [
+      { emoji: '💊', name: '叶酸' },
+      { emoji: '🥩', name: '蛋白质' },
+      { emoji: '🥣', name: '清淡易消化' }
+    ],
+    pregnancy_mid: [
+      { emoji: '🐟', name: 'DHA' },
+      { emoji: '🦴', name: '钙' },
+      { emoji: '🩸', name: '铁' },
+      { emoji: '🥩', name: '优质蛋白' }
+    ],
+    pregnancy_late: [
+      { emoji: '🦴', name: '钙' },
+      { emoji: '🥩', name: '蛋白质' },
+      { emoji: '⚡', name: '整体能量' },
+      { emoji: '🕐', name: '规律饮食' }
+    ],
+    lactation: [
+      { emoji: '⚡', name: '能量' },
+      { emoji: '🦴', name: '钙' },
+      { emoji: '💧', name: '水分' },
+      { emoji: '🥩', name: '优质蛋白' }
+    ],
+    adult_female: [
+      { emoji: '🥩', name: '蛋白质' },
+      { emoji: '🥦', name: '蔬菜水果' },
+      { emoji: '💧', name: '水分' },
+      { emoji: '🕐', name: '三餐规律' }
+    ]
+  }
+  return map[mother.value?.phase] || map['pregnancy_mid']
+})
+
+const phaseSlogan = computed(() => {
+  const map = {
+    preconception: '三餐规律，叶酸跟上，慢慢养稳',
+    pregnancy_early: '能吃得下就好，别给自己压力',
+    pregnancy_mid: '每餐搭配：主食 + 蛋白 + 蔬菜',
+    pregnancy_late: '稳定供能，舒服地吃、规律地吃',
+    lactation: '先照顾好自己，别总随便对付',
+    adult_female: '整体越来越均衡，不追求每顿完美'
+  }
+  return map[mother.value?.phase] || map['pregnancy_mid']
+})
 
 const motherNutritionTips = computed(() => {
   const phase = mother.value?.phase
@@ -933,7 +1036,89 @@ const motherNutritionTips = computed(() => {
 
 /* 妈妈模式营养卡片 */
 .mother-tip-card { }
-.mother-tip-title { display: block; font-size: 30rpx; font-weight: 700; color: #3D3935; margin-bottom: 24rpx; }
+
+.mother-tip-header {
+  margin-bottom: 24rpx;
+}
+
+.mother-tip-title {
+  display: block;
+  font-size: 32rpx;
+  font-weight: 700;
+  color: #3D3935;
+  margin-bottom: 8rpx;
+}
+
+.mother-tip-stage-desc {
+  font-size: 26rpx;
+  color: #999;
+}
+
+.nutrient-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+  margin-bottom: 24rpx;
+}
+
+.nutrient-tag {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: calc((100% - 48rpx) / 4);
+  background: #FFF8F0;
+  border-radius: 16rpx;
+  padding: 20rpx 8rpx;
+  border: 2rpx solid #F0E9DE;
+}
+
+.nutrient-emoji {
+  font-size: 40rpx;
+  margin-bottom: 8rpx;
+}
+
+.nutrient-name {
+  font-size: 24rpx;
+  color: #3D3935;
+  font-weight: 600;
+  text-align: center;
+}
+
+.tip-slogan {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  background: #F0F9F3;
+  border-radius: 12rpx;
+  padding: 16rpx 20rpx;
+  margin-bottom: 20rpx;
+}
+
+.slogan-icon {
+  font-size: 28rpx;
+}
+
+.slogan-text {
+  font-size: 26rpx;
+  color: #3D3935;
+  font-weight: 600;
+}
+
+.tip-expand {
+  text-align: center;
+  padding: 8rpx 0;
+}
+
+.expand-text {
+  font-size: 24rpx;
+  color: #F5A85B;
+}
+
+.tip-detail {
+  margin-top: 16rpx;
+  padding-top: 16rpx;
+  border-top: 1rpx solid #F0E9DE;
+}
 
 .mother-tip-content {
   display: block;
