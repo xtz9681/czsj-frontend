@@ -105,8 +105,10 @@ import IngredientPicker from '@/components/camera/IngredientPicker.vue'
 import { photoRecord } from '@/api/ai.js'
 import { getIngredientsByAge, quickRecord, recordMultiple } from '@/api/meal.js'
 import { useUserStore } from '@/store/user.js'
+import { useMealStore } from '@/store/meal'
 
 const userStore = useUserStore()
+const mealStore = useMealStore()
 const subjectSelectorRef = ref(null)
 
 // ── 安全区适配 ──────────────────────────────
@@ -363,7 +365,7 @@ function recordToBaby() {
     return
   }
 
-  uni.setStorageSync('pendingMeal', {
+  mealStore.setPendingMeal({
     ingredients: finalIngredients,
     photo: capturedPhoto.value,
     recognitionId: pendingRecognition.value?.recognitionId || null,

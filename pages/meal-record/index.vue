@@ -226,8 +226,10 @@ import { onLoad, onBackPress } from '@dcloudio/uni-app'
 import SubjectSelector from '@/components/SubjectSelector.vue'
 import { quickRecord, recordMultiple, getIngredientsByAge, getFrequentIngredients } from '@/api/meal.js'
 import { useUserStore } from '@/store/user.js'
+import { useMealStore } from '@/store/meal'
 
 const userStore = useUserStore()
+const mealStore = useMealStore()
 const subjectSelectorRef = ref(null)
 const showSubjectSelector = ref(false)
 const useMultipleSubjects = ref(false)
@@ -248,7 +250,9 @@ const form = ref({
   mealType: 'breakfast',
   ingredients: [],
   note: '',
-  photo: ''
+  photo: '',
+  recognitionId: null,
+  photoKey: null
 })
 
 const mealTypes = [
@@ -313,12 +317,13 @@ const selectedSubjectLabels = computed(() => {
 onLoad((options) => {
   // 从拍照页带入的食材
   if (options?.from === 'camera') {
-    const pending = uni.getStorageSync('pendingMeal')
+    const pending = mealStore.clearPendingMeal()
     if (pending?.ingredients) {
       form.value.ingredients = pending.ingredients.map(i => ({ ...i, amount: 30 }))
       form.value.photo = pending.photo || ''
+      form.value.recognitionId = pending.recognitionId || null
+      form.value.photoKey = pending.photoKey || null
     }
-    uni.removeStorageSync('pendingMeal')
   }
   // 从首页点击带入的单个食材
   if (options?.ingredient) {
@@ -453,7 +458,6 @@ async function saveMeal() {
   if (useMultipleSubjects.value && selectedSubjectIds.value.length > 0) {
     saving.value = true
     try {
-      const pending = uni.getStorageSync('pendingMeal') || {}
       const subjects = selectedSubjectIds.value.map(id => {
         if (userStore.mother && id === userStore.mother.id) {
           return { subjectType: 'MOTHER', subjectId: null }
@@ -464,8 +468,8 @@ async function saveMeal() {
       const payload = {
         subjects,
         ingredients: form.value.ingredients.map(i => ({ name: i.name, grams: i.amount || 30 })),
-        photoKey: pending.photoKey || null,
-        recognitionId: pending.recognitionId || null,
+        photoKey: form.value.photoKey || null,
+        recognitionId: form.value.recognitionId || null,
         note: form.value.note || ''
       }
 
@@ -490,16 +494,15 @@ async function saveMeal() {
 
   saving.value = true
   try {
-    const pending = uni.getStorageSync('pendingMeal') || {}
     const payload = {
       babyId: baby.id,
       subjectType: 'BABY',
       mealType: form.value.mealType.toUpperCase(),
       ingredients: form.value.ingredients.map(i => ({ name: i.name, grams: i.amount || 30 })),
       note: form.value.note || '',
-      photoKey: pending.photoKey || null,
-      recognitionId: pending.recognitionId || null,
-      source: pending.recognitionId ? 'PHOTO' : 'MANUAL'
+      photoKey: form.value.photoKey || null,
+      recognitionId: form.value.recognitionId || null,
+      source: form.value.recognitionId ? 'PHOTO' : 'MANUAL'
     }
     const res = await quickRecord(payload)
     scoreResult.value = buildScoreResult(res)

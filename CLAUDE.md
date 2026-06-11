@@ -155,3 +155,4 @@
       - 灰色文字色统一（#3D3935 主文字、#666 辅助、#999 弱提示）
       - 自造颜色收敛到设计系统（#E87D3F/#C04B32/#D4644C/#B07030 统一为标准色）
       - 页面水平间距统一为 40rpx
+  16. **数据传递规范统一**：pendingMeal 从 uni.storage 迁移到 Pinia store（store/meal.js），URL 仅传 ID 类参数，storage 仅做持久化
