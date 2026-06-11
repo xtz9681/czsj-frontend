@@ -592,8 +592,4 @@ function goBack() {
   font-size: 28rpx;
   color: #FFFFFF;
 }
-
-/* 高置信度结果 */
-}
-</style>
 </style>
