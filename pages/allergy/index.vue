@@ -503,29 +503,4 @@ function doRemove(item) {
 .f-name { font-size: 28rpx; color: #3D3935; }
 .f-reason { font-size: 22rpx; color: #E07A5F; }
 
-/* Loading 状态 */
-.loading-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 120rpx 0;
-  margin: 0 40rpx;
-}
-
-.loading-icon {
-  font-size: 60rpx;
-  margin-bottom: 16rpx;
-  animation: pulse 1.5s ease-in-out infinite;
-}
-
-.loading-text {
-  font-size: 26rpx;
-  color: #999;
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
-}
 </style>

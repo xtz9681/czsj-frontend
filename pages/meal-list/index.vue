@@ -488,28 +488,4 @@ function getDateStr(offset) {
 
 .fab-icon { font-size: 52rpx; }
 
-/* Loading 状态 */
-.loading-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 120rpx 0;
-}
-
-.loading-icon {
-  font-size: 60rpx;
-  margin-bottom: 16rpx;
-  animation: pulse 1.5s ease-in-out infinite;
-}
-
-.loading-text {
-  font-size: 26rpx;
-  color: #999;
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
-}
 </style>

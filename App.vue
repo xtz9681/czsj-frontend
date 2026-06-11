@@ -106,4 +106,55 @@
     padding: 16rpx 40rpx;
     line-height: 1.6;
   }
+
+  /* Loading 状态（全局公共） */
+  .loading-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 100rpx 40rpx;
+  }
+
+  .loading-icon {
+    font-size: 56rpx;
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+
+  .loading-text {
+    font-size: 26rpx;
+    color: #999;
+    margin-top: 16rpx;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+
+  /* 空状态（全局公共） */
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 100rpx 40rpx;
+  }
+
+  .empty-img {
+    width: 280rpx;
+    height: 280rpx;
+    margin-bottom: 24rpx;
+  }
+
+  .empty-text {
+    font-size: 28rpx;
+    color: #999;
+    margin-bottom: 12rpx;
+  }
+
+  .empty-sub {
+    font-size: 24rpx;
+    color: #999;
+  }
 </style>
