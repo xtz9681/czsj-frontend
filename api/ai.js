@@ -56,3 +56,8 @@ export function getWeeklyPlan(babyId) {
 export function getLatestPlan(babyId) {
   return request({ url: '/plan/latest', data: { subjectId: babyId } })
 }
+
+// AI 即时问答
+export function askAi(data) {
+  return request({ url: '/ai/ask', method: 'post', data })
+}

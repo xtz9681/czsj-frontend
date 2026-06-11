@@ -224,6 +224,18 @@
       <text class="plan-banner-arrow">›</text>
     </view>
 
+    <!-- AI 营养师 -->
+    <view class="ai-qa-banner card anim-fade-in-up" @tap="goAiChat">
+      <view class="ai-qa-content">
+        <text class="ai-qa-icon">💬</text>
+        <view class="ai-qa-text">
+          <text class="ai-qa-title">AI 营养师</text>
+          <text class="ai-qa-desc">有喂养问题？问我就对了</text>
+        </view>
+      </view>
+      <text class="ai-qa-arrow">›</text>
+    </view>
+
     <view class="bottom-space"></view>
 
     <!-- 主体切换 Sheet -->
@@ -561,6 +573,7 @@ function goCamera() { uni.navigateTo({ url: '/pages/camera/index' }) }
 function goMealRecord() { uni.navigateTo({ url: '/pages/meal-record/index' }) }
 function goMealList() { uni.switchTab({ url: '/pages/meal-list/index' }) }
 function goPlan() { uni.switchTab({ url: '/pages/plan/index' }) }
+function goAiChat() { uni.navigateTo({ url: '/pages/ai-chat/index' }) }
 function goMealDetail(id) { uni.navigateTo({ url: `/pages/meal-record/index?id=${id}` }) }
 function goEditMother() {
   showSwitcher.value = false
@@ -1148,6 +1161,47 @@ const motherNutritionTips = computed(() => {
   font-weight: 700;
   padding: 4rpx 32rpx;
   transform: rotate(45deg);
+}
+
+/* AI 营养师入口 */
+.ai-qa-banner {
+  margin: 0 40rpx 16rpx;
+  padding: 24rpx 32rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.ai-qa-content {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+}
+
+.ai-qa-icon {
+  font-size: 44rpx;
+}
+
+.ai-qa-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+}
+
+.ai-qa-title {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: #3D3935;
+}
+
+.ai-qa-desc {
+  font-size: 24rpx;
+  color: #999;
+}
+
+.ai-qa-arrow {
+  font-size: 36rpx;
+  color: #ccc;
 }
 
 .ingredients-row {

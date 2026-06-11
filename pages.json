@@ -77,6 +77,13 @@
       "style": {
         "navigationBarTitleText": "体重记录"
       }
+    },
+    {
+      "path": "pages/ai-chat/index",
+      "style": {
+        "navigationBarTitleText": "AI 营养师",
+        "navigationStyle": "custom"
+      }
     }
   ],
   "tabBar": {
