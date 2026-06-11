@@ -334,14 +334,14 @@ const ageText = computed(() => {
 
 // 月龄里程碑数据
 const MILESTONES = [
-  { month: 4,  icon: '/static/icons/stage-baby.png', title: '关注辅食时机', desc: '宝宝 4 个月啦，可以开始关注辅食添加时机了', tip: '建议纯母乳到 6 个月再开始添加' },
-  { month: 6,  icon: '/static/icons/stage-baby.png', title: '辅食启程！', desc: '可以尝试米糊、南瓜泥等单一食材', tip: '每次只试一种新食材，观察 3 天' },
-  { month: 8,  icon: '/static/icons/stage-baby.png', title: '解锁蛋黄', desc: '可以尝试蛋黄了，记得先少量试敏哦', tip: '蛋白建议 12 个月后再尝试' },
-  { month: 10, icon: '/static/icons/stage-baby.png', title: '手指食物时间', desc: '可以尝试手指食物了，锻炼咀嚼能力', tip: '切成条状或小块，让宝宝自主抓握' },
-  { month: 12, icon: '/static/icons/stage-baby.png', title: '满 1 岁啦！', desc: '可以喝鲜牛奶、尝试蜂蜜了', tip: '逐步从奶瓶过渡到水杯' },
-  { month: 15, icon: '/static/icons/stage-baby.png', title: '饮食大升级', desc: '可以和大人吃差不多的食物了', tip: '注意少盐少糖，避免重口味' },
-  { month: 18, icon: '/static/icons/stage-baby.png', title: '大部分食材解锁', desc: '大部分食材都能吃了，注意均衡搭配', tip: '每天保证奶量 400-500ml' },
-  { month: 24, icon: '/static/icons/stage-baby.png', title: '2 岁啦！', desc: '饮食接近成人，重点关注钙铁锌', tip: '可以开始培养自主进食习惯了' },
+  { month: 4,  icon: '/static/icons/avatar-baby.png', title: '关注辅食时机', desc: '宝宝 4 个月啦，可以开始关注辅食添加时机了', tip: '建议纯母乳到 6 个月再开始添加' },
+  { month: 6,  icon: '/static/icons/avatar-baby.png', title: '辅食启程！', desc: '可以尝试米糊、南瓜泥等单一食材', tip: '每次只试一种新食材，观察 3 天' },
+  { month: 8,  icon: '/static/icons/avatar-baby.png', title: '解锁蛋黄', desc: '可以尝试蛋黄了，记得先少量试敏哦', tip: '蛋白建议 12 个月后再尝试' },
+  { month: 10, icon: '/static/icons/avatar-baby.png', title: '手指食物时间', desc: '可以尝试手指食物了，锻炼咀嚼能力', tip: '切成条状或小块，让宝宝自主抓握' },
+  { month: 12, icon: '/static/icons/avatar-baby.png', title: '满 1 岁啦！', desc: '可以喝鲜牛奶、尝试蜂蜜了', tip: '逐步从奶瓶过渡到水杯' },
+  { month: 15, icon: '/static/icons/avatar-baby.png', title: '饮食大升级', desc: '可以和大人吃差不多的食物了', tip: '注意少盐少糖，避免重口味' },
+  { month: 18, icon: '/static/icons/avatar-baby.png', title: '大部分食材解锁', desc: '大部分食材都能吃了，注意均衡搭配', tip: '每天保证奶量 400-500ml' },
+  { month: 24, icon: '/static/icons/avatar-baby.png', title: '2 岁啦！', desc: '饮食接近成人，重点关注钙铁锌', tip: '可以开始培养自主进食习惯了' },
 ]
 
 const currentMilestone = computed(() => {
