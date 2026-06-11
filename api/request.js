@@ -21,7 +21,9 @@ export function request(options) {
           uni.reLaunch({ url: '/pages/login/index' })
           reject(new Error('请重新登录'))
         } else {
-          reject(new Error(res.data?.message || '请求出错了，稍后再试~'))
+          const err = new Error(res.data?.message || '请求出错了，稍后再试~')
+          err.statusCode = res.statusCode
+          reject(err)
         }
       },
       fail(err) {

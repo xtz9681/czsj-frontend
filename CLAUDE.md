@@ -65,7 +65,7 @@
   │   ├── auth.js           # wxLogin、getUserInfo
   │   ├── baby.js           # getBabyList、createBaby、updateBaby、deleteBaby、getGrowthRecords、addGrowthRecord
   │   ├── meal.js           # quickRecord、checkMultiRecordWarning、recordMultiple、getMealList、getIngredientsByAge、getDailySummary、getWeekSummary、deleteMeal、updateMeal、getFrequentIngredients
-  │   ├── ai.js             # photoRecord、getWeeklyPlan、getLatestPlan
+  │   ├── ai.js             # photoRecord、getWeeklyPlan、getLatestPlan、askAi
   │   ├── allergy.js        # getAllergyList、addAllergy、removeAllergy
   │   └── mother.js         # getMother、createMother、updateMother、getWeightRecords、addWeightRecord
   ├── store/                # Pinia 状态
