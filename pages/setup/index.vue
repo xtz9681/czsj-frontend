@@ -90,8 +90,8 @@ function handleNext() {
 .content {
   position: relative;
   z-index: 1;
-  padding: 120rpx 48rpx calc(80rpx + constant(safe-area-inset-bottom));
-  padding: 120rpx 48rpx calc(80rpx + env(safe-area-inset-bottom));
+  padding: 120rpx 40rpx calc(80rpx + constant(safe-area-inset-bottom));
+  padding: 120rpx 40rpx calc(80rpx + env(safe-area-inset-bottom));
 }
 
 .logo-area {

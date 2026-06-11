@@ -254,7 +254,7 @@ initUserMode()
 .section-title {
   font-size: 28rpx;
   font-weight: 600;
-  color: #333;
+  color: #3D3935;
   margin-bottom: 20rpx;
   display: block;
 }
@@ -307,7 +307,7 @@ initUserMode()
   .feature-title {
     font-size: 28rpx;
     font-weight: 600;
-    color: #333;
+    color: #3D3935;
   }
 
   .feature-desc {
@@ -339,8 +339,8 @@ initUserMode()
   align-items: center;
   justify-content: center;
   height: 88rpx;
-  background: #FFE8D6;
-  color: #E87D3F;
+  background: #FDEEE9;
+  color: #E07A5F;
   border-radius: 16rpx;
   font-size: 28rpx;
   font-weight: 600;

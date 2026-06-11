@@ -965,7 +965,7 @@ const motherNutritionTips = computed(() => {
   border-radius: 24rpx;
   padding: 8rpx 20rpx;
   font-size: 26rpx;
-  color: #555;
+  color: #666;
   display: flex;
   align-items: center;
   gap: 4rpx;
@@ -1150,7 +1150,7 @@ const motherNutritionTips = computed(() => {
 }
 
 .nutrition-highlight {
-  color: #D4644C;
+  color: #E07A5F;
   font-weight: 600;
 }
 

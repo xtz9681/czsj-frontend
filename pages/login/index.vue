@@ -150,7 +150,7 @@ function showPrivacy() {
   flex: 1;
   display: flex;
   flex-direction: column;
-  padding: 0 48rpx;
+  padding: 0 40rpx;
 }
 
 .logo-area {

@@ -150,7 +150,7 @@ const selectedIngredients = computed(() =>
   border-radius: 32rpx;
   border: 2rpx solid #F0E9DE;
   font-size: 28rpx;
-  color: #555;
+  color: #666;
   background: #F5F5F5;
 
   &.selected {
@@ -195,7 +195,7 @@ const selectedIngredients = computed(() =>
 
 .age-warning-card .warning-text {
   font-size: 26rpx;
-  color: #555;
+  color: #666;
   display: block;
 }
 

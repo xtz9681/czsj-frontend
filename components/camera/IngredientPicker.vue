@@ -213,7 +213,7 @@ function handleAddCustom() {
 
 .quick-item-name {
   font-size: 22rpx;
-  color: #555;
+  color: #666;
   text-align: center;
   line-height: 1.3;
 }
@@ -284,7 +284,7 @@ function handleAddCustom() {
   border-radius: 20rpx;
   background: #F5F5F5;
   font-size: 24rpx;
-  color: #555;
+  color: #666;
 
   &.allergy-tag {
     background: #FDEEE9;

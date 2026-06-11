@@ -445,7 +445,7 @@ function getDateStr(offset) {
   border-radius: 20rpx;
   padding: 6rpx 16rpx;
   font-size: 24rpx;
-  color: #555;
+  color: #666;
 
   &.allergy-chip {
     background: #FDEEE9;
@@ -466,7 +466,7 @@ function getDateStr(offset) {
   border-radius: 10rpx;
   padding: 14rpx 18rpx;
   font-size: 24rpx;
-  color: #555;
+  color: #666;
   line-height: 1.6;
 }
 

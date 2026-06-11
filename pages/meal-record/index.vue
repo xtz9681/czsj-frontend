@@ -647,7 +647,7 @@ function getScoreGrade(score) {
   align-items: center;
   justify-content: center;
   font-size: 32rpx;
-  color: #555;
+  color: #666;
   flex-shrink: 0;
 }
 
@@ -681,8 +681,8 @@ function getScoreGrade(score) {
 
 .allergy-block-title { display: block; font-size: 28rpx; font-weight: 700; color: #E07A5F; margin-bottom: 12rpx; }
 .allergy-block-item { margin-bottom: 4rpx; }
-.allergy-name { font-size: 26rpx; font-weight: 600; color: #C04B32; }
-.allergy-desc { font-size: 24rpx; color: #C04B32; margin-left: 8rpx; }
+.allergy-name { font-size: 26rpx; font-weight: 600; color: #E07A5F; }
+.allergy-desc { font-size: 24rpx; color: #E07A5F; margin-left: 8rpx; }
 
 .note-area {
   background: #FFFFFF;
@@ -907,7 +907,7 @@ function getScoreGrade(score) {
 
 .option-name {
   font-size: 28rpx;
-  color: #333;
+  color: #3D3935;
   font-weight: 500;
 }
 

@@ -443,8 +443,8 @@ async function saveAndGoHome() {
 
 <style lang="scss" scoped>
 .page-container {
-  padding: 0 48rpx calc(80rpx + constant(safe-area-inset-bottom));
-  padding: 0 48rpx calc(80rpx + env(safe-area-inset-bottom));
+  padding: 0 40rpx calc(80rpx + constant(safe-area-inset-bottom));
+  padding: 0 40rpx calc(80rpx + env(safe-area-inset-bottom));
 }
 
 .header {
@@ -666,7 +666,7 @@ async function saveAndGoHome() {
   border-left: 6rpx solid #F5A85B;
 }
 .tip-icon-img { width: 32rpx; height: 32rpx; flex-shrink: 0; }
-.tip-text { font-size: 24rpx; color: #B07030; line-height: 1.6; }
+.tip-text { font-size: 24rpx; color: #3D3935; line-height: 1.6; }
 
 .required { color: #E07A5F; font-size: 28rpx; margin-left: 4rpx; }
 </style>

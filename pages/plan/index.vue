@@ -374,7 +374,7 @@ onShow(() => { loadLatestPlan() })
 .blur-content {
   filter: blur(6px);
   font-size: 28rpx;
-  color: #555;
+  color: #666;
 }
 
 .blur-overlay {
@@ -493,7 +493,7 @@ onShow(() => { loadLatestPlan() })
 
   text {
     font-size: 26rpx;
-    color: #555;
+    color: #666;
 
     &:not(:last-child)::after {
       content: ' · ';
@@ -585,7 +585,7 @@ onShow(() => { loadLatestPlan() })
 
 .pb-item { display: flex; align-items: center; gap: 12rpx; padding: 10rpx 0; }
 .pb-check { font-size: 28rpx; color: #5CB87A; }
-.pb-text { font-size: 26rpx; color: #555; }
+.pb-text { font-size: 26rpx; color: #666; }
 
 .pay-confirm-btn {
   background: #F5A85B;
