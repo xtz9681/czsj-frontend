@@ -10,102 +10,118 @@
       </text>
     </view>
 
-    <!-- 搜索/添加 -->
-    <view class="search-row">
-      <view class="search-input-wrap">
-        <text class="search-icon">🔍</text>
-        <wd-input
-          v-model="searchKeyword"
-          placeholder="搜索食材名称"
-          clearable
-          @input="onSearchInput"
-        />
+    <!-- Tab 切换 -->
+    <view class="tab-bar">
+      <view class="tab-item" :class="{ active: activeTab === 'marked' }" @tap="activeTab = 'marked'">
+        已标记 ({{ allergyList.length }})
+      </view>
+      <view class="tab-item" :class="{ active: activeTab === 'add' }" @tap="activeTab = 'add'">
+        添加新的
       </view>
     </view>
 
-    <!-- 搜索结果 -->
-    <view v-if="searchKeyword && searchResults.length > 0" class="search-result-list card" style="margin: 0 40rpx 24rpx;">
-      <view
-        v-for="item in searchResults"
-        :key="item.id"
-        class="search-result-item"
-        @tap="addAllergyIngredient(item)"
-      >
-        <text class="sri-emoji">{{ item.emoji }}</text>
-        <text class="sri-name">{{ item.name }}</text>
-        <text class="sri-category">{{ item.category }}</text>
-        <view class="sri-add-btn">+ 标记过敏</view>
+    <!-- Tab 1：已标记 -->
+    <view v-if="activeTab === 'marked'" class="tab-content">
+      <!-- 已标记过敏食材 -->
+      <view class="section-header" style="padding: 0 40rpx;">
+        <text class="section-title">过敏食材</text>
+        <text class="section-count">{{ allergyList.length }} 种</text>
       </view>
-    </view>
 
-    <view v-if="searchKeyword && searchResults.length === 0" class="no-result">
-      <text>没找到「{{ searchKeyword }}」，试试其他名称</text>
-      <view class="custom-add-btn" @tap="addCustomAllergy">直接添加</view>
-    </view>
+      <view v-if="allergyLoading" class="loading-state">
+        <text class="loading-icon">⏳</text>
+        <text class="loading-text">加载中...</text>
+      </view>
 
-    <!-- 已标记的过敏食材 -->
-    <view class="section-header" style="padding: 0 40rpx;">
-      <text class="section-title">已标记过敏食材</text>
-      <text class="section-count">{{ allergyList.length }} 种</text>
-    </view>
+      <view v-else-if="allergyList.length === 0" class="empty-allergy">
+        <text class="empty-icon">🌿</text>
+        <text class="empty-text">还没有标记过敏食材，宝宝目前没有已知过敏~</text>
+      </view>
 
-    <view v-if="allergyLoading" class="loading-state">
-      <text class="loading-icon">⏳</text>
-      <text class="loading-text">加载中...</text>
-    </view>
+      <view v-else class="allergy-list" style="padding: 0 40rpx;">
+        <view
+          class="allergy-item card"
+          v-for="item in allergyList"
+          :key="item.id"
+        >
+          <view class="ai-left">
+            <text class="ai-emoji">{{ item.emoji || '⚠️' }}</text>
+            <view>
+              <text class="ai-name">{{ item.ingredientName || item.name }}</text>
+              <text v-if="(item.relatedIngredients || item.crossAllergies || []).length > 0" class="ai-cross">
+                交叉过敏：{{ (item.relatedIngredients || item.crossAllergies).join('、') }}
+              </text>
+            </view>
+          </view>
+          <view class="ai-remove" @tap="removeAllergy(item)">移除</view>
+        </view>
+      </view>
 
-    <view v-else-if="allergyList.length === 0" class="empty-allergy">
-      <text class="empty-icon">🌿</text>
-      <text class="empty-text">还没有标记过敏食材，宝宝目前没有已知过敏~</text>
-    </view>
-
-    <view v-else class="allergy-list" style="padding: 0 40rpx;">
-      <view
-        class="allergy-item card"
-        v-for="item in allergyList"
-        :key="item.id"
-      >
-        <view class="ai-left">
-          <text class="ai-emoji">{{ item.emoji || '⚠️' }}</text>
-          <view>
-            <text class="ai-name">{{ item.ingredientName || item.name }}</text>
-            <text v-if="(item.relatedIngredients || item.crossAllergies || []).length > 0" class="ai-cross">
-              交叉过敏：{{ (item.relatedIngredients || item.crossAllergies).join('、') }}
-            </text>
+      <!-- 月龄禁忌提示 -->
+      <view class="forbidden-card" style="margin: 32rpx 40rpx 0;">
+        <text class="forbidden-title">🚫 月龄禁忌（规则硬限制）</text>
+        <text class="forbidden-desc">以下食物系统会自动拦截，无需手动标记</text>
+        <view class="forbidden-list">
+          <view class="forbidden-item" v-for="f in forbiddenFoods" :key="f.name">
+            <text class="f-name">{{ f.name }}</text>
+            <text class="f-reason">{{ f.reason }}</text>
           </view>
         </view>
-        <view class="ai-remove" @tap="removeAllergy(item)">移除</view>
       </view>
     </view>
 
-    <!-- 常见过敏原参考 -->
-    <view class="common-section" style="padding: 0 40rpx;">
-      <text class="common-title">常见婴幼儿过敏原</text>
-      <text class="common-sub">点击快速标记</text>
-    </view>
-
-    <view class="common-grid" style="padding: 0 40rpx;">
-      <view
-        v-for="item in commonAllergens"
-        :key="item.id"
-        class="common-item"
-        :class="{ added: isAdded(item) }"
-        @tap="toggleCommonAllergen(item)"
-      >
-        <text class="common-emoji">{{ item.emoji }}</text>
-        <text class="common-name">{{ item.name }}</text>
-        <view v-if="isAdded(item)" class="common-check">✓</view>
+    <!-- Tab 2：添加新的 -->
+    <view v-if="activeTab === 'add'" class="tab-content">
+      <!-- 搜索/添加 -->
+      <view class="search-row">
+        <view class="search-input-wrap">
+          <text class="search-icon">🔍</text>
+          <wd-input
+            v-model="searchKeyword"
+            placeholder="搜索食材名称"
+            clearable
+            @input="onSearchInput"
+          />
+        </view>
       </view>
-    </view>
 
-    <!-- 月龄禁忌提示 -->
-    <view class="forbidden-card" style="margin: 32rpx 40rpx 0;">
-      <text class="forbidden-title">🚫 月龄禁忌（规则硬限制）</text>
-      <text class="forbidden-desc">以下食物系统会自动拦截，无需手动标记</text>
-      <view class="forbidden-list">
-        <view class="forbidden-item" v-for="f in forbiddenFoods" :key="f.name">
-          <text class="f-name">{{ f.name }}</text>
-          <text class="f-reason">{{ f.reason }}</text>
+      <!-- 搜索结果 -->
+      <view v-if="searchKeyword && searchResults.length > 0" class="search-result-list card" style="margin: 0 40rpx 24rpx;">
+        <view
+          v-for="item in searchResults"
+          :key="item.id"
+          class="search-result-item"
+          @tap="addAllergyIngredient(item)"
+        >
+          <text class="sri-emoji">{{ item.emoji }}</text>
+          <text class="sri-name">{{ item.name }}</text>
+          <text class="sri-category">{{ item.category }}</text>
+          <view class="sri-add-btn">+ 标记过敏</view>
+        </view>
+      </view>
+
+      <view v-if="searchKeyword && searchResults.length === 0" class="no-result">
+        <text>没找到「{{ searchKeyword }}」，试试其他名称</text>
+        <view class="custom-add-btn" @tap="addCustomAllergy">直接添加</view>
+      </view>
+
+      <!-- 常见过敏原参考 -->
+      <view class="common-section" style="padding: 0 40rpx;">
+        <text class="common-title">常见婴幼儿过敏原</text>
+        <text class="common-sub">点击快速标记</text>
+      </view>
+
+      <view class="common-grid" style="padding: 0 40rpx;">
+        <view
+          v-for="item in commonAllergens"
+          :key="item.id"
+          class="common-item"
+          :class="{ added: isAdded(item) }"
+          @tap="toggleCommonAllergen(item)"
+        >
+          <text class="common-emoji">{{ item.emoji }}</text>
+          <text class="common-name">{{ item.name }}</text>
+          <view v-if="isAdded(item)" class="common-check">✓</view>
         </view>
       </view>
     </view>
@@ -122,6 +138,7 @@ import { useUserStore } from '@/store/user.js'
 const searchKeyword = ref('')
 const allergyList = ref([])
 const allergyLoading = ref(false)
+const activeTab = ref('marked')
 
 function getBabyId() {
   return useUserStore().currentBaby?.id
@@ -209,6 +226,7 @@ async function addAllergyIngredient(item) {
     allergyList.value.push(res)
     uni.setStorageSync('allergyList', allergyList.value.map(a => ({ name: a.ingredientName || a.name, id: a.id, crossAllergies: a.relatedIngredients || [] })))
     searchKeyword.value = ''
+    activeTab.value = 'marked'
     uni.showToast({ title: `已标记 ${item.name} 过敏`, icon: 'success' })
   } catch (e) {
     uni.showToast({ title: e.message || '标记失败，稍后再试~', icon: 'none' })
@@ -265,6 +283,41 @@ function doRemove(item) {
 
 .explain-title { display: block; font-size: 30rpx; font-weight: 700; color: #3D3935; margin-bottom: 12rpx; }
 .explain-text { font-size: 26rpx; color: #666; line-height: 1.8; }
+
+/* Tab 切换 */
+.tab-bar {
+  display: flex;
+  margin: 0 40rpx 24rpx;
+  background: #F0EAE0;
+  border-radius: 12rpx;
+  padding: 6rpx;
+}
+
+.tab-item {
+  flex: 1;
+  text-align: center;
+  padding: 18rpx 0;
+  border-radius: 10rpx;
+  font-size: 28rpx;
+  color: #999;
+  font-weight: 600;
+  transition: all 0.3s;
+}
+
+.tab-item.active {
+  background: #FFFFFF;
+  color: #3D3935;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.08);
+}
+
+.tab-content {
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
 
 .search-row {
   padding: 0 40rpx 20rpx;
