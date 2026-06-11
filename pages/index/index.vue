@@ -73,7 +73,7 @@
           <text class="loading-text">加载中...</text>
         </view>
         <view v-else-if="todayMeals.length === 0" class="empty-meals">
-          <text class="empty-icon">🍽️</text>
+          <image src="/static/empty/no-meals.png" class="empty-img" mode="aspectFit" />
           <text class="empty-text">今天还没记录，快去拍一拍吧~</text>
           <view class="empty-btn" @tap="goCamera">记第一餐</view>
         </view>
@@ -887,7 +887,12 @@ const motherNutritionTips = computed(() => {
   box-shadow: 0 4rpx 12rpx rgba(0,0,0,0.05);
 }
 
-.empty-icon { font-size: 80rpx; display: block; margin-bottom: 20rpx; }
+.empty-img {
+  width: 320rpx;
+  height: 320rpx;
+  margin-bottom: 24rpx;
+}
+
 .empty-text { font-size: 28rpx; color: #999; display: block; margin-bottom: 32rpx; }
 
 .empty-btn {

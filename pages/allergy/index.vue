@@ -34,7 +34,7 @@
       </view>
 
       <view v-else-if="allergyList.length === 0" class="empty-allergy">
-        <text class="empty-icon">🌿</text>
+        <image src="/static/empty/no-allergy.png" class="empty-img" mode="aspectFit" />
         <text class="empty-text">还没有标记过敏食材，宝宝目前没有已知过敏~</text>
       </view>
 
@@ -404,7 +404,12 @@ function doRemove(item) {
   padding: 48rpx 40rpx;
 }
 
-.empty-icon { font-size: 72rpx; display: block; margin-bottom: 16rpx; }
+.empty-img {
+  width: 280rpx;
+  height: 280rpx;
+  margin-bottom: 20rpx;
+}
+
 .empty-text { font-size: 26rpx; color: #999; text-align: center; line-height: 1.8; }
 
 .allergy-list { display: flex; flex-direction: column; gap: 16rpx; }

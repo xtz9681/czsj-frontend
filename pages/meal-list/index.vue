@@ -33,7 +33,7 @@
       <text class="loading-text">加载中...</text>
     </view>
     <view v-else-if="mealGroups.length === 0" class="empty-state">
-      <text class="empty-icon">📒</text>
+      <image src="/static/empty/no-meals.png" class="empty-img" mode="aspectFit" />
       <text class="empty-text">还没有记录，去记第一餐吧~</text>
       <view class="empty-btn" @tap="goRecord">开始记录</view>
     </view>
@@ -350,7 +350,12 @@ function getDateStr(offset) {
   padding: 120rpx 40rpx;
 }
 
-.empty-icon { font-size: 100rpx; display: block; margin-bottom: 24rpx; }
+.empty-img {
+  width: 320rpx;
+  height: 320rpx;
+  margin-bottom: 24rpx;
+}
+
 .empty-text { font-size: 28rpx; color: #999; margin-bottom: 40rpx; }
 .empty-btn {
   background: #F5A85B;

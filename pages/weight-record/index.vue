@@ -112,7 +112,7 @@
 
     <!-- 空状态 -->
     <view v-else class="empty-state">
-      <text class="empty-icon">🏋️</text>
+      <image src="/static/empty/no-records.png" class="empty-img" mode="aspectFit" />
       <text class="empty-text">还没有记录过体重数据</text>
       <text class="empty-sub">开始记录，关注自己的健康～</text>
     </view>
@@ -413,8 +413,9 @@ function formatDate(dateStr) {
   padding: 100rpx 40rpx;
 }
 
-.empty-icon {
-  font-size: 80rpx;
+.empty-img {
+  width: 280rpx;
+  height: 280rpx;
   margin-bottom: 24rpx;
 }
 
