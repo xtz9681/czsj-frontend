@@ -26,7 +26,7 @@
     </view>
 
     <!-- 已选食材 -->
-    <view class="ingredient-list" v-if="form.ingredients.length > 0">
+    <view class="ingredient-list card" v-if="form.ingredients.length > 0">
       <view
         class="ingredient-row"
         v-for="(ing, idx) in form.ingredients"
@@ -45,7 +45,7 @@
     </view>
 
     <!-- 添加食材入口 -->
-    <view class="add-ingredient-row" @tap="showIngredientPicker">
+    <view class="add-ingredient-row card" @tap="showIngredientPicker">
       <text class="add-icon">＋</text>
       <text class="add-text">添加食材</text>
     </view>
@@ -102,7 +102,7 @@
     </wd-button>
 
     <!-- AI 营养评分结果 -->
-    <view v-if="scoreResult" class="score-result">
+    <view v-if="scoreResult" class="score-result card">
       <view class="score-header">
         <view class="score-circle" :class="getScoreClass(scoreResult.score)">
           <text class="score-num">{{ scoreResult.score }}</text>
@@ -612,11 +612,9 @@ function getScoreGrade(score) {
 .section-count { font-size: 26rpx; color: #999; }
 
 .ingredient-list {
-  background: #FFFFFF;
-  border-radius: 16rpx;
-  box-shadow: 0 4rpx 12rpx rgba(0,0,0,0.05);
   margin-bottom: 16rpx;
   overflow: hidden;
+  padding: 0;
 }
 
 .ingredient-row {
@@ -667,9 +665,6 @@ function getScoreGrade(score) {
   align-items: center;
   gap: 12rpx;
   padding: 24rpx 28rpx;
-  background: #FFFFFF;
-  border-radius: 16rpx;
-  box-shadow: 0 4rpx 12rpx rgba(0,0,0,0.05);
   margin-bottom: 24rpx;
 }
 

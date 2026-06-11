@@ -115,7 +115,7 @@
         <view
           v-for="item in commonAllergens"
           :key="item.id"
-          class="common-item"
+          class="common-item card"
           :class="{ added: isAdded(item) }"
           @tap="toggleCommonAllergen(item)"
         >
@@ -457,10 +457,7 @@ function doRemove(item) {
   flex-direction: column;
   align-items: center;
   width: calc((100% - 48rpx) / 4);
-  background: #FFFFFF;
-  border-radius: 16rpx;
   padding: 20rpx 8rpx;
-  box-shadow: 0 4rpx 12rpx rgba(0,0,0,0.05);
   border: 3rpx solid transparent;
 
   &.added {

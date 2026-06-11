@@ -16,7 +16,7 @@
       </view>
 
       <!-- 特性介绍 -->
-      <view class="features">
+      <view class="features card">
         <view class="feature-item" v-for="f in features" :key="f.id">
           <image :src="f.iconPath" class="feature-intro-icon" mode="aspectFit" />
           <view class="feature-text">
@@ -185,9 +185,6 @@ function showPrivacy() {
 }
 
 .features {
-  background: #FFFFFF;
-  border-radius: 16rpx;
-  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.05);
   padding: 16rpx 32rpx;
   margin-bottom: 60rpx;
 }

@@ -84,7 +84,7 @@
     <view v-if="!isPremium" class="preview-section">
       <text class="preview-title">本周计划预览</text>
       <view class="preview-cards">
-        <view class="preview-day-card" v-for="d in previewDays" :key="d.day">
+        <view class="preview-day-card card" v-for="d in previewDays" :key="d.day">
           <view class="pdc-header">
             <view class="pdc-date-badge">
               <text>{{ d.dayLabel }}</text>
@@ -365,10 +365,8 @@ onShow(() => { loadLatestPlan() })
 .preview-cards { display: flex; flex-direction: column; gap: 16rpx; }
 
 .preview-day-card {
-  background: #FFFFFF;
-  border-radius: 16rpx;
-  box-shadow: 0 4rpx 12rpx rgba(0,0,0,0.05);
   overflow: hidden;
+  padding: 0;
 }
 
 .preview-blur { position: relative; padding: 24rpx; min-height: 120rpx; }

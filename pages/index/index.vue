@@ -118,7 +118,7 @@
           <scroll-view scroll-x class="recommend-scroll">
             <view class="recommend-list">
               <view
-                class="recommend-card"
+                class="recommend-card card"
                 v-for="item in recommendIngredients"
                 :key="item.id"
                 @tap="addIngredient(item)"
@@ -999,10 +999,7 @@ const motherNutritionTips = computed(() => {
   display: inline-flex;
   flex-direction: column;
   align-items: center;
-  background: #FFFFFF;
-  border-radius: 16rpx;
   padding: 24rpx 20rpx;
-  box-shadow: 0 4rpx 12rpx rgba(0,0,0,0.05);
   min-width: 120rpx;
 }
 
