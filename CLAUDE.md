@@ -55,6 +55,11 @@
   │   ├── growth-record/    # 宝宝生长记录
   │   └── weight-record/    # 妈妈体重记录
   ├── components/           # 公共组件
+  │   ├── SubjectSelector.vue
+  │   └── camera/           # 拍照识食材子组件
+  │       ├── RecognitionResult.vue   # 高置信度识别结果确认
+  │       ├── IngredientPicker.vue    # 低置信度 fallback 食材勾选
+  │       └── RecordActions.vue       # 动作按钮组（记录/记录我的/记录多个）
   ├── api/                  # 后端 API 封装
   │   ├── request.js        # 基础请求封装
   │   ├── auth.js           # wxLogin、getUserInfo
@@ -116,3 +121,4 @@
   7. **体重记录**：记录妈妈体重（支持孕周/产后天数），查看历史
   8. **Loading 状态**：所有异步加载页面均有 loading 提示，区分"加载中"和"确实为空"
   9. **返回确认**：meal-record 页有 onBackPress 防误触
+  10. **camera 组件拆分**：拍照识食材页面拆为 3 个子组件（RecognitionResult / IngredientPicker / RecordActions），主页面仅负责拍照和 stage 调度
