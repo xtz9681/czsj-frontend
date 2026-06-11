@@ -802,7 +802,7 @@ function getScoreGrade(score) {
 }
 
 .nutrient-icon { font-size: 28rpx; }
-.nutrient-name { font-size: 24rpx; color: #555; }
+.nutrient-name { font-size: 24rpx; color: #666; }
 .nutrient-status { font-size: 24rpx; font-weight: 700; }
 .status-ok { color: #5CB87A; }
 .status-miss { color: #C8C8C8; }
@@ -815,7 +815,7 @@ function getScoreGrade(score) {
 }
 
 .suggestion-title { display: block; font-size: 26rpx; font-weight: 700; color: #4A7FB5; margin-bottom: 10rpx; }
-.suggestion-text { font-size: 26rpx; color: #555; line-height: 1.8; }
+.suggestion-text { font-size: 26rpx; color: #666; line-height: 1.8; }
 
 .disclaimer {
   display: block;
