@@ -133,10 +133,11 @@ async function handleSubscribe(slot) {
 }
 
 async function handleToggle(item) {
+  const newValue = item.enabled
   try {
-    await toggleReminder(item.id, !item.enabled)
-    item.enabled = !item.enabled
+    await toggleReminder(item.id, newValue)
   } catch (e) {
+    item.enabled = !newValue
     uni.showToast({ title: '操作失败', icon: 'none' })
   }
 }
