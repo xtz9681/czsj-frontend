@@ -18,6 +18,7 @@
   "homepage": "https://github.com/xtz9681/czsj-frontend#readme",
   "description": "",
   "dependencies": {
+    "@qiun/ucharts": "^2.5.0-20230101",
     "vue": "^3.5.35",
     "wot-design-uni": "^1.14.0"
   }

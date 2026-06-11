@@ -157,3 +157,4 @@
       - 页面水平间距统一为 40rpx
   16. **数据传递规范统一**：pendingMeal 从 uni.storage 迁移到 Pinia store（store/meal.js），URL 仅传 ID 类参数，storage 仅做持久化
   17. **动画优化**：评分圆圈缩放弹入 + 数字滑入、列表卡片依次淡入上滑、页面切换 slide-in-right 过渡（全局 CSS 动画 class 定义在 App.vue）
+  18. **营养趋势可视化**：安装 @qiun/ucharts，首页新增近 7 天营养评分折线图卡片，调用 /meal/nutrition-trend 接口（付费功能，402 时静默隐藏）

@@ -47,6 +47,16 @@
       </view>
     </view>
 
+    <!-- 近 7 天营养趋势 -->
+    <view v-if="trendData.length > 0" class="section">
+      <view class="section-header">
+        <text class="section-title">近 7 天营养趋势</text>
+      </view>
+      <view class="trend-card card anim-fade-in-up">
+        <NutritionTrendChart :chartData="trendData" height="360rpx" />
+      </view>
+    </view>
+
     <!-- 快速记录按钮 -->
     <view class="quick-actions">
       <view class="action-primary" @tap="goCamera">
@@ -244,8 +254,9 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
-import { getMealList, getIngredientsByAge, getDailySummary } from '@/api/meal.js'
+import { getMealList, getIngredientsByAge, getDailySummary, getNutritionTrend } from '@/api/meal.js'
 import { useUserStore } from '@/store/user.js'
+import NutritionTrendChart from "@/components/NutritionTrendChart.vue"
 
 const userStore = useUserStore()
 
@@ -276,6 +287,7 @@ const recommendIngredients = ref([])
 const showRecommend = ref(false)
 const pageLoading = ref(false)
 const showMotherDetail = ref(false)
+const trendData = ref([])
 
 const nutritionStats = ref([
   { key: 'meals', icon: '🍽️', label: '餐次', value: '-', unit: '餐', color: '#F5A85B' },
@@ -383,6 +395,18 @@ async function loadRecommendIngredients() {
   }
 }
 
+async function loadTrend() {
+  try {
+    const params = subjectMode.value === "mother"
+      ? { subjectType: "MOTHER", days: 7 }
+      : { subjectType: "BABY", subjectId: currentBaby.value?.id, days: 7 }
+    const res = await getNutritionTrend(params)
+    trendData.value = res.points || []
+  } catch (e) {
+    trendData.value = []
+  }
+}
+
 function syncFromStore() {
   // 妈妈阶段优先级：孕期/哺乳期默认进入妈妈模式；adult_female 才能优先进入宝宝模式
   if (userStore.mother) {
@@ -413,7 +437,8 @@ onShow(() => {
   Promise.allSettled([
     loadTodayMeals(),
     loadRecommendIngredients(),
-    loadDailySummary()
+    loadDailySummary(),
+    loadTrend()
   ]).finally(() => {
     pageLoading.value = false
   })
@@ -430,7 +455,8 @@ function switchToBaby(baby) {
   Promise.allSettled([
     loadTodayMeals(),
     loadRecommendIngredients(),
-    loadDailySummary()
+    loadDailySummary(),
+    loadTrend()
   ]).finally(() => {
     pageLoading.value = false
   })
@@ -443,7 +469,8 @@ function switchToMother() {
   recommendIngredients.value = []
   pageLoading.value = true
   Promise.allSettled([
-    loadDailySummary()
+    loadDailySummary(),
+    loadTrend()
   ]).finally(() => {
     pageLoading.value = false
   })
@@ -1250,5 +1277,9 @@ const motherNutritionTips = computed(() => {
   background: #FFF3E6;
   border-radius: 16rpx;
   padding: 4rpx 12rpx;
+}
+
+.trend-card {
+  padding: 24rpx;
 }
 </style>
