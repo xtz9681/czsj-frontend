@@ -47,6 +47,26 @@
       </view>
     </view>
 
+    <!-- 月龄里程碑提醒 -->
+    <view v-if="currentMilestone && subjectMode === 'baby'" class="section milestone-section anim-fade-in-up">
+      <view class="milestone-card card" :class="{ 'milestone-new': currentMilestone.isNew }">
+        <view class="milestone-header">
+          <image :src="currentMilestone.icon" class="milestone-icon" mode="aspectFit" />
+          <view class="milestone-info">
+            <text class="milestone-title">{{ currentMilestone.title }}</text>
+            <text class="milestone-desc">{{ currentMilestone.desc }}</text>
+          </view>
+        </view>
+        <view class="milestone-tip">
+          <text class="tip-label">小贴士</text>
+          <text class="tip-text">{{ currentMilestone.tip }}</text>
+        </view>
+        <view v-if="nextMilestone" class="milestone-next">
+          <text class="next-text">下一站：{{ nextMilestone.month }} 个月 — {{ nextMilestone.title }}</text>
+        </view>
+      </view>
+    </view>
+
     <!-- 近 7 天营养趋势 -->
     <view v-if="trendData.length > 0" class="section">
       <view class="section-header">
@@ -310,6 +330,46 @@ const ageText = computed(() => {
   const y = Math.floor(m / 12)
   const rem = m % 12
   return rem > 0 ? `${y} 岁 ${rem} 个月` : `${y} 岁`
+})
+
+// 月龄里程碑数据
+const MILESTONES = [
+  { month: 4,  icon: '/static/icons/stage-baby.png', title: '关注辅食时机', desc: '宝宝 4 个月啦，可以开始关注辅食添加时机了', tip: '建议纯母乳到 6 个月再开始添加' },
+  { month: 6,  icon: '/static/icons/stage-baby.png', title: '辅食启程！', desc: '可以尝试米糊、南瓜泥等单一食材', tip: '每次只试一种新食材，观察 3 天' },
+  { month: 8,  icon: '/static/icons/stage-baby.png', title: '解锁蛋黄', desc: '可以尝试蛋黄了，记得先少量试敏哦', tip: '蛋白建议 12 个月后再尝试' },
+  { month: 10, icon: '/static/icons/stage-baby.png', title: '手指食物时间', desc: '可以尝试手指食物了，锻炼咀嚼能力', tip: '切成条状或小块，让宝宝自主抓握' },
+  { month: 12, icon: '/static/icons/stage-baby.png', title: '满 1 岁啦！', desc: '可以喝鲜牛奶、尝试蜂蜜了', tip: '逐步从奶瓶过渡到水杯' },
+  { month: 15, icon: '/static/icons/stage-baby.png', title: '饮食大升级', desc: '可以和大人吃差不多的食物了', tip: '注意少盐少糖，避免重口味' },
+  { month: 18, icon: '/static/icons/stage-baby.png', title: '大部分食材解锁', desc: '大部分食材都能吃了，注意均衡搭配', tip: '每天保证奶量 400-500ml' },
+  { month: 24, icon: '/static/icons/stage-baby.png', title: '2 岁啦！', desc: '饮食接近成人，重点关注钙铁锌', tip: '可以开始培养自主进食习惯了' },
+]
+
+const currentMilestone = computed(() => {
+  if (subjectMode.value !== 'baby' || !ageMonths.value) return null
+  const age = ageMonths.value
+  // 找到当前所处的里程碑（最近的已达到的节点）
+  let current = null
+  for (let i = MILESTONES.length - 1; i >= 0; i--) {
+    if (age >= MILESTONES[i].month) {
+      current = MILESTONES[i]
+      break
+    }
+  }
+  // 如果刚好在里程碑月份（±1个月内），高亮显示
+  if (current && Math.abs(age - current.month) <= 1) {
+    return { ...current, isNew: true }
+  }
+  // 否则显示当前阶段（不高亮）
+  return current ? { ...current, isNew: false } : null
+})
+
+const nextMilestone = computed(() => {
+  if (subjectMode.value !== 'baby' || !ageMonths.value) return null
+  const age = ageMonths.value
+  for (const ms of MILESTONES) {
+    if (ms.month > age) return ms
+  }
+  return null
 })
 
 // 顶部显示名称
@@ -996,6 +1056,98 @@ const motherNutritionTips = computed(() => {
   &.score-good { background: #E8F8EE; color: #5CB87A; }
   &.score-ok { background: #FFF3E6; color: #F5A85B; }
   &.score-low { background: #FDEEE9; color: #E07A5F; }
+}
+
+/* 月龄里程碑卡片 */
+.milestone-section {
+  padding: 0 40rpx;
+  margin-bottom: 16rpx;
+}
+
+.milestone-card {
+  padding: 28rpx 32rpx;
+  position: relative;
+  overflow: hidden;
+}
+
+.milestone-card.milestone-new {
+  background: linear-gradient(135deg, #FFF8F0 0%, #FFFFFF 100%);
+  border: 2rpx solid #F5A85B;
+}
+
+.milestone-header {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  margin-bottom: 20rpx;
+}
+
+.milestone-icon {
+  width: 64rpx;
+  height: 64rpx;
+  flex-shrink: 0;
+}
+
+.milestone-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
+}
+
+.milestone-title {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: #3D3935;
+}
+
+.milestone-desc {
+  font-size: 26rpx;
+  color: #666;
+  line-height: 1.5;
+}
+
+.milestone-tip {
+  background: #FAF7F2;
+  border-radius: 12rpx;
+  padding: 16rpx 20rpx;
+  margin-bottom: 16rpx;
+}
+
+.tip-label {
+  font-size: 22rpx;
+  color: #F5A85B;
+  font-weight: 600;
+  margin-right: 8rpx;
+}
+
+.tip-text {
+  font-size: 24rpx;
+  color: #666;
+  line-height: 1.5;
+}
+
+.milestone-next {
+  padding-top: 12rpx;
+  border-top: 1rpx solid #F0E9DE;
+}
+
+.next-text {
+  font-size: 22rpx;
+  color: #999;
+}
+
+.milestone-card.milestone-new::after {
+  content: 'NEW';
+  position: absolute;
+  top: 16rpx;
+  right: -24rpx;
+  background: #F5A85B;
+  color: #FFFFFF;
+  font-size: 18rpx;
+  font-weight: 700;
+  padding: 4rpx 32rpx;
+  transform: rotate(45deg);
 }
 
 .ingredients-row {
