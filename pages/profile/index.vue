@@ -9,7 +9,7 @@
     <view class="avatar-area" @tap="chooseAvatar">
       <image v-if="form.avatar" :src="form.avatar" class="avatar-img" mode="aspectFill" />
       <view v-else class="avatar-placeholder">
-        <text class="avatar-icon">👶</text>
+        <image src="/static/icons/avatar-baby.png" class="avatar-icon-img" mode="aspectFit" />
       </view>
       <view class="avatar-badge">📷</view>
     </view>
@@ -322,8 +322,10 @@ function skipToHome() {
   justify-content: center;
 }
 
-.avatar-icon {
-  font-size: 72rpx;
+.avatar-icon-img {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 50%;
 }
 
 .avatar-badge {

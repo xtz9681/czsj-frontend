@@ -4,7 +4,7 @@
     <view class="user-card">
       <view class="user-header">
         <view class="user-avatar">
-          {{ userMode === 'baby' && currentBaby ? (currentBaby.gender === 'female' ? '👧' : '👦') : '🤱' }}
+          <image :src="userMode === 'baby' && currentBaby ? (currentBaby.gender === 'female' ? '/static/icons/avatar-girl.png' : '/static/icons/avatar-boy.png') : '/static/icons/avatar-mother.png'" class="user-avatar-img" mode="aspectFit" />
         </view>
         <view class="user-info">
           <text class="user-name">
@@ -23,7 +23,7 @@
       <view class="features-list">
         <!-- 宝宝档案 -->
         <view class="feature-item card" @tap="goToBabyProfile">
-          <view class="feature-icon">🍼</view>
+          <view class="feature-icon"><image src="/static/icons/icon-bottle.png" class="feature-icon-img" mode="aspectFit" /></view>
           <view class="feature-content">
             <text class="feature-title">宝宝档案</text>
             <text class="feature-desc">{{ babies.length > 0 ? `${babies.length} 个档案` : '管理宝宝信息' }}</text>
@@ -33,7 +33,7 @@
 
         <!-- 妈妈档案 -->
         <view class="feature-item card" @tap="goToMotherProfile">
-          <view class="feature-icon">🤱</view>
+          <view class="feature-icon"><image src="/static/icons/icon-mother-profile.png" class="feature-icon-img" mode="aspectFit" /></view>
           <view class="feature-content">
             <text class="feature-title">妈妈档案</text>
             <text class="feature-desc">{{ motherPhaseText }}</text>
@@ -43,7 +43,7 @@
 
         <!-- 过敏管理 -->
         <view class="feature-item card" @tap="goToAllergy">
-          <view class="feature-icon">⚠️</view>
+          <view class="feature-icon"><image src="/static/icons/icon-allergy.png" class="feature-icon-img" mode="aspectFit" /></view>
           <view class="feature-content">
             <text class="feature-title">过敏管理</text>
             <text class="feature-desc">{{ allergyCount > 0 ? allergyCount + ' 项过敏记录' : '暂无记录' }}</text>
@@ -53,7 +53,7 @@
 
         <!-- 生长记录 -->
         <view v-if="currentBaby?.id" class="feature-item card" @tap="goToGrowthRecord">
-          <view class="feature-icon">📊</view>
+          <view class="feature-icon"><image src="/static/icons/icon-growth.png" class="feature-icon-img" mode="aspectFit" /></view>
           <view class="feature-content">
             <text class="feature-title">生长记录</text>
             <text class="feature-desc">记录宝宝成长数据</text>
@@ -63,7 +63,7 @@
 
         <!-- 体重管理 -->
         <view v-if="mother" class="feature-item card" @tap="goToWeightRecord">
-          <view class="feature-icon">🏋️</view>
+          <view class="feature-icon"><image src="/static/icons/icon-weight.png" class="feature-icon-img" mode="aspectFit" /></view>
           <view class="feature-content">
             <text class="feature-title">体重管理</text>
             <text class="feature-desc">记录妈妈体重</text>
@@ -212,13 +212,18 @@ initUserMode()
   }
 
   .user-avatar {
-    font-size: 80rpx;
     width: 100rpx;
     height: 100rpx;
     display: flex;
     align-items: center;
     justify-content: center;
     background: rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+  }
+
+  .user-avatar-img {
+    width: 100rpx;
+    height: 100rpx;
     border-radius: 50%;
   }
 
@@ -280,9 +285,16 @@ initUserMode()
   }
 
   .feature-icon {
-    font-size: 48rpx;
     min-width: 60rpx;
     text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .feature-icon-img {
+    width: 48rpx;
+    height: 48rpx;
   }
 
   .feature-content {

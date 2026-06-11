@@ -5,7 +5,9 @@
       <view class="top-bar">
         <view class="subject-info" @tap="showSwitcher = true">
           <view class="subject-avatar">
-            <text>{{ subjectMode === 'baby' ? (currentBaby?.gender === 'female' ? '👧' : '👦') : '🤱' }}</text>
+            <image v-if="subjectMode === 'baby' && currentBaby?.gender === 'female'" src="/static/avatar-girl.png" class="avatar-img" />
+            <image v-else-if="subjectMode === 'baby' && currentBaby?.gender === 'male'" src="/static/avatar-boy.png" class="avatar-img" />
+            <image v-else src="/static/avatar-mother.png" class="avatar-img" />
           </view>
           <view class="subject-detail">
             <view class="subject-name-row">
@@ -48,7 +50,7 @@
     <!-- 快速记录按钮 -->
     <view class="quick-actions">
       <view class="action-primary" @tap="goCamera">
-        <text class="action-icon-big">📸</text>
+        <image src="/static/icon-camera.png" class="action-icon-img-big" />
         <view>
           <text class="action-title">拍照记一餐</text>
           <text class="action-sub">AI 自动识别食材</text>
@@ -56,7 +58,7 @@
         <text class="action-arrow">›</text>
       </view>
       <view class="action-secondary" @tap="goMealRecord">
-        <text class="action-icon">✍️</text>
+        <image src="/static/icon-manual.png" class="action-icon-img" />
         <text class="action-text">手动记录</text>
       </view>
     </view>
@@ -179,7 +181,7 @@
     <!-- AI 周计划入口 -->
     <view class="plan-banner" @tap="goPlan">
       <view class="plan-banner-content">
-        <text class="plan-banner-icon">🗓️</text>
+        <image src="/static/icon-plan.png" class="plan-banner-icon-img" />
         <view>
           <text class="plan-banner-title">AI 智能周计划</text>
           <text class="plan-banner-sub">根据月龄 + 过敏史，帮你安排本周饮食</text>
@@ -198,7 +200,7 @@
 
         <!-- 宝妈档案 -->
         <view v-if="mother" class="switcher-item" :class="{ active: subjectMode === 'mother' }" @tap="switchToMother">
-          <view class="switcher-avatar">🤱</view>
+          <image src="/static/avatar-mother.png" class="switcher-avatar-img" />
           <view class="switcher-info">
             <text class="switcher-name">我的营养</text>
             <text class="switcher-sub">{{ { preconception: '备孕期', pregnancy_early: '孕早期', pregnancy_mid: '孕中期', pregnancy_late: '孕晚期', lactation: '哺乳期', adult_female: '日常营养' }[mother.phase] || '妈妈' }}</text>
@@ -215,7 +217,8 @@
           :class="{ active: subjectMode === 'baby' && currentBabyId === b.id }"
           @tap="switchToBaby(b)"
         >
-          <view class="switcher-avatar">{{ b.gender === 'female' ? '👧' : '👦' }}</view>
+          <image v-if="b.gender === 'female'" src="/static/avatar-girl.png" class="switcher-avatar-img" />
+          <image v-else src="/static/avatar-boy.png" class="switcher-avatar-img" />
           <view class="switcher-info">
             <text class="switcher-name">{{ b.name }}</text>
             <text class="switcher-sub">{{ babyAgeText(b) }}</text>
@@ -682,6 +685,12 @@ const motherNutritionTips = computed(() => {
   flex-shrink: 0;
 }
 
+.avatar-img {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 50%;
+}
+
 .subject-detail { flex: 1; }
 
 .subject-name-row {
@@ -840,6 +849,11 @@ const motherNutritionTips = computed(() => {
 
 .action-icon-big { font-size: 56rpx; }
 
+.action-icon-img-big {
+  width: 64rpx;
+  height: 64rpx;
+}
+
 .action-title { display: block; font-size: 30rpx; font-weight: 700; color: #3D3935; margin-bottom: 4rpx; }
 .action-sub { font-size: 22rpx; color: #999; }
 
@@ -859,6 +873,10 @@ const motherNutritionTips = computed(() => {
 }
 
 .action-icon { font-size: 44rpx; }
+.action-icon-img {
+  width: 48rpx;
+  height: 48rpx;
+}
 .action-text { font-size: 24rpx; color: #666; }
 
 /* 通用 section */
@@ -1007,6 +1025,12 @@ const motherNutritionTips = computed(() => {
 }
 
 .plan-banner-icon { font-size: 56rpx; }
+
+.plan-banner-icon-img {
+  width: 56rpx;
+  height: 56rpx;
+  margin-right: 16rpx;
+}
 
 .plan-banner-title { display: block; font-size: 30rpx; font-weight: 700; color: #FFFFFF; margin-bottom: 6rpx; }
 .plan-banner-sub { font-size: 24rpx; color: rgba(255,255,255,0.85); }
@@ -1191,6 +1215,12 @@ const motherNutritionTips = computed(() => {
   display: flex; align-items: center; justify-content: center;
   font-size: 36rpx;
   flex-shrink: 0;
+}
+
+.switcher-avatar-img {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 50%;
 }
 
 .switcher-info { flex: 1; }

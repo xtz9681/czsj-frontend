@@ -2,7 +2,7 @@
   <view class="page-container">
     <!-- 妈妈信息卡片 -->
     <view class="mother-info-card card">
-      <text class="mother-emoji">🤱</text>
+      <image src="/static/icons/avatar-mother.png" class="mother-emoji-img" mode="aspectFit" />
       <text class="mother-phase">{{ motherPhaseLabel }}</text>
     </view>
 
@@ -273,8 +273,15 @@ function formatDate(dateStr) {
 
 .mother-emoji {
   display: block;
-  font-size: 60rpx;
   margin-bottom: 12rpx;
+}
+
+.mother-emoji-img {
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: 50%;
+  display: block;
+  margin: 0 auto 12rpx;
 }
 
 .mother-phase {

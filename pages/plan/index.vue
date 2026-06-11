@@ -3,7 +3,7 @@
     <!-- 付费引导 Banner（未订阅时显示） -->
     <view v-if="!isPremium" class="premium-banner">
       <view class="premium-content">
-        <text class="premium-icon">🗓️</text>
+        <image src="/static/icons/icon-plan.png" class="premium-icon-img" mode="aspectFit" />
         <view>
           <text class="premium-title">AI 智能周计划</text>
           <text class="premium-desc">根据宝宝月龄 + 过敏史 + 已吃食材，自动生成 7 天食谱安排</text>
@@ -306,7 +306,10 @@ onShow(() => { loadLatestPlan() })
   margin-bottom: 28rpx;
 }
 
-.premium-icon { font-size: 64rpx; flex-shrink: 0; }
+.premium-icon { flex-shrink: 0; }
+
+.premium-icon-img { width: 56rpx; height: 56rpx; margin-right: 16rpx; }
+
 
 .premium-title { display: block; font-size: 34rpx; font-weight: 700; color: #FFFFFF; margin-bottom: 8rpx; }
 .premium-desc { font-size: 26rpx; color: rgba(255,255,255,0.9); line-height: 1.6; }

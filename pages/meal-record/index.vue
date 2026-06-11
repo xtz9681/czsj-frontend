@@ -8,7 +8,8 @@
         :type="form.mealType === t.value ? 'primary' : 'default'"
         @click="form.mealType = t.value"
       >
-        {{ t.icon }} {{ t.label }}
+        <image :src="t.icon" class="meal-type-icon-img" mode="aspectFit" />
+        {{ t.label }}
       </wd-button>
     </view>
 
@@ -251,10 +252,10 @@ const form = ref({
 })
 
 const mealTypes = [
-  { value: 'breakfast', icon: '🌅', label: '早餐' },
-  { value: 'lunch', icon: '☀️', label: '午餐' },
-  { value: 'dinner', icon: '🌙', label: '晚餐' },
-  { value: 'snack', icon: '🍪', label: '加餐' },
+  { value: 'breakfast', icon: '/static/meal-breakfast.png', label: '早餐' },
+  { value: 'lunch', icon: '/static/meal-lunch.png', label: '午餐' },
+  { value: 'dinner', icon: '/static/meal-dinner.png', label: '晚餐' },
+  { value: 'snack', icon: '/static/meal-snack.png', label: '加餐' },
 ]
 
 const allergyList = uni.getStorageSync('allergyList') || []
@@ -543,6 +544,12 @@ function getScoreGrade(score) {
   display: flex;
   gap: 16rpx;
   padding: 32rpx 0 24rpx;
+}
+
+.meal-type-icon-img {
+  width: 40rpx;
+  height: 40rpx;
+  margin-right: 8rpx;
 }
 
 .meal-type-btn {

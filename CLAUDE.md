@@ -76,6 +76,23 @@
   │   │   ├── no-allergy.png
   │   │   ├── no-plan.png
   │   │   └── no-records.png
+  │   ├── icons/            # UI 图标（替代 emoji）
+  │   │   ├── avatar-girl.png
+  │   │   ├── avatar-boy.png
+  │   │   ├── avatar-mother.png
+  │   │   ├── avatar-baby.png
+  │   │   ├── icon-camera.png
+  │   │   ├── icon-manual.png
+  │   │   ├── icon-plan.png
+  │   │   ├── icon-bottle.png
+  │   │   ├── icon-mother-profile.png
+  │   │   ├── icon-allergy.png
+  │   │   ├── icon-growth.png
+  │   │   ├── icon-weight.png
+  │   │   ├── meal-breakfast.png
+  │   │   ├── meal-lunch.png
+  │   │   ├── meal-dinner.png
+  │   │   └── meal-snack.png
   │   └── ...
   ├── App.vue
   ├── main.js
@@ -131,3 +148,4 @@
   11. **过敏页 tab 布局**：过敏管理页改为「已标记 / 添加新的」tab 切换，收纳四段式内容
   12. **妈妈营养标签卡片**：妈妈模式首页营养提示改为营养素标签 + 一句话口诀 + 折叠详情，视觉更轻盈
   13. **空状态插图**：各页面空状态从 emoji 升级为情感化插图（static/empty/ 目录）
+  14. **图标替换（第一批）**：头像、功能入口、餐次类型的 emoji 替换为 AI 生成的风格统一图标（static/icons/ 目录）
