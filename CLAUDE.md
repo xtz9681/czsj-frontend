@@ -149,3 +149,7 @@
   12. **妈妈营养标签卡片**：妈妈模式首页营养提示改为营养素标签 + 一句话口诀 + 折叠详情，视觉更轻盈
   13. **空状态插图**：各页面空状态从 emoji 升级为情感化插图（static/empty/ 目录）
   14. **图标替换**：头像、功能入口、餐次类型、妈妈阶段、性别选择、登录/设置页的 emoji 全部替换为 AI 生成的风格统一图标（static/icons/ 目录，共 29 张）
+  15. **样式规范统一**：
+      - Step 1：Loading 和空状态样式提取到 App.vue 全局（.loading-state/.empty-state/.loading-icon/.empty-text）
+      - Step 2：卡片样式复用全局 .card（删除 5 个页面的重复 background/border-radius/box-shadow 定义）
+      - Step 3：（进行中）其他通用样式复用（按钮、表单、标题等）

@@ -745,10 +745,6 @@ function getScoreGrade(score) {
 .input-placeholder { color: #C8C8C8; }
 
 .score-result {
-  background: #FFFFFF;
-  border-radius: 16rpx;
-  box-shadow: 0 4rpx 12rpx rgba(0,0,0,0.05);
-  padding: 32rpx;
   margin-top: 32rpx;
 }
 
