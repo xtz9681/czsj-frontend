@@ -53,178 +53,37 @@
     </view>
 
     <!-- === 状态3：高置信度 — 直接展示识别结果 === -->
-    <view v-if="stage === 'high-confidence'" class="result-stage">
-      <image :src="capturedPhoto" class="result-photo" mode="aspectFill" />
-
-      <scroll-view class="result-card-scroll">
-        <view class="result-card">
-          <view class="result-header">
-            <text class="result-icon">✅</text>
-            <text class="result-title">识别到这些食材</text>
-            <text class="result-sub">点击可以调整</text>
-          </view>
-
-          <view class="ingredient-tags">
-            <view
-              v-for="ing in recognizedIngredients"
-              :key="ing.id"
-              class="ingredient-tag"
-              :class="{
-                selected: ing.selected,
-                'allergy-tag': ing.isAllergy
-              }"
-              @tap="toggleIngredient(ing)"
-            >
-              <text v-if="ing.isAllergy" class="tag-warning">⚠️</text>
-              <text>{{ ing.name }}</text>
-              <text v-if="ing.selected" class="tag-check">✓</text>
-              <text v-else class="tag-remove">✕</text>
-            </view>
-            <view class="ingredient-tag add-tag" @tap="showAddIngredient">
-              <text>+ 添加</text>
-            </view>
-          </view>
-
-          <!-- 年龄警告（如果有） -->
-          <view v-if="ageWarning" class="age-warning-card">
-            <text class="warning-title">💡 食材提示</text>
-            <text class="warning-text">{{ ageWarning }}</text>
-          </view>
-
-          <!-- 过敏预警 -->
-          <view v-if="allergyWarnings.length > 0" class="allergy-warning-card">
-            <text class="warning-title">⚠️ 过敏提醒</text>
-            <view v-for="w in allergyWarnings" :key="w.name" class="warning-item">
-              <text class="warning-name">{{ w.name }}</text>
-              <text class="warning-desc">{{ w.desc }}</text>
-            </view>
-          </view>
-
-          <!-- 动作按钮 -->
-          <view class="action-buttons">
-            <!-- 妈妈模式 -->
-            <template v-if="subjectMode === 'mother'">
-              <!-- 没有孩子：只显示"记录" -->
-              <view v-if="userStore.babies.length === 0" class="action-btn primary" @tap="recordToMother">
-                <text>记录</text>
-              </view>
-              <!-- 有孩子：显示"记录我的"和"记录多个" -->
-              <template v-else>
-                <view class="action-btn primary" @tap="recordToMother">
-                  <text>记录我的</text>
-                </view>
-                <view class="action-btn secondary" @tap="showMultipleSelect">
-                  <text>记录多个</text>
-                </view>
-              </template>
-            </template>
-            <!-- 宝宝模式：显示"记录" -->
-            <template v-else>
-              <view class="action-btn primary" @tap="recordToBaby">
-                <text>记录</text>
-              </view>
-            </template>
-          </view>
-        </view>
-      </scroll-view>
-    </view>
+    <RecognitionResult
+      v-if="stage === 'high-confidence'"
+      :photo="capturedPhoto"
+      :ingredients="recognizedIngredients"
+      :age-warning="ageWarning"
+      :allergy-warnings="allergyWarnings"
+      :subject-mode="subjectMode"
+      :has-babies="userStore.babies.length > 0"
+      @toggle-ingredient="toggleIngredient"
+      @add-ingredient="showAddIngredient"
+      @record-mother="recordToMother"
+      @record-baby="recordToBaby"
+      @record-multiple="showMultipleSelect"
+    />
 
     <!-- === 状态4：低置信度 — fallback 勾选 === -->
-    <view v-if="stage === 'low-confidence'" class="fallback-stage">
-      <image v-if="capturedPhoto" :src="capturedPhoto" class="fallback-photo" mode="aspectFill" />
-
-      <view class="fallback-card">
-        <view class="fallback-header">
-          <text class="fallback-title">📸 这一餐看起来是辅食～</text>
-          <text class="fallback-sub">帮我确认下用了什么食材？</text>
-        </view>
-
-        <!-- 月龄常用食材（快速勾选） -->
-        <view class="quick-select-section">
-          <text class="quick-select-title">{{ babyAgeText }}常用食材</text>
-          <view class="quick-select-grid">
-            <view
-              v-for="ing in ageBasedIngredients"
-              :key="ing.id"
-              class="quick-select-item"
-              :class="{
-                selected: ing.selected,
-                'allergy-item': ing.isAllergy
-              }"
-              @tap="toggleIngredient(ing)"
-            >
-              <text class="quick-item-emoji">{{ ing.emoji }}</text>
-              <text class="quick-item-name">{{ ing.name }}</text>
-              <text v-if="ing.isAllergy" class="quick-allergy-icon">⚠️</text>
-              <view v-if="ing.selected" class="selected-check">✓</view>
-            </view>
-          </view>
-        </view>
-
-        <!-- 自定义输入 -->
-        <view class="custom-input-area">
-          <wd-input
-            v-model="customIngredient"
-            placeholder="输入其他食材名称"
-            clearable
-            @confirm="addCustomIngredient"
-          />
-          <wd-button @click="addCustomIngredient" type="primary">添加</wd-button>
-        </view>
-
-        <!-- 已选食材展示 -->
-        <view v-if="selectedIngredients.length > 0" class="selected-summary">
-          <text class="selected-title">已选 {{ selectedIngredients.length }} 种食材</text>
-          <view class="selected-tags">
-            <view
-              v-for="ing in selectedIngredients"
-              :key="ing.id"
-              class="selected-tag"
-              :class="{ 'allergy-tag': ing.isAllergy }"
-            >
-              <text v-if="ing.isAllergy">⚠️ </text>
-              <text>{{ ing.name }}</text>
-              <text class="remove-tag" @tap="removeIngredient(ing)">✕</text>
-            </view>
-          </view>
-        </view>
-
-        <!-- 过敏预警 -->
-        <view v-if="allergyWarnings.length > 0" class="allergy-warning-card">
-          <text class="warning-title">⚠️ 过敏提醒</text>
-          <view v-for="w in allergyWarnings" :key="w.name" class="warning-item">
-            <text class="warning-name">{{ w.name }}</text>
-            <text class="warning-desc">{{ w.desc }}</text>
-          </view>
-        </view>
-
-        <!-- 动作按钮 -->
-        <view class="action-buttons">
-          <!-- 妈妈模式 -->
-          <template v-if="subjectMode === 'mother'">
-            <!-- 没有孩子：只显示"记录" -->
-            <view v-if="userStore.babies.length === 0" class="action-btn primary" :class="{ disabled: selectedIngredients.length === 0 }" @tap="selectedIngredients.length > 0 && recordToMother()">
-              <text>{{ selectedIngredients.length > 0 ? '记录' : '请至少选一种食材' }}</text>
-            </view>
-            <!-- 有孩子：显示"记录我的"和"记录多个" -->
-            <template v-else>
-              <view class="action-btn primary" :class="{ disabled: selectedIngredients.length === 0 }" @tap="selectedIngredients.length > 0 && recordToMother()">
-                <text>{{ selectedIngredients.length > 0 ? '记录我的' : '请至少选一种食材' }}</text>
-              </view>
-              <view class="action-btn secondary" :class="{ disabled: selectedIngredients.length === 0 }" @tap="selectedIngredients.length > 0 && showMultipleSelect()">
-                <text>记录多个</text>
-              </view>
-            </template>
-          </template>
-          <!-- 宝宝模式：显示"记录" -->
-          <template v-else>
-            <view class="action-btn primary" :class="{ disabled: selectedIngredients.length === 0 }" @tap="selectedIngredients.length > 0 && recordToBaby()">
-              <text>{{ selectedIngredients.length > 0 ? '记录' : '请至少选一种食材' }}</text>
-            </view>
-          </template>
-        </view>
-      </view>
-    </view>
+    <IngredientPicker
+      v-if="stage === 'low-confidence'"
+      :photo="capturedPhoto"
+      :ingredients="ageBasedIngredients"
+      :allergy-warnings="allergyWarnings"
+      :baby-age-text="babyAgeText"
+      :subject-mode="subjectMode"
+      :has-babies="userStore.babies.length > 0"
+      @toggle-ingredient="toggleIngredient"
+      @add-custom="handleCustomIngredient"
+      @remove-ingredient="removeIngredient"
+      @record-mother="recordToMother"
+      @record-baby="recordToBaby"
+      @record-multiple="showMultipleSelect"
+    />
 
     <!-- 档案选择器 -->
     <SubjectSelector
@@ -241,6 +100,8 @@
 import { ref, computed, nextTick } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
 import SubjectSelector from '@/components/SubjectSelector.vue'
+import RecognitionResult from '@/components/camera/RecognitionResult.vue'
+import IngredientPicker from '@/components/camera/IngredientPicker.vue'
 import { photoRecord } from '@/api/ai.js'
 import { getIngredientsByAge, quickRecord, recordMultiple } from '@/api/meal.js'
 import { useUserStore } from '@/store/user.js'
@@ -260,7 +121,6 @@ const navBarStyle = computed(() => ({
 
 const stage = ref('init') // init | recognizing | high-confidence | low-confidence
 const capturedPhoto = ref('')
-const customIngredient = ref('')
 const recognizedIngredients = ref([])
 const ageWarning = ref(null)
 const suggestedSubjectType = ref(null)
@@ -438,6 +298,21 @@ function addCustomIngredient() {
     isAllergy: allergyList.some(a => a.name === name)
   })
   customIngredient.value = ''
+}
+
+// 用于 IngredientPicker 子组件的处理函数
+function handleCustomIngredient(name) {
+  if (ageBasedIngredients.value.some(i => i.name === name)) {
+    uni.showToast({ title: '食材已在列表里了~', icon: 'none' })
+    return
+  }
+  ageBasedIngredients.value.push({
+    id: Date.now(),
+    emoji: '🍴',
+    name,
+    selected: true,
+    isAllergy: allergyList.some(a => a.name === name)
+  })
 }
 
 function removeIngredient(ing) {
@@ -719,323 +594,6 @@ function goBack() {
 }
 
 /* 高置信度结果 */
-.result-stage {
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
 }
-
-.result-photo {
-  width: 100%;
-  height: 400rpx;
-  flex-shrink: 0;
-}
-
-.result-card-scroll {
-  flex: 1;
-  overflow-y: auto;
-  border-radius: 40rpx 40rpx 0 0;
-  background: #FFFFFF;
-  margin-top: -40rpx;
-}
-
-.result-card {
-  padding: 40rpx 40rpx 80rpx;
-  border-radius: 40rpx 40rpx 0 0;
-}
-
-.result-header {
-  display: flex;
-  align-items: center;
-  gap: 12rpx;
-  margin-bottom: 32rpx;
-}
-
-.result-icon { font-size: 40rpx; }
-.result-title { font-size: 32rpx; font-weight: 700; color: #3D3935; flex: 1; }
-.result-sub { font-size: 24rpx; color: #999; }
-
-.ingredient-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 16rpx;
-  margin-bottom: 32rpx;
-}
-
-.ingredient-tag {
-  display: flex;
-  align-items: center;
-  gap: 8rpx;
-  padding: 14rpx 24rpx;
-  border-radius: 32rpx;
-  border: 2rpx solid #F0E9DE;
-  font-size: 28rpx;
-  color: #555;
-  background: #F5F5F5;
-
-  &.selected {
-    background: #FFF3E6;
-    border-color: #F5A85B;
-    color: #F5A85B;
-    font-weight: 600;
-  }
-
-  &.allergy-tag {
-    background: #FDEEE9;
-    border-color: #E07A5F;
-    color: #E07A5F;
-  }
-}
-
-.add-tag {
-  background: transparent;
-  border-style: dashed;
-  color: #F5A85B;
-}
-
-.tag-check { font-size: 22rpx; color: #A3D9B1; font-weight: 700; }
-.tag-warning { font-size: 22rpx; }
-.tag-remove { font-size: 22rpx; color: #C8C8C8; }
-
-/* 过敏警告 */
-.allergy-warning-card {
-  background: #FDEEE9;
-  border-radius: 16rpx;
-  padding: 24rpx;
-  margin-bottom: 32rpx;
-  border-left: 6rpx solid #E07A5F;
-}
-
-.warning-title {
-  font-size: 28rpx;
-  font-weight: 700;
-  color: #E07A5F;
-  display: block;
-  margin-bottom: 16rpx;
-}
-
-.warning-item {
-  margin-bottom: 8rpx;
-}
-
-.warning-name { font-size: 26rpx; font-weight: 600; color: #C04B32; }
-.warning-desc { font-size: 24rpx; color: #C04B32; margin-left: 8rpx; }
-
-/* fallback 手动勾选 */
-.fallback-stage {
-  display: flex;
-  flex-direction: column;
-}
-
-.fallback-photo {
-  width: 100%;
-  height: 240rpx;
-}
-
-.fallback-card {
-  background: #FFFFFF;
-  border-radius: 40rpx 40rpx 0 0;
-  margin-top: -40rpx;
-  padding: 40rpx 40rpx 60rpx;
-  flex: 1;
-}
-
-.fallback-header {
-  margin-bottom: 32rpx;
-}
-
-.fallback-title { display: block; font-size: 32rpx; font-weight: 700; color: #3D3935; margin-bottom: 8rpx; }
-.fallback-sub { font-size: 26rpx; color: #999; }
-
-.quick-select-title {
-  font-size: 26rpx;
-  color: #999;
-  display: block;
-  margin-bottom: 20rpx;
-}
-
-.quick-select-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 16rpx;
-  margin-bottom: 32rpx;
-}
-
-.quick-select-item {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: calc((100% - 48rpx) / 4);
-  background: #F5F5F5;
-  border-radius: 16rpx;
-  padding: 20rpx 8rpx;
-  border: 3rpx solid transparent;
-
-  &.selected {
-    border-color: #F5A85B;
-    background: #FFF3E6;
-  }
-
-  &.allergy-item {
-    border-color: #E07A5F;
-    background: #FDEEE9;
-  }
-}
-
-.quick-item-emoji { font-size: 44rpx; margin-bottom: 6rpx; }
-.quick-item-name { font-size: 22rpx; color: #3D3935; text-align: center; }
-.quick-allergy-icon { font-size: 20rpx; position: absolute; top: 8rpx; right: 8rpx; }
-
-.selected-check {
-  position: absolute;
-  top: -8rpx;
-  right: -8rpx;
-  width: 32rpx;
-  height: 32rpx;
-  background: #F5A85B;
-  border-radius: 50%;
-  font-size: 20rpx;
-  color: #FFFFFF;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.custom-input-area {
-  display: flex;
-  gap: 16rpx;
-  margin-bottom: 32rpx;
-}
-
-.custom-input {
-  flex: 1;
-  background: #F5F5F5;
-  border-radius: 12rpx;
-  padding: 0 24rpx;
-  height: 80rpx;
-  font-size: 28rpx;
-  color: #3D3935;
-}
-
-.input-placeholder { color: #C8C8C8; }
-
-.custom-add-btn {
-  background: #F5A85B;
-  color: #FFFFFF;
-  border-radius: 12rpx;
-  padding: 0 32rpx;
-  height: 80rpx;
-  line-height: 80rpx;
-  font-size: 28rpx;
-  font-weight: 600;
-}
-
-.selected-summary {
-  margin-bottom: 32rpx;
-}
-
-.selected-title { font-size: 26rpx; color: #999; display: block; margin-bottom: 16rpx; }
-
-.selected-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12rpx;
-}
-
-.selected-tag {
-  display: flex;
-  align-items: center;
-  gap: 8rpx;
-  background: #FFF3E6;
-  border: 2rpx solid #F5A85B;
-  border-radius: 24rpx;
-  padding: 10rpx 20rpx;
-  font-size: 26rpx;
-  color: #F5A85B;
-
-  &.allergy-tag {
-    background: #FDEEE9;
-    border-color: #E07A5F;
-    color: #E07A5F;
-  }
-}
-
-.remove-tag { color: #C8C8C8; margin-left: 4rpx; }
-
-/* 年龄警告卡 */
-.age-warning-card {
-  background: #FFF8F0;
-  border-radius: 16rpx;
-  padding: 24rpx;
-  margin-bottom: 20rpx;
-  border-left: 6rpx solid #F5A85B;
-}
-
-.warning-title {
-  font-size: 28rpx;
-  font-weight: 700;
-  color: #F5A85B;
-  display: block;
-  margin-bottom: 12rpx;
-}
-
-.warning-text {
-  font-size: 26rpx;
-  color: #666;
-  line-height: 1.6;
-}
-
-/* 动作按钮组 */
-.action-buttons {
-  display: flex;
-  flex-direction: column;
-  gap: 16rpx;
-  padding: 20rpx 0 constant(safe-area-inset-bottom) 0;
-  padding: 20rpx 0 env(safe-area-inset-bottom) 0;
-}
-
-.action-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 96rpx;
-  border-radius: 16rpx;
-  font-size: 30rpx;
-  font-weight: 600;
-  transition: all 0.3s ease;
-
-  &.primary {
-    background: #F5A85B;
-    color: #FFFFFF;
-
-    &:active:not(.disabled) {
-      background: #E89645;
-      transform: scale(0.98);
-    }
-
-    &.disabled {
-      background: #E8D5BE;
-      color: rgba(255, 255, 255, 0.6);
-      opacity: 0.6;
-    }
-  }
-
-  &.secondary {
-    background: #FFFFFF;
-    color: #F5A85B;
-    border: 2rpx solid #F5A85B;
-
-    &:active:not(.disabled) {
-      background: #FFF9F5;
-      transform: scale(0.98);
-    }
-
-    &.disabled {
-      color: #E8D5BE;
-      border-color: #E8D5BE;
-      opacity: 0.6;
-    }
-  }
-}
+</style>
 </style>
