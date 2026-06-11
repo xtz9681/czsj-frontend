@@ -122,3 +122,4 @@
   8. **Loading 状态**：所有异步加载页面均有 loading 提示，区分"加载中"和"确实为空"
   9. **返回确认**：meal-record 页有 onBackPress 防误触
   10. **camera 组件拆分**：拍照识食材页面拆为 3 个子组件（RecognitionResult / IngredientPicker / RecordActions），主页面仅负责拍照和 stage 调度
+  11. **过敏页 tab 布局**：过敏管理页改为「已标记 / 添加新的」tab 切换，收纳四段式内容
