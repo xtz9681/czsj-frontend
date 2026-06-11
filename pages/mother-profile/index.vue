@@ -24,7 +24,7 @@
 
       <!-- 提示文案：信息越完善 AI 建议越准 -->
       <view class="tip-bar">
-        <text class="tip-icon">✨</text>
+        <image src="/static/icons/icon-sparkle.png" class="tip-icon-img" mode="aspectFit" />
         <text class="tip-text">填得越详细，AI 给出的营养建议就越贴合你的情况～</text>
       </view>
 
@@ -107,7 +107,8 @@
           </picker>
         </view>
         <view v-if="pregnancyPhaseHint" class="pregnancy-phase-hint">
-          <text class="phase-hint-text">🤰 {{ pregnancyPhaseHint }}</text>
+          <image src="/static/icons/phase-pregnancy.png" class="phase-hint-icon" mode="aspectFit" />
+          <text class="phase-hint-text">{{ pregnancyPhaseHint }}</text>
         </view>
         <view class="divider"></view>
         <view class="form-item">
@@ -538,7 +539,11 @@ async function saveAndGoHome() {
 
 .pregnancy-phase-hint {
   padding: 16rpx 0 8rpx;
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
 }
+.phase-hint-icon { width: 36rpx; height: 36rpx; flex-shrink: 0; vertical-align: middle; }
 .phase-hint-text {
   font-size: 26rpx;
   color: #F5A85B;
@@ -660,7 +665,7 @@ async function saveAndGoHome() {
   border-radius: 12rpx;
   border-left: 6rpx solid #F5A85B;
 }
-.tip-icon { font-size: 28rpx; flex-shrink: 0; }
+.tip-icon-img { width: 32rpx; height: 32rpx; flex-shrink: 0; }
 .tip-text { font-size: 24rpx; color: #B07030; line-height: 1.6; }
 
 .required { color: #E07A5F; font-size: 28rpx; margin-left: 4rpx; }

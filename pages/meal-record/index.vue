@@ -252,10 +252,10 @@ const form = ref({
 })
 
 const mealTypes = [
-  { value: 'breakfast', icon: '/static/meal-breakfast.png', label: '早餐' },
-  { value: 'lunch', icon: '/static/meal-lunch.png', label: '午餐' },
-  { value: 'dinner', icon: '/static/meal-dinner.png', label: '晚餐' },
-  { value: 'snack', icon: '/static/meal-snack.png', label: '加餐' },
+  { value: 'breakfast', icon: '/static/icons/meal-breakfast.png', label: '早餐' },
+  { value: 'lunch', icon: '/static/icons/meal-lunch.png', label: '午餐' },
+  { value: 'dinner', icon: '/static/icons/meal-dinner.png', label: '晚餐' },
+  { value: 'snack', icon: '/static/icons/meal-snack.png', label: '加餐' },
 ]
 
 const allergyList = uni.getStorageSync('allergyList') || []

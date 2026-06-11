@@ -5,9 +5,9 @@
       <view class="top-bar">
         <view class="subject-info" @tap="showSwitcher = true">
           <view class="subject-avatar">
-            <image v-if="subjectMode === 'baby' && currentBaby?.gender === 'female'" src="/static/avatar-girl.png" class="avatar-img" />
-            <image v-else-if="subjectMode === 'baby' && currentBaby?.gender === 'male'" src="/static/avatar-boy.png" class="avatar-img" />
-            <image v-else src="/static/avatar-mother.png" class="avatar-img" />
+            <image v-if="subjectMode === 'baby' && currentBaby?.gender === 'female'" src="/static/icons/avatar-girl.png" class="avatar-img" />
+            <image v-else-if="subjectMode === 'baby' && currentBaby?.gender === 'male'" src="/static/icons/avatar-boy.png" class="avatar-img" />
+            <image v-else src="/static/icons/avatar-mother.png" class="avatar-img" />
           </view>
           <view class="subject-detail">
             <view class="subject-name-row">
@@ -50,7 +50,7 @@
     <!-- 快速记录按钮 -->
     <view class="quick-actions">
       <view class="action-primary" @tap="goCamera">
-        <image src="/static/icon-camera.png" class="action-icon-img-big" />
+        <image src="/static/icons/icon-camera.png" class="action-icon-img-big" />
         <view>
           <text class="action-title">拍照记一餐</text>
           <text class="action-sub">AI 自动识别食材</text>
@@ -58,7 +58,7 @@
         <text class="action-arrow">›</text>
       </view>
       <view class="action-secondary" @tap="goMealRecord">
-        <image src="/static/icon-manual.png" class="action-icon-img" />
+        <image src="/static/icons/icon-manual.png" class="action-icon-img" />
         <text class="action-text">手动记录</text>
       </view>
     </view>
@@ -138,7 +138,10 @@
       <view class="section">
         <view class="mother-tip-card card">
           <view class="mother-tip-header">
-            <text class="mother-tip-title">{{ phaseEmoji }} {{ subjectSubtitle }}</text>
+            <view class="mother-tip-title-row">
+              <image :src="phaseEmoji" class="phase-emoji-img" mode="aspectFit" />
+              <text class="mother-tip-title">{{ subjectSubtitle }}</text>
+            </view>
             <text class="mother-tip-stage-desc">{{ phaseDesc }}</text>
           </view>
 
@@ -181,7 +184,7 @@
     <!-- AI 周计划入口 -->
     <view class="plan-banner" @tap="goPlan">
       <view class="plan-banner-content">
-        <image src="/static/icon-plan.png" class="plan-banner-icon-img" />
+        <image src="/static/icons/icon-plan.png" class="plan-banner-icon-img" />
         <view>
           <text class="plan-banner-title">AI 智能周计划</text>
           <text class="plan-banner-sub">根据月龄 + 过敏史，帮你安排本周饮食</text>
@@ -200,7 +203,7 @@
 
         <!-- 宝妈档案 -->
         <view v-if="mother" class="switcher-item" :class="{ active: subjectMode === 'mother' }" @tap="switchToMother">
-          <image src="/static/avatar-mother.png" class="switcher-avatar-img" />
+          <image src="/static/icons/avatar-mother.png" class="switcher-avatar-img" />
           <view class="switcher-info">
             <text class="switcher-name">我的营养</text>
             <text class="switcher-sub">{{ { preconception: '备孕期', pregnancy_early: '孕早期', pregnancy_mid: '孕中期', pregnancy_late: '孕晚期', lactation: '哺乳期', adult_female: '日常营养' }[mother.phase] || '妈妈' }}</text>
@@ -217,8 +220,8 @@
           :class="{ active: subjectMode === 'baby' && currentBabyId === b.id }"
           @tap="switchToBaby(b)"
         >
-          <image v-if="b.gender === 'female'" src="/static/avatar-girl.png" class="switcher-avatar-img" />
-          <image v-else src="/static/avatar-boy.png" class="switcher-avatar-img" />
+          <image v-if="b.gender === 'female'" src="/static/icons/avatar-girl.png" class="switcher-avatar-img" />
+          <image v-else src="/static/icons/avatar-boy.png" class="switcher-avatar-img" />
           <view class="switcher-info">
             <text class="switcher-name">{{ b.name }}</text>
             <text class="switcher-sub">{{ babyAgeText(b) }}</text>
@@ -487,14 +490,14 @@ function addIngredient(item) {
 
 const phaseEmoji = computed(() => {
   const map = {
-    preconception: '🌱',
-    pregnancy_early: '🤰',
-    pregnancy_mid: '🤰',
-    pregnancy_late: '🤰',
-    lactation: '🤱',
-    adult_female: '💪'
+    preconception: '/static/icons/phase-preconception.png',
+    pregnancy_early: '/static/icons/phase-pregnancy.png',
+    pregnancy_mid: '/static/icons/phase-pregnancy.png',
+    pregnancy_late: '/static/icons/phase-pregnancy.png',
+    lactation: '/static/icons/phase-lactation.png',
+    adult_female: '/static/icons/phase-daily.png'
   }
-  return map[mother.value?.phase] || '🤰'
+  return map[mother.value?.phase] || '/static/icons/phase-pregnancy.png'
 })
 
 const phaseDesc = computed(() => {
@@ -1070,12 +1073,24 @@ const motherNutritionTips = computed(() => {
   margin-bottom: 24rpx;
 }
 
+.mother-tip-title-row {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  margin-bottom: 8rpx;
+}
+
+.phase-emoji-img {
+  width: 48rpx;
+  height: 48rpx;
+  flex-shrink: 0;
+}
+
 .mother-tip-title {
   display: block;
   font-size: 32rpx;
   font-weight: 700;
   color: #3D3935;
-  margin-bottom: 8rpx;
 }
 
 .mother-tip-stage-desc {

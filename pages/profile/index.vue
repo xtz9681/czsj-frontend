@@ -53,14 +53,16 @@
             :class="{ active: form.gender === 'male' }"
             @tap="form.gender = 'male'"
           >
-            <text>👦 男宝</text>
+            <image src="/static/icons/gender-boy.png" class="gender-icon-img" mode="aspectFit" />
+            <text>男宝</text>
           </view>
           <view
             class="gender-btn"
             :class="{ active: form.gender === 'female' }"
             @tap="form.gender = 'female'"
           >
-            <text>👧 女宝</text>
+            <image src="/static/icons/gender-girl.png" class="gender-icon-img" mode="aspectFit" />
+            <text>女宝</text>
           </view>
         </view>
       </view>
@@ -385,6 +387,9 @@ function skipToHome() {
   font-size: 26rpx;
   color: #999;
   background: #FAFAFA;
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
 
   &.active {
     border-color: #F5A85B;
@@ -392,6 +397,11 @@ function skipToHome() {
     background: #FFF3E6;
     font-weight: 600;
   }
+}
+
+.gender-icon-img {
+  width: 56rpx;
+  height: 56rpx;
 }
 
 .picker-value {

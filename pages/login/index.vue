@@ -10,15 +10,15 @@
     <view class="content" :style="contentStyle">
       <!-- Logo 区域 -->
       <view class="logo-area">
-        <view class="logo-icon">🌱</view>
+        <image src="/static/icons/logo-app.png" class="logo-icon-img" mode="aspectFit" />
         <text class="app-name">成长食记</text>
         <text class="app-slogan">从第一口辅食开始，记录宝宝的成长</text>
       </view>
 
       <!-- 特性介绍 -->
       <view class="features">
-        <view class="feature-item" v-for="f in features" :key="f.icon">
-          <text class="feature-icon">{{ f.icon }}</text>
+        <view class="feature-item" v-for="f in features" :key="f.id">
+          <image :src="f.iconPath" class="feature-intro-icon" mode="aspectFit" />
           <view class="feature-text">
             <text class="feature-title">{{ f.title }}</text>
             <text class="feature-desc">{{ f.desc }}</text>
@@ -29,7 +29,7 @@
       <!-- 登录按钮 -->
       <view class="btn-area">
         <button class="wx-login-btn" @tap="handleWxLogin" :loading="loading">
-          <text class="btn-icon">💬</text>
+          <image src="/static/icons/icon-wechat.png" class="btn-icon-img" mode="aspectFit" />
           <text>微信一键登录</text>
         </button>
         <text class="privacy-tip">登录即同意<text class="link" @tap="showPrivacy">《隐私协议》</text>，AI 建议仅供参考，请咨询专业人员</text>
@@ -58,9 +58,9 @@ const contentStyle = computed(() => ({
 }))
 
 const features = [
-  { icon: '📸', title: '拍照识食材', desc: '拍一拍，AI 自动识别今天吃了什么' },
-  { icon: '🌟', title: 'AI 营养评分', desc: '实时评估营养均衡度，小建议一目了然' },
-  { icon: '⚠️', title: '过敏预警', desc: '自动检测交叉过敏风险，宝宝更安全' },
+  { id: 1, iconPath: '/static/icons/icon-camera.png', title: '拍照识食材', desc: '拍一拍，AI 自动识别今天吃了什么' },
+  { id: 2, iconPath: '/static/icons/icon-star.png', title: 'AI 营养评分', desc: '实时评估营养均衡度，小建议一目了然' },
+  { id: 3, iconPath: '/static/icons/icon-allergy.png', title: '过敏预警', desc: '自动检测交叉过敏风险，宝宝更安全' },
 ]
 
 async function handleWxLogin() {
@@ -165,6 +165,12 @@ function showPrivacy() {
   margin-bottom: 20rpx;
 }
 
+.logo-icon-img {
+  width: 120rpx;
+  height: 120rpx;
+  margin-bottom: 20rpx;
+}
+
 .app-name {
   font-size: 56rpx;
   font-weight: 700;
@@ -199,6 +205,13 @@ function showPrivacy() {
 
 .feature-icon {
   font-size: 44rpx;
+  margin-right: 24rpx;
+  flex-shrink: 0;
+}
+
+.feature-intro-icon {
+  width: 48rpx;
+  height: 48rpx;
   margin-right: 24rpx;
   flex-shrink: 0;
 }
@@ -243,6 +256,12 @@ function showPrivacy() {
 
 .btn-icon {
   font-size: 36rpx;
+  margin-right: 12rpx;
+}
+
+.btn-icon-img {
+  width: 40rpx;
+  height: 40rpx;
   margin-right: 12rpx;
 }
 

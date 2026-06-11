@@ -7,7 +7,7 @@
 
     <view class="content">
       <view class="logo-area">
-        <view class="logo-icon">💫</view>
+        <image src="/static/icons/logo-setup.png" class="logo-icon-img" mode="aspectFit" />
         <text class="title">告诉我更多关于你</text>
         <text class="subtitle">根据你的阶段，我们会给出最合适的营养建议</text>
       </view>
@@ -20,7 +20,7 @@
           :class="{ active: selected === s.value }"
           @tap="selected = s.value"
         >
-          <text class="stage-icon">{{ s.icon }}</text>
+          <image :src="s.icon" class="stage-icon-img" mode="aspectFit" />
           <view class="stage-text">
             <text class="stage-title">{{ s.label }}</text>
             <text class="stage-desc">{{ s.desc }}</text>
@@ -43,10 +43,10 @@ const selected = ref('')
 const loading = ref(false)
 
 const motherStages = [
-  { value: 'preconception', icon: '💕', label: '备孕中', desc: '正在为迎接宝宝做准备' },
-  { value: 'pregnancy',     icon: '🤰', label: '孕期',   desc: '孕早期 / 孕中期 / 孕晚期' },
-  { value: 'lactation',     icon: '🤱', label: '哺乳期', desc: '刚生产，正在哺乳' },
-  { value: 'adult_female',  icon: '👩', label: '日常管理', desc: '日常营养管理' },
+  { value: 'preconception', icon: '/static/icons/stage-love.png', label: '备孕中', desc: '正在为迎接宝宝做准备' },
+  { value: 'pregnancy',     icon: '/static/icons/phase-pregnancy.png', label: '孕期',   desc: '孕早期 / 孕中期 / 孕晚期' },
+  { value: 'lactation',     icon: '/static/icons/phase-lactation.png', label: '哺乳期', desc: '刚生产，正在哺乳' },
+  { value: 'adult_female',  icon: '/static/icons/stage-woman.png', label: '日常管理', desc: '日常营养管理' },
 ]
 
 function handleNext() {
@@ -101,6 +101,13 @@ function handleNext() {
 
 .logo-icon { font-size: 80rpx; display: block; margin-bottom: 24rpx; }
 
+.logo-icon-img {
+  width: 120rpx;
+  height: 120rpx;
+  display: block;
+  margin: 0 auto 24rpx;
+}
+
 .title {
   display: block;
   font-size: 40rpx;
@@ -140,6 +147,12 @@ function handleNext() {
 }
 
 .stage-icon { font-size: 52rpx; flex-shrink: 0; }
+
+.stage-icon-img {
+  width: 48rpx;
+  height: 48rpx;
+  flex-shrink: 0;
+}
 
 .stage-text { flex: 1; }
 
