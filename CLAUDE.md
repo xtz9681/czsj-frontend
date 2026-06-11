@@ -67,7 +67,8 @@
   │   ├── meal.js           # quickRecord、checkMultiRecordWarning、recordMultiple、getMealList、getIngredientsByAge、getDailySummary、getWeekSummary、deleteMeal、updateMeal、getFrequentIngredients
   │   ├── ai.js             # photoRecord、getWeeklyPlan、getLatestPlan、askAi
   │   ├── allergy.js        # getAllergyList、addAllergy、removeAllergy
-  │   └── mother.js         # getMother、createMother、updateMother、getWeightRecords、addWeightRecord
+  │   ├── mother.js         # getMother、createMother、updateMother、getWeightRecords、addWeightRecord
+  │   └── reminder.js       # subscribeReminder、getReminderList、toggleReminder、deleteReminder
   ├── store/                # Pinia 状态
   ├── utils/                # 工具函数
   ├── static/               # 图片字体等
@@ -160,3 +161,4 @@
   18. **营养趋势可视化**：安装 @qiun/ucharts，首页新增近 7 天营养评分折线图卡片，调用 /meal/nutrition-trend 接口（付费功能，402 时静默隐藏）
   19. **月龄里程碑提醒**：首页新增里程碑卡片，根据宝宝月龄展示当前阶段饮食建议和下一个里程碑预告（8 个月龄节点：4/6/8/10/12/15/18/24 月，纯前端硬编码）
   20. **AI 即时问答**：新增 AI 营养师页面（pages/ai-chat/index.vue），用户可输入喂养问题获取 AI 回答，热门问题快捷入口，自动注入宝宝月龄/过敏上下文，402 配额用完友好提示
+  21. **用餐提醒**：「我的」页面新增用餐提醒入口，用户可设置早/午/晚餐提醒时间，通过 wx.requestSubscribeMessage 授权后，后端定时发送微信订阅消息提醒记餐（需微信小程序环境，模板 ID 待配置）

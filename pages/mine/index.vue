@@ -70,6 +70,16 @@
           </view>
           <text class="feature-arrow">›</text>
         </view>
+
+        <!-- 用餐提醒 -->
+        <view class="feature-item card" @tap="goToReminder">
+          <view class="feature-icon"><text class="feature-emoji">🔔</text></view>
+          <view class="feature-content">
+            <text class="feature-title">用餐提醒</text>
+            <text class="feature-desc">定时提醒记录餐食</text>
+          </view>
+          <text class="feature-arrow">›</text>
+        </view>
       </view>
     </view>
 
@@ -168,6 +178,12 @@ function goToGrowthRecord() {
 function goToWeightRecord() {
   uni.navigateTo({
     url: '/pages/weight-record/index'
+  })
+}
+
+function goToReminder() {
+  uni.navigateTo({
+    url: '/pages/reminder/index'
   })
 }
 
@@ -295,6 +311,10 @@ initUserMode()
   .feature-icon-img {
     width: 48rpx;
     height: 48rpx;
+  }
+
+  .feature-emoji {
+    font-size: 44rpx;
   }
 
   .feature-content {

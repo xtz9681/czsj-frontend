@@ -84,6 +84,12 @@
         "navigationBarTitleText": "AI 营养师",
         "navigationStyle": "custom"
       }
+    },
+    {
+      "path": "pages/reminder/index",
+      "style": {
+        "navigationBarTitleText": "用餐提醒"
+      }
     }
   ],
   "tabBar": {
