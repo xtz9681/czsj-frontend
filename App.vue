@@ -157,4 +157,53 @@
     font-size: 24rpx;
     color: #999;
   }
+
+  /* 渐入上滑 */
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(30rpx);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* 缩放弹入 */
+  @keyframes scaleIn {
+    from {
+      opacity: 0;
+      transform: scale(0.6);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  /* 数字滚入（从下方滑入） */
+  @keyframes countUp {
+    from {
+      opacity: 0;
+      transform: translateY(20rpx);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* 通用入场动画 class */
+  .anim-fade-in-up {
+    animation: fadeInUp 0.4s ease-out both;
+  }
+
+  .anim-scale-in {
+    animation: scaleIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  }
+
+  .anim-count-up {
+    animation: countUp 0.5s ease-out both;
+  }
 </style>

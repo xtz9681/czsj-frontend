@@ -59,9 +59,10 @@
         <!-- 餐次卡片 -->
         <view class="meal-cards" style="padding: 0 40rpx;">
           <view
-            class="meal-card card"
-            v-for="meal in group.meals"
+            class="meal-card card anim-fade-in-up"
+            v-for="(meal, index) in group.meals"
             :key="meal.id"
+            :style="{ animationDelay: index * 0.08 + 's' }"
             @tap="goDetail(meal.id)"
           >
             <view class="mc-header">
@@ -487,5 +488,22 @@ function getDateStr(offset) {
 }
 
 .fab-icon { font-size: 52rpx; }
+
+/* 卡片淡入上升动画 */
+@keyframes anim-fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(20rpx);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.anim-fade-in-up {
+  animation: anim-fade-in-up 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
 
 </style>

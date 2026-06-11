@@ -102,10 +102,10 @@
     </wd-button>
 
     <!-- AI 营养评分结果 -->
-    <view v-if="scoreResult" class="score-result card">
+    <view v-if="scoreResult" class="score-result card anim-fade-in-up">
       <view class="score-header">
-        <view class="score-circle" :class="getScoreClass(scoreResult.score)">
-          <text class="score-num">{{ scoreResult.score }}</text>
+        <view class="score-circle anim-scale-in" :class="getScoreClass(scoreResult.score)">
+          <text class="score-num anim-count-up">{{ scoreResult.score }}</text>
           <text class="score-unit">分</text>
         </view>
         <view class="score-summary">
@@ -979,5 +979,51 @@ function getScoreGrade(score) {
   font-size: 24rpx;
   flex-shrink: 0;
   white-space: nowrap;
+}
+
+/* 评分结果动画 */
+.anim-fade-in-up {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+.anim-scale-in {
+  animation: scaleIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.anim-count-up {
+  animation: countUp 0.8s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20rpx);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes countUp {
+  from {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 </style>

@@ -81,9 +81,10 @@
         </view>
         <view v-else class="meal-list">
           <view
-            class="meal-card card"
-            v-for="meal in todayMeals"
+            class="meal-card card anim-fade-in-up"
+            v-for="(meal, index) in todayMeals"
             :key="meal.id"
+            :style="{ animationDelay: index * 0.08 + 's' }"
             @tap="goMealDetail(meal.id)"
           >
             <view class="meal-card-header">
@@ -648,6 +649,22 @@ const motherNutritionTips = computed(() => {
 .home-page {
   min-height: 100vh;
   background: #FAF7F2;
+}
+
+/* 淡入向上动画 */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30rpx);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.anim-fade-in-up {
+  animation: fadeInUp 0.6s ease-out forwards;
 }
 
 /* 顶部渐变区域 */

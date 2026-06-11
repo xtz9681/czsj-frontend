@@ -156,3 +156,4 @@
       - 自造颜色收敛到设计系统（#E87D3F/#C04B32/#D4644C/#B07030 统一为标准色）
       - 页面水平间距统一为 40rpx
   16. **数据传递规范统一**：pendingMeal 从 uni.storage 迁移到 Pinia store（store/meal.js），URL 仅传 ID 类参数，storage 仅做持久化
+  17. **动画优化**：评分圆圈缩放弹入 + 数字滑入、列表卡片依次淡入上滑、页面切换 slide-in-right 过渡（全局 CSS 动画 class 定义在 App.vue）

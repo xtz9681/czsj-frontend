@@ -40,9 +40,10 @@
 
       <view v-else class="allergy-list" style="padding: 0 40rpx;">
         <view
-          class="allergy-item card"
-          v-for="item in allergyList"
+          class="allergy-item card anim-fade-in-up"
+          v-for="(item, index) in allergyList"
           :key="item.id"
+          :style="{ animationDelay: index * 0.06 + 's' }"
         >
           <view class="ai-left">
             <text class="ai-emoji">{{ item.emoji || '⚠️' }}</text>
@@ -317,6 +318,21 @@ function doRemove(item) {
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
+}
+
+@keyframes anim-fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(24rpx);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.anim-fade-in-up {
+  animation: anim-fade-in-up 0.4s ease-out forwards;
 }
 
 .search-row {

@@ -115,6 +115,8 @@
     "navigationBarTextStyle": "black",
     "navigationBarTitleText": "成长食记",
     "navigationBarBackgroundColor": "#FAF7F2",
-    "backgroundColor": "#FAF7F2"
+    "backgroundColor": "#FAF7F2",
+    "animationType": "slide-in-right",
+    "animationDuration": 250
   }
 }
