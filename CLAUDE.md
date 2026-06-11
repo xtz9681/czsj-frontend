@@ -123,3 +123,4 @@
   9. **返回确认**：meal-record 页有 onBackPress 防误触
   10. **camera 组件拆分**：拍照识食材页面拆为 3 个子组件（RecognitionResult / IngredientPicker / RecordActions），主页面仅负责拍照和 stage 调度
   11. **过敏页 tab 布局**：过敏管理页改为「已标记 / 添加新的」tab 切换，收纳四段式内容
+  12. **妈妈营养标签卡片**：妈妈模式首页营养提示改为营养素标签 + 一句话口诀 + 折叠详情，视觉更轻盈
