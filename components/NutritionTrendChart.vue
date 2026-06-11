@@ -10,7 +10,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, onUnmounted, watch, getCurrentInstance } from 'vue'
 import uCharts from '@qiun/ucharts'
 
 const props = defineProps({
@@ -28,6 +28,7 @@ const props = defineProps({
 const chart = ref(null)
 const canvasWidth = ref(300)
 const canvasHeight = ref(400)
+const instance = getCurrentInstance()
 
 onMounted(() => {
   initChart()
@@ -50,7 +51,7 @@ async function initChart() {
   if (!props.chartData || props.chartData.length === 0) return
 
   // 获取 canvas 上下文
-  const query = uni.createSelectorQuery().in(this)
+  const query = uni.createSelectorQuery().in(instance.proxy)
   query.select('#nutrition-trend-canvas').node(res => {
     if (!res || !res.node) return
 
