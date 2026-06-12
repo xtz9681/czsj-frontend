@@ -55,3 +55,8 @@ export function getNutritionTrend(params) {
   return request({ url: '/meal/nutrition-trend', method: 'get', data: params })
 }
 
+// 获取单条餐食记录
+export function getMealById(mealId) {
+  return request({ url: '/meal/' + mealId, method: 'GET' })
+}
+

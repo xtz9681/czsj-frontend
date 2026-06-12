@@ -64,7 +64,7 @@
   │   ├── request.js        # 基础请求封装
   │   ├── auth.js           # wxLogin、getUserInfo
   │   ├── baby.js           # getBabyList、createBaby、updateBaby、deleteBaby、getGrowthRecords、addGrowthRecord
-  │   ├── meal.js           # quickRecord、checkMultiRecordWarning、recordMultiple、getMealList、getIngredientsByAge、getDailySummary、getWeekSummary、deleteMeal、updateMeal、getFrequentIngredients
+  │   ├── meal.js           # quickRecord、checkMultiRecordWarning、recordMultiple、getMealList、getIngredientsByAge、getDailySummary、getWeekSummary、deleteMeal、updateMeal、getFrequentIngredients、getMealById
   │   ├── ai.js             # photoRecord、getWeeklyPlan、getLatestPlan、askAi
   │   ├── allergy.js        # getAllergyList、addAllergy、removeAllergy
   │   ├── mother.js         # getMother、createMother、updateMother、getWeightRecords、addWeightRecord
@@ -162,3 +162,4 @@
   19. **月龄里程碑提醒**：首页新增里程碑卡片，根据宝宝月龄展示当前阶段饮食建议和下一个里程碑预告（8 个月龄节点：4/6/8/10/12/15/18/24 月，纯前端硬编码）
   20. **AI 即时问答**：新增 AI 营养师页面（pages/ai-chat/index.vue），用户可输入喂养问题获取 AI 回答，热门问题快捷入口，自动注入宝宝月龄/过敏上下文，402 配额用完友好提示
   21. **用餐提醒**：「我的」页面新增用餐提醒入口，用户可设置早/午/晚餐提醒时间，通过 wx.requestSubscribeMessage 授权后，后端定时发送微信订阅消息提醒记餐（需微信小程序环境，模板 ID 待配置）
+  22. **多档案异步评分轮询**：多档案提交后，前端轮询 GET /meal/{mealId} 接口等待 AI 评分完成，3 秒间隔，30 秒超时；单档案提交仍为同步返回评分结果

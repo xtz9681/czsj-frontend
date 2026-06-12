@@ -101,6 +101,11 @@
       {{ useMultipleSubjects && selectedSubjectIds.length > 0 ? `保存到 ${selectedSubjectIds.length} 个档案` : (scoreResult ? '重新评分' : '保存并获取 AI 评分') }}
     </wd-button>
 
+    <!-- 评分加载状态 -->
+    <view v-if="isScoring" class="scoring-loading">
+      <text>🤖 AI 正在评分中...</text>
+    </view>
+
     <!-- AI 营养评分结果 -->
     <view v-if="scoreResult" class="score-result card anim-fade-in-up">
       <view class="score-header">
@@ -221,10 +226,10 @@
 </template>
 
 <script setup>
-import { ref, computed, nextTick } from 'vue'
+import { ref, computed, nextTick, onUnmounted } from 'vue'
 import { onLoad, onBackPress } from '@dcloudio/uni-app'
 import SubjectSelector from '@/components/SubjectSelector.vue'
-import { quickRecord, recordMultiple, getIngredientsByAge, getFrequentIngredients } from '@/api/meal.js'
+import { quickRecord, recordMultiple, getIngredientsByAge, getFrequentIngredients, getMealById } from '@/api/meal.js'
 import { useUserStore } from '@/store/user.js'
 import { useMealStore } from '@/store/meal'
 
@@ -237,6 +242,9 @@ const selectedSubjectIds = ref([])
 
 const saving = ref(false)
 const scoreResult = ref(null)
+const pollingTimer = ref(null)
+const pollingStartTime = ref(0)
+const isScoring = ref(false)
 
 // 食材选择相关
 const showIngredientSheet = ref(false)
@@ -353,6 +361,13 @@ onBackPress(() => {
   return false  // 没填内容或已保存，正常返回
 })
 
+onUnmounted(() => {
+  if (pollingTimer.value) {
+    clearInterval(pollingTimer.value)
+  }
+})
+})
+
 function changeAmount(idx, delta) {
   const cur = form.value.ingredients[idx].amount || 30
   form.value.ingredients[idx].amount = Math.max(5, cur + delta)
@@ -449,6 +464,36 @@ function onSubjectSelectorConfirm(ids) {
   showSubjectSelector.value = false
 }
 
+async function pollScoreResult(mealId) {
+  isScoring.value = true
+  pollingStartTime.value = Date.now()
+
+  pollingTimer.value = setInterval(async () => {
+    try {
+      const meal = await getMealById(mealId)
+      if (meal && meal.aiScore !== null && meal.aiScore !== undefined) {
+        clearInterval(pollingTimer.value)
+        pollingTimer.value = null
+        isScoring.value = false
+        scoreResult.value = {
+          score: meal.aiScore,
+          analysis: meal.aiFeedback,
+          improvements: meal.improvements || []
+        }
+      } else if (Date.now() - pollingStartTime.value > 30000) {
+        clearInterval(pollingTimer.value)
+        pollingTimer.value = null
+        isScoring.value = false
+        uni.showToast({ title: '评分稍慢，可稍后在记录列表中查看', icon: 'none', duration: 3000 })
+      }
+    } catch (e) {
+      clearInterval(pollingTimer.value)
+      pollingTimer.value = null
+      isScoring.value = false
+    }
+  }, 3000)
+}
+
 async function saveMeal() {
   if (form.value.ingredients.length === 0) {
     uni.showToast({ title: '先添加食材吧~', icon: 'none' })
@@ -473,11 +518,20 @@ async function saveMeal() {
         note: form.value.note || ''
       }
 
-      await recordMultiple(payload)
+      const res = await recordMultiple(payload)
       uni.showToast({ title: '保存成功', icon: 'success' })
-      setTimeout(() => {
-        uni.navigateBack()
-      }, 1200)
+
+      // 多档案提交后轮询评分状态
+      if (res && res.length > 0 && res[0].id) {
+        pollScoreResult(res[0].id)
+        setTimeout(() => {
+          uni.navigateBack()
+        }, 5000)
+      } else {
+        setTimeout(() => {
+          uni.navigateBack()
+        }, 1200)
+      }
     } catch (e) {
       uni.showToast({ title: e.message || '保存时遇到了点小问题~', icon: 'none' })
     } finally {
@@ -1025,5 +1079,12 @@ function getScoreGrade(score) {
     opacity: 1;
     transform: scale(1);
   }
+}
+
+.scoring-loading {
+  text-align: center;
+  padding: 40rpx;
+  color: #999;
+  font-size: 28rpx;
 }
 </style>
