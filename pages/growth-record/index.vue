@@ -111,6 +111,7 @@ import { ref, computed } from 'vue'
 import { onShow, onLoad } from '@dcloudio/uni-app'
 import { useUserStore } from '@/store/user.js'
 import { getGrowthRecords, addGrowthRecord } from '@/api/baby.js'
+import { deleteGrowthRecord } from '@/api/record.js'
 
 const userStore = useUserStore()
 const babyId = ref('')
@@ -195,7 +196,7 @@ async function deleteRecord(recordId) {
     success: async (res) => {
       if (res.confirm) {
         try {
-          // 调用删除接口（假设后端支持 DELETE）
+          await deleteGrowthRecord(recordId)
           uni.showToast({ title: '已删除', icon: 'success' })
           loadRecords()
         } catch (e) {

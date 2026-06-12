@@ -68,7 +68,8 @@
   │   ├── ai.js             # photoRecord、getWeeklyPlan、getLatestPlan、askAi
   │   ├── allergy.js        # getAllergyList、addAllergy、removeAllergy
   │   ├── mother.js         # getMother、createMother、updateMother、getWeightRecords、addWeightRecord
-  │   └── reminder.js       # subscribeReminder、getReminderList、toggleReminder、deleteReminder
+  │   ├── reminder.js       # subscribeReminder、getReminderList、toggleReminder、deleteReminder
+  │   └── record.js         # deleteGrowthRecord、deleteWeightRecord
   ├── store/                # Pinia 状态
   ├── utils/                # 工具函数
   ├── static/               # 图片字体等
@@ -163,3 +164,4 @@
   20. **AI 即时问答**：新增 AI 营养师页面（pages/ai-chat/index.vue），用户可输入喂养问题获取 AI 回答，热门问题快捷入口，自动注入宝宝月龄/过敏上下文，402 配额用完友好提示
   21. **用餐提醒**：「我的」页面新增用餐提醒入口，用户可设置早/午/晚餐提醒时间，通过 wx.requestSubscribeMessage 授权后，后端定时发送微信订阅消息提醒记餐（需微信小程序环境，模板 ID 待配置）
   22. **多档案异步评分轮询**：多档案提交后，前端轮询 GET /meal/{mealId} 接口等待 AI 评分完成，3 秒间隔，30 秒超时；单档案提交仍为同步返回评分结果
+  23. **删除记录**：growth-record 和 weight-record 页面删除功能已接入后端 DELETE API

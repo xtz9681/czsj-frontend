@@ -127,6 +127,7 @@ import { ref, computed } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
 import { useUserStore } from '@/store/user.js'
 import { getWeightRecords, addWeightRecord } from '@/api/mother.js'
+import { deleteWeightRecord } from '@/api/record.js'
 
 const userStore = useUserStore()
 
@@ -228,6 +229,7 @@ async function deleteRecord(recordId) {
     success: async (res) => {
       if (res.confirm) {
         try {
+          await deleteWeightRecord(recordId)
           uni.showToast({ title: '已删除', icon: 'success' })
           loadRecords()
         } catch (e) {
