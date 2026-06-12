@@ -190,7 +190,7 @@ async function deleteRecord(recordId) {
     success: async (res) => {
       if (res.confirm) {
         try {
-          await deleteGrowthRecord(recordId)
+          await deleteGrowthRecord(babyId.value, recordId)
           uni.showToast({ title: '已删除', icon: 'success' })
           loadRecords()
         } catch (e) {

@@ -206,6 +206,9 @@ async function showAiDisclaimer() {
         } else {
           resolve(false)
         }
+      },
+      fail: () => {
+        resolve(false)
       }
     })
   })

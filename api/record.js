@@ -1,9 +1,9 @@
 import { request } from './request'
 
-export function deleteGrowthRecord(id) {
-  return request({ url: '/growth-record/' + id, method: 'DELETE' })
+export function deleteGrowthRecord(babyId, id) {
+  return request({ url: '/baby/' + babyId + '/growth-records/' + id, method: 'DELETE' })
 }
 
 export function deleteWeightRecord(id) {
-  return request({ url: '/weight-record/' + id, method: 'DELETE' })
+  return request({ url: '/mother/weight-records/' + id, method: 'DELETE' })
 }
