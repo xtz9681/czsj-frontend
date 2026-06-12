@@ -32,3 +32,5 @@ export function request(options) {
     })
   })
 }
+
+export { BASE_URL }

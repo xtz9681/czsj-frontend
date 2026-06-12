@@ -1,4 +1,4 @@
-import { request } from './request'
+import { request, BASE_URL } from './request'
 
 // 拍照识食材（multipart 上传，直接传 filePath）
 // 返回 { recognitionId, photoKey, signedPhotoUrl, mode, recognized, confidence, ageIngredients }
@@ -11,7 +11,7 @@ export function photoRecord(filePath, babyId) {
     console.log('  filePath:', filePath)
 
     uni.uploadFile({
-      url: 'http://localhost:8080/meal/photo-record',
+      url: BASE_URL + '/meal/photo-record',
       filePath,
       name: 'photo',
       formData: { babyId: String(babyId) },
