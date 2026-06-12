@@ -382,7 +382,7 @@ async function showIngredientPicker() {
   showIngredientSheet.value = true
   if (allIngredients.value.length === 0) {
     try {
-      const list = await getIngredientsByAge()
+      const list = await getIngredientsByAge(userStore.currentBaby?.id)
       allIngredients.value = list || []
     } catch (e) {
       uni.showToast({ title: '加载食材库失败', icon: 'none' })
@@ -393,7 +393,6 @@ async function showIngredientPicker() {
 }
 
 async function loadFrequentIngredients() {
-  const userStore = useUserStore()
   const baby = userStore.currentBaby
   const mother = userStore.mother
 

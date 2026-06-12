@@ -23,7 +23,7 @@
           <text class="price-save">省 79 元</text>
         </view>
         <view class="premium-btn" @tap="showPayModal">开通会员，生成本周计划</view>
-        <text class="premium-features">包含：无限 AI 评分 · 无限拍照识别 · PDF 月报 · 群体对比</text>
+        <text class="premium-features">包含：无限 AI 评分 · 无限拍照识别 · PDF 月报(即将上线) · 群体对比(即将上线)</text>
       </view>
     </view>
 
@@ -174,8 +174,8 @@ const benefits = [
   '无限次 AI 拍照识食材',
   '无限次 AI 营养评分',
   'AI 智能周计划生成',
-  'PDF 周报/月报导出',
-  '同月龄群体营养对比',
+  'PDF 周报/月报导出（即将上线）',
+  '同月龄群体营养对比（即将上线）',
   '全部历史记录无限保存',
 ]
 
