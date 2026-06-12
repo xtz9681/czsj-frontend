@@ -146,6 +146,7 @@ import { ref, computed } from 'vue'
 import { onLoad, onBackPress } from '@dcloudio/uni-app'
 import { createBaby, updateBaby } from '@/api/baby.js'
 import { useUserStore } from '@/store/user.js'
+import { calcAgeMonths, formatAge } from '@/utils/age.js'
 
 const userStore = useUserStore()
 const isEdit = ref(false)
@@ -176,19 +177,10 @@ const babyPhaseOptions = [
 
 const ageMonths = computed(() => {
   if (!form.value.birthday) return -1
-  const birth = new Date(form.value.birthday)
-  const now = new Date()
-  return Math.floor((now - birth) / (1000 * 60 * 60 * 24 * 30.4))
+  return calcAgeMonths(form.value.birthday)
 })
 
-const displayAge = computed(() => {
-  const months = ageMonths.value
-  if (months < 0) return ''
-  if (months < 12) return `${months} 个月`
-  const years = Math.floor(months / 12)
-  const remainMonths = months % 12
-  return remainMonths > 0 ? `${years} 岁 ${remainMonths} 个月` : `${years} 岁`
-})
+const displayAge = computed(() => formatAge(form.value.birthday))
 
 onLoad((options) => {
   if (options?.babyDeliveryDate) {

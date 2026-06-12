@@ -336,14 +336,7 @@ const ageMonths = computed(() => {
   return calcAgeMonths(currentBaby.value.birthday)
 })
 
-const ageText = computed(() => {
-  if (subjectMode.value !== 'baby') return ''
-  const m = ageMonths.value
-  if (m < 12) return `${m} 个月`
-  const y = Math.floor(m / 12)
-  const rem = m % 12
-  return rem > 0 ? `${y} 岁 ${rem} 个月` : `${y} 岁`
-})
+const ageText = computed(() => formatAge(currentBaby.value?.birthday))
 
 // 月龄里程碑数据
 const MILESTONES = [
