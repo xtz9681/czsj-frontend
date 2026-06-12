@@ -80,6 +80,16 @@
           </view>
           <text class="feature-arrow">›</text>
         </view>
+
+        <!-- 意见反馈 -->
+        <button class="feature-item card feedback-btn" open-type="feedback">
+          <view class="feature-icon"><text class="feature-emoji">💬</text></view>
+          <view class="feature-content">
+            <text class="feature-title">意见反馈</text>
+            <text class="feature-desc">问题反馈与建议</text>
+          </view>
+          <text class="feature-arrow">›</text>
+        </button>
       </view>
     </view>
 
@@ -370,5 +380,19 @@ initUserMode()
     opacity: 0.8;
     transform: scale(0.98);
   }
+}
+
+.feedback-btn {
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  text-align: left;
+  line-height: normal;
+  font-size: inherit;
+}
+
+.feedback-btn::after {
+  border: none;
 }
 </style>
