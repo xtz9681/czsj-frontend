@@ -11,13 +11,14 @@
       <view class="form-group">
         <text class="form-label">日期</text>
         <view class="date-picker-row">
-          <wd-input
-            v-model="formData.date"
-            type="text"
-            readonly
-            placeholder="选择日期"
-            @click="showDatePicker"
-          />
+          <picker mode="date" :value="formData.date" :end="getTodayStr()" start="2020-01-01" @change="onDateChange">
+            <wd-input
+              v-model="formData.date"
+              type="text"
+              readonly
+              placeholder="选择日期"
+            />
+          </picker>
         </view>
       </view>
 
@@ -205,14 +206,8 @@ async function deleteRecord(recordId) {
   })
 }
 
-function showDatePicker() {
-  uni.chooseDate({
-    startYear: 2020,
-    endYear: new Date().getFullYear(),
-    success: (res) => {
-      formData.value.date = res.year + '-' + String(res.month).padStart(2, '0') + '-' + String(res.day).padStart(2, '0')
-    }
-  })
+function onDateChange(e) {
+  formData.value.date = e.detail.value
 }
 
 function getTodayStr() {
