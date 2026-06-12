@@ -288,6 +288,8 @@ import { ref, computed } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
 import { getMealList, getIngredientsByAge, getDailySummary, getNutritionTrend } from '@/api/meal.js'
 import { useUserStore } from '@/store/user.js'
+import { calcAgeMonths, formatAge } from '@/utils/age.js'
+import { phaseMap } from '@/constants/phase.js'
 import NutritionTrendChart from "@/components/NutritionTrendChart.vue"
 
 const userStore = useUserStore()
@@ -331,8 +333,7 @@ const nutritionStats = ref([
 // ── 计算属性 ──────────────────────────────────
 const ageMonths = computed(() => {
   if (subjectMode.value !== 'baby' || !currentBaby.value?.birthday) return 0
-  const birth = new Date(currentBaby.value.birthday)
-  return Math.floor((Date.now() - birth.getTime()) / (1000 * 60 * 60 * 24 * 30.4))
+  return calcAgeMonths(currentBaby.value.birthday)
 })
 
 const ageText = computed(() => {
@@ -393,14 +394,6 @@ const subjectName = computed(() => {
 // 顶部显示副标题
 const subjectSubtitle = computed(() => {
   if (subjectMode.value === 'baby') return ageText.value ? `${ageText.value}` : '宝宝'
-  const phaseMap = {
-    preconception: '备孕期',
-    pregnancy_early: '孕早期',
-    pregnancy_mid: '孕中期',
-    pregnancy_late: '孕晚期',
-    lactation: '哺乳期',
-    adult_female: '日常营养',
-  }
   return phaseMap[mother.value?.phase] || '妈妈'
 })
 
@@ -561,12 +554,7 @@ function getScoreClass(score) {
 }
 
 function babyAgeText(baby) {
-  if (!baby?.birthday) return ''
-  const m = Math.floor((Date.now() - new Date(baby.birthday).getTime()) / (1000 * 60 * 60 * 24 * 30.4))
-  if (m < 12) return `${m} 个月`
-  const y = Math.floor(m / 12)
-  const rem = m % 12
-  return rem > 0 ? `${y} 岁 ${rem} 个月` : `${y} 岁`
+  return formatAge(baby?.birthday)
 }
 
 function goCamera() { uni.navigateTo({ url: '/pages/camera/index' }) }

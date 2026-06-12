@@ -72,6 +72,9 @@
   │   └── record.js         # deleteGrowthRecord、deleteWeightRecord
   ├── store/                # Pinia 状态
   ├── utils/                # 工具函数
+  │   └── age.js            # calcAgeMonths(birthday) 计算月龄、formatAge(birthday) 格式化为"X 个月"或"X 岁 X 个月"
+  ├── constants/            # 常量枚举
+  │   └── phase.js          # phaseMap 妈妈阶段枚举值到中文的映射（备孕/孕早/孕中/孕晚/哺乳/日常）
   ├── static/               # 图片字体等
   │   ├── empty/            # 空状态插图
   │   │   ├── no-meals.png

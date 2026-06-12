@@ -112,19 +112,13 @@ import { onShow, onLoad } from '@dcloudio/uni-app'
 import { useUserStore } from '@/store/user.js'
 import { getGrowthRecords, addGrowthRecord } from '@/api/baby.js'
 import { deleteGrowthRecord } from '@/api/record.js'
+import { formatAge } from '@/utils/age.js'
 
 const userStore = useUserStore()
 const babyId = ref('')
 const currentBaby = computed(() => userStore.babies.find(b => b.id === babyId.value))
 
-const babyAgeText = computed(() => {
-  if (!currentBaby.value?.birthday) return ''
-  const m = Math.floor((Date.now() - new Date(currentBaby.value.birthday).getTime()) / (1000 * 60 * 60 * 24 * 30.4))
-  if (m < 12) return `${m} 个月`
-  const y = Math.floor(m / 12)
-  const rem = m % 12
-  return rem > 0 ? `${y} 岁 ${rem} 个月` : `${y} 岁`
-})
+const babyAgeText = computed(() => formatAge(currentBaby.value?.birthday))
 
 const formData = ref({
   date: getTodayStr(),

@@ -67,6 +67,8 @@
 import { ref, computed } from 'vue'
 import { checkMultiRecordWarning } from '@/api/meal.js'
 import { useUserStore } from '@/store/user.js'
+import { formatAge } from '@/utils/age.js'
+import { phaseMap } from '@/constants/phase.js'
 
 const props = defineProps({
   visible: {
@@ -91,24 +93,12 @@ const nursingWarningText = ref('')
 const isChecking = ref(false)
 
 const motherPhaseLabel = computed(() => {
-  const phaseMap = {
-    preconception: '备孕期',
-    pregnancy_early: '孕早期',
-    pregnancy_mid: '孕中期',
-    pregnancy_late: '孕晚期',
-    lactation: '哺乳期',
-    adult_female: '日常营养'
-  }
   return phaseMap[mother.value?.phase] || '妈妈档案'
 })
 
 function babyPhaseLabel(baby) {
   if (!baby.birthday) return baby.name
-  const months = Math.floor((Date.now() - new Date(baby.birthday).getTime()) / (1000 * 60 * 60 * 24 * 30.4))
-  if (months < 12) return `${months} 个月`
-  const years = Math.floor(months / 12)
-  const remainMonths = months % 12
-  return remainMonths > 0 ? `${years} 岁 ${remainMonths} 个月` : `${years} 岁`
+  return formatAge(baby.birthday)
 }
 
 function toggleSubject(id) {

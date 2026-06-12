@@ -129,12 +129,12 @@ const suggestedSubjectType = ref(null)
 const showSubjectSelector = ref(false)
 const pendingIngredients = ref([])
 
-const baby = userStore.currentBaby || { ageMonths: 8 }
+const baby = computed(() => userStore.currentBaby || { ageMonths: 8 })
 const allergyList = uni.getStorageSync('allergyList') || []
 const subjectMode = ref('baby')
 
 const babyAgeText = computed(() => {
-  const m = baby.ageMonths || 8
+  const m = baby.value.ageMonths || 8
   return m < 12 ? `${m} 个月` : `${Math.floor(m / 12)} 岁`
 })
 
@@ -142,9 +142,9 @@ const babyAgeText = computed(() => {
 const ageBasedIngredients = ref([])
 
 async function loadAgeIngredients() {
-  if (!baby?.id) return
+  if (!baby.value?.id) return
   try {
-    const list = await getIngredientsByAge(baby.id)
+    const list = await getIngredientsByAge(baby.value.id)
     ageBasedIngredients.value = (list || []).map(i => ({
       id: i.id,
       emoji: '🥗',
@@ -246,7 +246,7 @@ const pendingRecognition = ref(null)
 
 async function startRecognition(filePath) {
   stage.value = 'recognizing'
-  const babyId = baby.id
+  const babyId = baby.value.id
   if (!babyId) {
     stage.value = 'low-confidence'
     return

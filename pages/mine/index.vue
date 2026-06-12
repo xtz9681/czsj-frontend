@@ -105,6 +105,8 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useUserStore } from '@/store/user.js'
+import { formatAge } from '@/utils/age.js'
+import { phaseMap } from '@/constants/phase.js'
 
 const userStore = useUserStore()
 
@@ -114,26 +116,10 @@ const babies = computed(() => userStore.babies)
 const currentBaby = computed(() => userStore.currentBaby)
 const mother = computed(() => userStore.mother)
 
-const babyAgeText = computed(() => {
-  if (!currentBaby.value?.birthday) return ''
-  const birth = new Date(currentBaby.value.birthday)
-  const months = Math.floor((Date.now() - birth.getTime()) / (1000 * 60 * 60 * 24 * 30.4))
-  if (months < 12) return `${months} 个月`
-  const years = Math.floor(months / 12)
-  const remainMonths = months % 12
-  return remainMonths > 0 ? `${years} 岁 ${remainMonths} 个月` : `${years} 岁`
-})
+const babyAgeText = computed(() => formatAge(currentBaby.value?.birthday))
 
 const motherPhaseText = computed(() => {
   if (!mother.value) return ''
-  const phaseMap = {
-    preconception: '备孕期',
-    pregnancy_early: '孕早期',
-    pregnancy_mid: '孕中期',
-    pregnancy_late: '孕晚期',
-    lactation: '哺乳期',
-    adult_female: '日常营养'
-  }
   return phaseMap[mother.value.phase] || '妈妈档案'
 })
 
