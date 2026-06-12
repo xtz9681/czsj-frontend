@@ -190,7 +190,31 @@ const allergyWarnings = computed(() => {
 })
 
 
+async function showAiDisclaimer() {
+  const confirmed = uni.getStorageSync('ai_disclaimer_confirmed')
+  if (confirmed) return true
+  return new Promise((resolve) => {
+    uni.showModal({
+      title: 'AI 使用须知',
+      content: 'AI 识别与营养建议仅供参考，不构成医疗诊断或治疗建议。如有健康问题，请咨询专业医生或营养师。',
+      confirmText: '我知道了',
+      cancelText: '取消',
+      success: (res) => {
+        if (res.confirm) {
+          uni.setStorageSync('ai_disclaimer_confirmed', true)
+          resolve(true)
+        } else {
+          resolve(false)
+        }
+      }
+    })
+  })
+}
+
 async function takePhoto() {
+  const canProceed = await showAiDisclaimer()
+  if (!canProceed) return
+
   uni.chooseImage({
     count: 1,
     sizeType: ['compressed'],
@@ -203,6 +227,9 @@ async function takePhoto() {
 }
 
 async function chooseFromAlbum() {
+  const canProceed = await showAiDisclaimer()
+  if (!canProceed) return
+
   uni.chooseImage({
     count: 1,
     sizeType: ['compressed'],

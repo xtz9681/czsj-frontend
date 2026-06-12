@@ -110,6 +110,25 @@
 
   **注**：过敏管理从 TabBar 降为「我的」页面的子入口
 
+  ## 页面列表
+
+  - `pages/login/index` - 微信登录，勾选隐私政策确认
+  - `pages/index/index` - 首页，宝宝成长卡片、快速记餐
+  - `pages/meal-list/index` - 饮食记录列表
+  - `pages/meal-record/index` - 记一餐（手动/拍照）
+  - `pages/camera/index` - 拍照识食材，AI 首次使用确认
+  - `pages/plan/index` - AI 周计划
+  - `pages/profile/index` - 宝宝档案，新建时需监护人确认
+  - `pages/mother-profile/index` - 妈妈档案
+  - `pages/growth-record/index` - 生长记录
+  - `pages/weight-record/index` - 体重记录
+  - `pages/allergy/index` - 过敏管理
+  - `pages/reminder/index` - 用餐提醒
+  - `pages/privacy/index` - 隐私政策
+  - `pages/ai-chat/index` - AI 营养师
+  - `pages/setup/index` - 初始化流程
+  - `pages/mine/index` - 我的
+
   ## 关键产品决策
 
   1. **拍照识食材 + 智能 fallback**：拍照 → AI 识别 + 置信度判定 → 高置信度直接
@@ -165,3 +184,8 @@
   21. **用餐提醒**：「我的」页面新增用餐提醒入口，用户可设置早/午/晚餐提醒时间，通过 wx.requestSubscribeMessage 授权后，后端定时发送微信订阅消息提醒记餐（需微信小程序环境，模板 ID 待配置）
   22. **多档案异步评分轮询**：多档案提交后，前端轮询 GET /meal/{mealId} 接口等待 AI 评分完成，3 秒间隔，30 秒超时；单档案提交仍为同步返回评分结果
   23. **删除记录**：growth-record 和 weight-record 页面删除功能已接入后端 DELETE API
+  24. **合规确认机制**：
+      - 隐私政策页面（pages/privacy/index）：完整的数据收集、使用、存储、安全、用户权利、儿童保护、AI 免责声明
+      - 登录页勾选：用户需勾选《隐私政策》才能登录，登录按钮动态启用/禁用
+      - 宝宝档案监护人确认：新建宝宝时需勾选"我确认是该宝宝的监护人"，编辑模式下不需要
+      - AI 首次使用提示：首次使用拍照识食材或拍照记餐时，弹出 AI 使用须知，用户确认后存储到本地缓存，后续使用不再提示

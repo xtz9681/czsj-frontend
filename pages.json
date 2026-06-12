@@ -90,6 +90,12 @@
       "style": {
         "navigationBarTitleText": "用餐提醒"
       }
+    },
+    {
+      "path": "pages/privacy/index",
+      "style": {
+        "navigationBarTitleText": "隐私政策"
+      }
     }
   ],
   "tabBar": {

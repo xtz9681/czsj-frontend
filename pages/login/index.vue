@@ -28,11 +28,17 @@
 
       <!-- 登录按钮 -->
       <view class="btn-area">
-        <button class="wx-login-btn" @tap="handleWxLogin" :loading="loading">
+        <view class="agreement-check">
+          <checkbox :checked="agreedPrivacy" @tap="agreedPrivacy = !agreedPrivacy" color="#5CB87A" />
+          <text class="agreement-text">
+            我已阅读并同意<text class="link" @tap="showPrivacy">《隐私政策》</text>
+          </text>
+        </view>
+        <button class="wx-login-btn" :disabled="!agreedPrivacy" :class="{ disabled: !agreedPrivacy }" @tap="handleWxLogin" :loading="loading">
           <image src="/static/icons/icon-wechat.png" class="btn-icon-img" mode="aspectFit" />
           <text>微信一键登录</text>
         </button>
-        <text class="privacy-tip">登录即同意<text class="link" @tap="showPrivacy">《隐私协议》</text>，AI 建议仅供参考，请咨询专业人员</text>
+        <text class="privacy-tip">AI 建议仅供参考，请咨询专业人员</text>
       </view>
     </view>
   </view>
@@ -44,6 +50,7 @@ import { wxLogin } from '@/api/auth.js'
 import { useUserStore } from '@/store/user.js'
 
 const loading = ref(false)
+const agreedPrivacy = ref(false)
 const userStore = useUserStore()
 
 // ── 安全区适配 ──────────────────────────────
@@ -64,6 +71,10 @@ const features = [
 ]
 
 async function handleWxLogin() {
+  if (!agreedPrivacy.value) {
+    uni.showToast({ title: '请先同意隐私政策', icon: 'none' })
+    return
+  }
   if (loading.value) return
   loading.value = true
   try {
@@ -95,12 +106,7 @@ async function handleWxLogin() {
 }
 
 function showPrivacy() {
-  uni.showModal({
-    title: '隐私协议',
-    content: '我们仅收集必要的宝宝喂养数据，用于提供 AI 营养建议。数据不会用于商业分析或分享给第三方。AI 建议仅供参考，不构成医疗建议，请咨询专业人员。',
-    showCancel: false,
-    confirmText: '知道了'
-  })
+  uni.navigateTo({ url: '/pages/privacy/index' })
 }
 </script>
 
@@ -272,5 +278,22 @@ function showPrivacy() {
 
 .link {
   color: #F5A85B;
+}
+
+.agreement-check {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20rpx;
+  gap: 8rpx;
+}
+
+.agreement-text {
+  font-size: 24rpx;
+  color: #666;
+}
+
+.wx-login-btn.disabled {
+  opacity: 0.5;
 }
 </style>

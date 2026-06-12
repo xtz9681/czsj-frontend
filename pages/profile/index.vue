@@ -126,7 +126,11 @@
     </view>
 
     <!-- 保存按钮 -->
-    <wd-button type="primary" @click="saveBaby" :loading="saving" block round>
+    <view class="guardian-check" v-if="!isEdit">
+      <checkbox :checked="guardianConfirmed" @tap="guardianConfirmed = !guardianConfirmed" color="#5CB87A" />
+      <text class="guardian-text">我确认是该宝宝的监护人，同意记录宝宝营养数据</text>
+    </view>
+    <wd-button type="primary" @click="saveBaby" :disabled="!isEdit && !guardianConfirmed" :class="{ disabled: !isEdit && !guardianConfirmed }" :loading="saving" block round>
       {{ isEdit ? '保存修改' : '开始记录吧~' }}
     </wd-button>
 
@@ -146,6 +150,7 @@ import { useUserStore } from '@/store/user.js'
 const userStore = useUserStore()
 const isEdit = ref(false)
 const saving = ref(false)
+const guardianConfirmed = ref(false)
 const today = new Date().toISOString().split('T')[0]
 
 const form = ref({
@@ -222,6 +227,10 @@ function chooseAvatar() {
 }
 
 async function saveBaby() {
+  if (!isEdit.value && !guardianConfirmed.value) {
+    uni.showToast({ title: '请确认监护人身份', icon: 'none' })
+    return
+  }
   if (!form.value.name.trim()) {
     uni.showToast({ title: '给宝宝起个昵称吧~', icon: 'none' })
     return
@@ -496,5 +505,23 @@ function skipToHome() {
 .unit {
   color: #999;
   font-size: 26rpx;
+}
+
+.guardian-check {
+  display: flex;
+  align-items: flex-start;
+  padding: 20rpx 40rpx;
+  gap: 12rpx;
+}
+
+.guardian-text {
+  font-size: 24rpx;
+  color: #666;
+  line-height: 1.5;
+  flex: 1;
+}
+
+.wd-button.disabled {
+  opacity: 0.5;
 }
 </style>
