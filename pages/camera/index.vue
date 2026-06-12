@@ -364,7 +364,7 @@ function recordToMother() {
   // 调用妈妈餐快速记录接口
   const payload = {
     subjectType: 'MOTHER',
-    ingredients: finalIngredients.map(i => ({ name: i.name || i, grams: i.amount || 30 })),
+    ingredients: finalIngredients.map(i => ({ name: i.name || i })),
     photoKey: pendingRecognition.value?.photoKey || null,
     recognitionId: pendingRecognition.value?.recognitionId || null,
     note: ''
@@ -430,7 +430,7 @@ function onSubjectSelectorConfirm(selectedSubjectIds) {
 
   const payload = {
     subjects,
-    ingredients: finalIngredients.map(i => ({ name: i.name || i, grams: i.amount || 30 })),
+    ingredients: finalIngredients.map(i => ({ name: i.name || i })),
     photoKey: pendingRecognition.value?.photoKey || null,
     recognitionId: pendingRecognition.value?.recognitionId || null,
     note: ''

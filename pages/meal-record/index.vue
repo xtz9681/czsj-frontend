@@ -511,7 +511,7 @@ async function saveMeal() {
 
       const payload = {
         subjects,
-        ingredients: form.value.ingredients.map(i => ({ name: i.name, grams: i.amount || 30 })),
+        ingredients: form.value.ingredients.map(i => ({ name: i.name })),
         photoKey: form.value.photoKey || null,
         recognitionId: form.value.recognitionId || null,
         note: form.value.note || ''
@@ -551,7 +551,7 @@ async function saveMeal() {
       babyId: baby.id,
       subjectType: 'BABY',
       mealType: form.value.mealType.toUpperCase(),
-      ingredients: form.value.ingredients.map(i => ({ name: i.name, grams: i.amount || 30 })),
+      ingredients: form.value.ingredients.map(i => ({ name: i.name })),
       note: form.value.note || '',
       photoKey: form.value.photoKey || null,
       recognitionId: form.value.recognitionId || null,
