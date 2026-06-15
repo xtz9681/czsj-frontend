@@ -16,8 +16,10 @@ export function recordMultiple(data) {
 }
 
 // 餐次历史列表
-export function getMealList(babyId, page = 0, size = 20) {
-  return request({ url: '/meal/list', data: { babyId, page, size } })
+export function getMealList(babyId, page = 0, size = 20, date = null) {
+  const data = { babyId, page, size }
+  if (date) data.date = date
+  return request({ url: '/meal/list', method: 'GET', data })
 }
 
 // 月龄食材库

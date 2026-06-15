@@ -1,5 +1,5 @@
 <template>
-  <view class="page-container">
+  <scroll-view class="page-container" scroll-y @scrolltolower="onReachBottom">
     <!-- 日历/筛选栏 -->
     <view class="filter-bar">
       <view
@@ -100,12 +100,16 @@
       </view>
     </view>
 
+    <!-- 底部提示 -->
+    <view v-if="mealsLoading && currentPage > 0" class="loading-tip">加载中...</view>
+    <view v-if="noMore && allMeals.length > 0" class="no-more-tip">没有更多了</view>
+
     <!-- 底部留白 -->
     <view style="height: 120rpx;"></view>
 
     <!-- 悬浮记录按钮 -->
     <wd-fab icon="camera-fill" @click="goCamera" />
-  </view>
+  </scroll-view>
 </template>
 
 <script setup>
@@ -123,16 +127,19 @@ const filterOptions = [
 
 const allMeals = ref([])
 const mealsLoading = ref(false)
+const currentPage = ref(0)
+const noMore = ref(false)
 
 const weekNutrition = ref([])
 
 async function loadMeals() {
   const baby = useUserStore().currentBaby
   if (!baby?.id) return
+  if (noMore.value) return
   mealsLoading.value = true
   try {
-    const list = await getMealList(baby.id, 0, 100)
-    allMeals.value = (list || []).map(m => ({
+    const list = await getMealList(baby.id, currentPage.value, 20)
+    const mappedList = (list || []).map(m => ({
       id: m.id,
       date: m.mealTime ? m.mealTime.split('T')[0] : getTodayStr(),
       mealType: (m.mealType || 'BREAKFAST').toLowerCase(),
@@ -142,10 +149,25 @@ async function loadMeals() {
       suggestion: m.aiFeedback ? m.aiFeedback.substring(0, 30) + '...' : null,
       ingredients: (m.ingredients || []).map(i => ({ id: i.name, name: i.name, isAllergy: false }))
     }))
+    if (currentPage.value === 0) {
+      allMeals.value = mappedList
+    } else {
+      allMeals.value = [...allMeals.value, ...mappedList]
+    }
+    if (!list || list.length < 20) {
+      noMore.value = true
+    }
+    currentPage.value++
   } catch (e) {
     uni.showToast({ title: '加载记录失败，请稍后再试~', icon: 'none' })
   } finally {
     mealsLoading.value = false
+  }
+}
+
+function onReachBottom() {
+  if (!noMore.value && !mealsLoading.value) {
+    loadMeals()
   }
 }
 
@@ -488,6 +510,26 @@ function getDateStr(offset) {
 }
 
 .fab-icon { font-size: 52rpx; }
+
+/* 分页加载提示 */
+.page-container {
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.loading-tip, .no-more-tip {
+  padding: 24rpx 40rpx;
+  text-align: center;
+  font-size: 26rpx;
+  color: #999;
+}
+
+.no-more-tip {
+  margin-top: 20rpx;
+  margin-bottom: 20rpx;
+}
 
 /* 卡片淡入上升动画 */
 @keyframes anim-fade-in-up {

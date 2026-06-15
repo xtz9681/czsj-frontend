@@ -399,18 +399,16 @@ const todayStr = computed(() => {
 async function loadTodayMeals() {
   if (subjectMode.value !== 'baby' || !currentBaby.value?.id) return
   try {
-    const list = await getMealList(currentBaby.value.id, 0, 10)
     const todayDate = new Date().toISOString().split('T')[0]
-    todayMeals.value = (list || [])
-      .filter(m => m.mealTime && m.mealTime.startsWith(todayDate))
-      .map(m => ({
-        id: m.id,
-        mealType: m.mealType,
-        time: m.mealTime ? m.mealTime.substring(11, 16) : '',
-        score: m.aiScore,
-        photo: m.signedPhotoUrl || '',
-        ingredients: (m.ingredients || []).map(i => ({ id: i.name, name: i.name, isAllergy: false }))
-      }))
+    const list = await getMealList(currentBaby.value.id, 0, 20, todayDate)
+    todayMeals.value = (list || []).map(m => ({
+      id: m.id,
+      mealType: m.mealType,
+      time: m.mealTime ? m.mealTime.substring(11, 16) : '',
+      score: m.aiScore,
+      photo: m.signedPhotoUrl || '',
+      ingredients: (m.ingredients || []).map(i => ({ id: i.name, name: i.name, isAllergy: false }))
+    }))
   } catch (e) {
     // 静默处理
   }
