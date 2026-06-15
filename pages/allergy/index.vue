@@ -137,7 +137,7 @@ import { getIngredientsByAge } from '@/api/meal.js'
 import { useUserStore } from '@/store/user.js'
 
 const searchKeyword = ref('')
-const allergyList = ref([])
+const allergyList = computed(() => useUserStore().allergyList)
 const allergyLoading = ref(false)
 const activeTab = ref('marked')
 
@@ -146,19 +146,7 @@ function getBabyId() {
 }
 
 async function loadAllergyList() {
-  const babyId = getBabyId()
-  if (!babyId) return
-  allergyLoading.value = true
-  try {
-    const list = await getAllergyList(babyId)
-    allergyList.value = list
-    uni.setStorageSync('allergyList', list.map(a => ({ name: a.ingredientName, id: a.id, crossAllergies: a.relatedIngredients || [] })))
-  } catch (e) {
-    // 网络失败时降级读 storage
-    allergyList.value = uni.getStorageSync('allergyList') || []
-  } finally {
-    allergyLoading.value = false
-  }
+  await useUserStore().loadAllergyList()
 }
 
 onShow(() => { loadAllergyList(); loadIngredientDatabase() })
@@ -223,11 +211,8 @@ async function addAllergyIngredient(item) {
   const babyId = getBabyId()
   if (!babyId) { uni.showToast({ title: '请先完善宝宝档案~', icon: 'none' }); return }
   try {
-    const res = await addAllergy(babyId, item.name)
-    allergyList.value.push(res)
-    const mappedList = allergyList.value.map(a => ({ name: a.ingredientName || a.name, id: a.id, crossAllergies: a.relatedIngredients || [] }))
-    uni.setStorageSync('allergyList', mappedList)
-    useUserStore().allergyList = mappedList
+    await addAllergy(babyId, item.name)
+    await useUserStore().loadAllergyList()
     searchKeyword.value = ''
     activeTab.value = 'marked'
     uni.showToast({ title: `已标记 ${item.name} 过敏`, icon: 'success' })
@@ -263,11 +248,8 @@ function doRemove(item) {
     confirmColor: '#E07A5F',
     success(res) {
       if (!res.confirm) return
-      removeAllergyApi(item.id).then(() => {
-        allergyList.value = allergyList.value.filter(a => a.id !== item.id)
-        const mappedList = allergyList.value.map(a => ({ name: a.ingredientName || a.name, id: a.id, crossAllergies: a.relatedIngredients || [] }))
-        uni.setStorageSync('allergyList', mappedList)
-        useUserStore().allergyList = mappedList
+      removeAllergyApi(item.id).then(async () => {
+        await useUserStore().loadAllergyList()
       }).catch(e => {
         uni.showToast({ title: e.message || '移除失败，稍后再试~', icon: 'none' })
       })
