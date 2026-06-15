@@ -234,7 +234,8 @@
       :score="scoreResult?.score || 0"
       :ingredients="meal?.ingredients?.map(i => i.name) || []"
       :feedback="scoreResult?.suggestion || '继续加油！'"
-      :babyName="userStore.currentBaby?.name || '宝宝'"
+      :subjectName="userStore.currentBaby?.name || userStore.mother?.name || '我'"
+      :avatarUrl="userStore.currentBaby?.avatarUrl || userStore.mother?.avatarUrl || '/static/images/avatar-default.png'"
     />
   </view>
 </template>
