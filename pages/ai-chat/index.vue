@@ -78,7 +78,8 @@
 
 <script setup>
 import { ref, computed } from 'vue'
-import { askAi } from '@/api/ai.js'
+import { onShow } from '@dcloudio/uni-app'
+import { askAi, getChatHistory, clearChatHistory } from '@/api/ai.js'
 import { useUserStore } from '@/store/user.js'
 
 const userStore = useUserStore()
@@ -91,12 +92,29 @@ const chatMessages = ref([])  // [{ role: 'user'|'assistant', content: '', discl
 const loading = ref(false)
 const errorMsg = ref('')
 
+const DISCLAIMER = '仅供参考，请咨询医生'
+
 const hotQuestions = [
   '6个月宝宝可以吃鸡蛋吗？',
   '宝宝不爱吃蔬菜怎么办？',
   '辅食一天吃几次合适？',
   '补铁吃什么食物好？',
 ]
+
+onShow(async () => {
+  try {
+    const list = await getChatHistory()
+    if (list && list.length > 0) {
+      chatMessages.value = list.map(m => ({
+        role: m.role,
+        content: m.content,
+        disclaimer: m.role === 'assistant' ? DISCLAIMER : ''
+      }))
+    }
+  } catch (e) {
+    // 加载历史失败不阻断，静默忽略
+  }
+})
 
 async function handleAsk(q) {
   const text = q || question.value.trim()
@@ -154,9 +172,14 @@ function tapHotQuestion(q) {
   handleAsk(q)
 }
 
-function clearChat() {
+async function clearChat() {
   chatMessages.value = []
   errorMsg.value = ''
+  try {
+    await clearChatHistory()
+  } catch (e) {
+    // 清空后端失败不阻断前端体验
+  }
 }
 
 function goBack() {

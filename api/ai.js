@@ -65,3 +65,13 @@ export function getLatestPlan(babyId) {
 export function askAi(data) {
   return request({ url: '/ai/ask', method: 'post', data })
 }
+
+// 获取 AI 问答对话历史（最近 5 轮）
+export function getChatHistory() {
+  return request({ url: '/ai/history', method: 'GET' })
+}
+
+// 清空对话历史（开启新对话）
+export function clearChatHistory() {
+  return request({ url: '/ai/history', method: 'DELETE' })
+}
