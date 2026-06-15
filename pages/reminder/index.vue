@@ -66,7 +66,13 @@ const userStore = useUserStore()
 const reminders = ref([])
 const loading = ref(false)
 
-// 微信订阅消息模板 ID（需要在微信后台申请后填入）
+// 微信订阅消息模板 ID（需要在微信公众平台申请后填入）
+// 步骤：
+// 1. 登录微信公众平台 (mp.weixin.qq.com) → 功能 → 订阅消息
+// 2. 选择「用餐提醒」类模板或创建自定义模板
+// 3. 获取模板 ID（格式类似 "xxxxxx"）
+// 4. 将下面的占位符替换为真实 ID
+// 注：模板 ID 是小程序订阅消息推送的必要参数，不替换会导致用户订阅失败
 const MEAL_REMINDER_TPL_ID = 'your-template-id-here'
 
 const timeSlots = [
