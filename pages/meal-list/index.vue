@@ -148,7 +148,7 @@ async function loadMeals() {
     const list = await getMealList(baby.id, currentPage.value, 20)
     const mappedList = (list || []).map(m => ({
       id: m.id,
-      date: m.mealTime ? m.mealTime.split('T')[0] : getTodayStr(),
+      date: toLocalDateStr(m.mealTime),
       mealType: (m.mealType || 'BREAKFAST').toLowerCase(),
       time: m.mealTime ? m.mealTime.substring(11, 16) : '',
       score: m.aiScore || null,
@@ -314,6 +314,12 @@ function confirmDeleteMeal(meal) {
 
 function getTodayStr() {
   const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
+}
+
+function toLocalDateStr(isoStr) {
+  if (!isoStr) return getTodayStr()
+  const d = new Date(isoStr)
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
 }
 

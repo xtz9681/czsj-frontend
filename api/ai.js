@@ -28,6 +28,10 @@ export function photoRecord(filePath, babyId) {
             console.error('❌ JSON 解析失败:', e)
             reject(new Error('服务器返回格式错误'))
           }
+        } else if (res.statusCode === 401) {
+          console.log('❌ 401 未授权，跳转登录')
+          uni.removeStorageSync('token')
+          uni.reLaunch({ url: '/pages/login/index' })
         } else if (res.statusCode === 402) {
           reject(new Error('今日拍照次数已用完，可以手动选择食材~'))
         } else {
