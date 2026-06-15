@@ -124,8 +124,7 @@ const motherPhaseText = computed(() => {
 })
 
 const allergyCount = computed(() => {
-  const allergyList = uni.getStorageSync('allergyList') || []
-  return allergyList.length
+  return useUserStore().allergyList.length
 })
 
 // ── 页面初始化 ──────────────────────────────

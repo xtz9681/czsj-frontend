@@ -129,8 +129,9 @@ const suggestedSubjectType = ref(null)
 const showSubjectSelector = ref(false)
 const pendingIngredients = ref([])
 
+const userStore = useUserStore()
 const baby = computed(() => userStore.currentBaby || { ageMonths: 8 })
-const allergyList = uni.getStorageSync('allergyList') || []
+const allergyList = computed(() => userStore.allergyList)
 const subjectMode = ref('baby')
 
 const babyAgeText = computed(() => {
@@ -150,7 +151,7 @@ async function loadAgeIngredients() {
       emoji: '🥗',
       name: i.name,
       selected: false,
-      isAllergy: allergyList.some(a => a.name === i.name),
+      isAllergy: allergyList.value.some(a => a.name === i.name),
       allergyDesc: ''
     }))
   } catch (e) {
@@ -268,7 +269,7 @@ async function startRecognition(filePath) {
         id: idx,
         name,
         selected: true,
-        isAllergy: allergyList.some(a => (a.name || a.ingredientName) === name)
+        isAllergy: allergyList.value.some(a => (a.name || a.ingredientName) === name)
       }))
       stage.value = 'high-confidence'
     } else {
@@ -308,7 +309,7 @@ function showAddIngredient() {
           id: Date.now(),
           name: res.content.trim(),
           selected: true,
-          isAllergy: allergyList.some(a => a.name === res.content.trim())
+          isAllergy: allergyList.value.some(a => a.name === res.content.trim())
         })
       }
     }
@@ -327,7 +328,7 @@ function addCustomIngredient() {
     emoji: '🍴',
     name,
     selected: true,
-    isAllergy: allergyList.some(a => a.name === name)
+    isAllergy: allergyList.value.some(a => a.name === name)
   })
   customIngredient.value = ''
 }
@@ -343,7 +344,7 @@ function handleCustomIngredient(name) {
     emoji: '🍴',
     name,
     selected: true,
-    isAllergy: allergyList.some(a => a.name === name)
+    isAllergy: allergyList.value.some(a => a.name === name)
   })
 }
 

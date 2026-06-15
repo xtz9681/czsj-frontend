@@ -9,6 +9,7 @@ export const useUserStore = defineStore('user', () => {
   const babies = ref(uni.getStorageSync('babies') || [])
   const currentBabyId = ref(uni.getStorageSync('currentBabyId') || null)
   const mother = ref(uni.getStorageSync('mother') || null)
+  const allergyList = ref(uni.getStorageSync('allergyList') || [])
 
   // ── 计算属性 ──────────────────────────────────
   const currentBaby = computed(() =>
@@ -68,16 +69,38 @@ export const useUserStore = defineStore('user', () => {
     babies.value = []
     currentBabyId.value = null
     mother.value = null
+    allergyList.value = []
     uni.removeStorageSync('token')
     uni.removeStorageSync('userId')
     uni.removeStorageSync('babies')
     uni.removeStorageSync('currentBabyId')
     uni.removeStorageSync('mother')
+    uni.removeStorageSync('allergyList')
+  }
+
+  async function loadAllergyList() {
+    try {
+      const { default: request } = await import('@/api/request.js')
+      const list = await request({ url: '/allergy/list', method: 'GET' })
+      allergyList.value = list || []
+      uni.setStorageSync('allergyList', allergyList.value)
+    } catch (e) {
+      allergyList.value = uni.getStorageSync('allergyList') || []
+    }
+  }
+
+  function initFromStorage() {
+    token.value = uni.getStorageSync('token') || ''
+    userId.value = uni.getStorageSync('userId') || null
+    babies.value = uni.getStorageSync('babies') || []
+    currentBabyId.value = uni.getStorageSync('currentBabyId') || null
+    mother.value = uni.getStorageSync('mother') || null
+    allergyList.value = uni.getStorageSync('allergyList') || []
   }
 
   return {
-    token, userId, babies, currentBabyId, mother,
+    token, userId, babies, currentBabyId, mother, allergyList,
     currentBaby, isLoggedIn, currentBabyAgeMonths,
-    setLoginResult, switchBaby, addBaby, updateBaby, setMother, logout
+    setLoginResult, switchBaby, addBaby, updateBaby, setMother, logout, loadAllergyList, initFromStorage
   }
 })

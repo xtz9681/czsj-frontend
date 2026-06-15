@@ -225,7 +225,9 @@ async function addAllergyIngredient(item) {
   try {
     const res = await addAllergy(babyId, item.name)
     allergyList.value.push(res)
-    uni.setStorageSync('allergyList', allergyList.value.map(a => ({ name: a.ingredientName || a.name, id: a.id, crossAllergies: a.relatedIngredients || [] })))
+    const mappedList = allergyList.value.map(a => ({ name: a.ingredientName || a.name, id: a.id, crossAllergies: a.relatedIngredients || [] }))
+    uni.setStorageSync('allergyList', mappedList)
+    useUserStore().allergyList = mappedList
     searchKeyword.value = ''
     activeTab.value = 'marked'
     uni.showToast({ title: `已标记 ${item.name} 过敏`, icon: 'success' })
@@ -263,7 +265,9 @@ function doRemove(item) {
       if (!res.confirm) return
       removeAllergyApi(item.id).then(() => {
         allergyList.value = allergyList.value.filter(a => a.id !== item.id)
-        uni.setStorageSync('allergyList', allergyList.value.map(a => ({ name: a.ingredientName || a.name, id: a.id, crossAllergies: a.relatedIngredients || [] })))
+        const mappedList = allergyList.value.map(a => ({ name: a.ingredientName || a.name, id: a.id, crossAllergies: a.relatedIngredients || [] }))
+        uni.setStorageSync('allergyList', mappedList)
+        useUserStore().allergyList = mappedList
       }).catch(e => {
         uni.showToast({ title: e.message || '移除失败，稍后再试~', icon: 'none' })
       })

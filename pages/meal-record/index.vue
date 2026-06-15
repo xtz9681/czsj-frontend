@@ -270,7 +270,7 @@ const mealTypes = [
   { value: 'snack', icon: '/static/icons/meal-snack.png', label: '加餐' },
 ]
 
-const allergyList = uni.getStorageSync('allergyList') || []
+const allergyList = computed(() => useUserStore().allergyList)
 
 const allergyWarnings = computed(() =>
   form.value.ingredients.filter(i => i.isAllergy).map(i => ({

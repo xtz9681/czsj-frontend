@@ -1,7 +1,7 @@
 <template>
   <view class="page-container">
     <!-- 导航栏 -->
-    <view class="nav-bar">
+    <view class="nav-bar" :style="{ paddingTop: safeTop }">
       <view class="nav-back" @tap="goBack">‹</view>
       <text class="nav-title">AI 营养师</text>
       <view class="nav-placeholder"></view>
@@ -74,6 +74,9 @@ import { askAi } from '@/api/ai.js'
 import { useUserStore } from '@/store/user.js'
 
 const userStore = useUserStore()
+
+const systemInfo = uni.getSystemInfoSync()
+const safeTop = (systemInfo.statusBarHeight + 44) + 'px'
 
 const question = ref('')
 const answer = ref('')
