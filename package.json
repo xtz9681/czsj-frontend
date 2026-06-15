@@ -19,6 +19,7 @@
   "description": "",
   "dependencies": {
     "@qiun/ucharts": "^2.5.0-20230101",
+    "mp-painter": "^1.0.1",
     "vue": "^3.5.35",
     "wot-design-uni": "^1.14.0"
   }

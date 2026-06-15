@@ -141,6 +141,10 @@
       </view>
 
       <text class="disclaimer">AI 评分仅供参考，不构成医疗建议，请咨询专业人员</text>
+
+      <view class="share-section">
+        <wd-button type="default" @click="showSharePanel">分享给朋友</wd-button>
+      </view>
     </view>
 
     <SubjectSelector
@@ -222,6 +226,16 @@
         </view>
       </view>
     </view>
+
+    <!-- 海报生成组件（隐藏，仅用于离屏渲染） -->
+    <ScorePoster
+      v-show="false"
+      ref="posterRef"
+      :score="scoreResult?.score || 0"
+      :ingredients="meal?.ingredients?.map(i => i.name) || []"
+      :feedback="scoreResult?.suggestion || '继续加油！'"
+      :babyName="userStore.currentBaby?.name || '宝宝'"
+    />
   </view>
 </template>
 
@@ -229,6 +243,7 @@
 import { ref, computed, nextTick, onUnmounted } from 'vue'
 import { onLoad, onBackPress } from '@dcloudio/uni-app'
 import SubjectSelector from '@/components/SubjectSelector.vue'
+import ScorePoster from '@/components/ScorePoster.vue'
 import { quickRecord, recordMultiple, getIngredientsByAge, getFrequentIngredients, getMealById } from '@/api/meal.js'
 import { useUserStore } from '@/store/user.js'
 import { useMealStore } from '@/store/meal'
@@ -236,6 +251,7 @@ import { useMealStore } from '@/store/meal'
 const userStore = useUserStore()
 const mealStore = useMealStore()
 const subjectSelectorRef = ref(null)
+const posterRef = ref(null)
 const showSubjectSelector = ref(false)
 const useMultipleSubjects = ref(false)
 const selectedSubjectIds = ref([])
@@ -588,6 +604,33 @@ function getScoreGrade(score) {
   if (score >= 60) return '还可以，稍作调整'
   return '食材种类可以再丰富一些'
 }
+
+async function showSharePanel() {
+  try {
+    await posterRef.value?.renderPoster()
+    const tempPath = await posterRef.value?.exportImage()
+    uni.showActionSheet({
+      itemList: ['保存到相册', '分享给微信好友'],
+      success(res) {
+        if (res.tapIndex === 0) {
+          uni.saveImageToPhotosAlbum({
+            filePath: tempPath,
+            success() { uni.showToast({ title: '已保存到相册', icon: 'success' }) },
+            fail() { uni.showToast({ title: '保存失败', icon: 'none' }) }
+          })
+        } else if (res.tapIndex === 1) {
+          uni.shareImageMessage({
+            imageUrl: tempPath,
+            success() { uni.showToast({ title: '分享成功', icon: 'success' }) },
+            fail() { uni.showToast({ title: '分享失败', icon: 'none' }) }
+          })
+        }
+      }
+    })
+  } catch (e) {
+    uni.showToast({ title: '生成海报失败', icon: 'none' })
+  }
+}
 </script>
 
 <style lang="scss" scoped>
@@ -879,6 +922,11 @@ function getScoreGrade(score) {
   font-size: 22rpx;
   color: #C8C8C8;
   line-height: 1.6;
+  margin-bottom: 24rpx;
+}
+
+.share-section {
+  margin-top: 24rpx;
 }
 
 /* 食材选择弹窗 */

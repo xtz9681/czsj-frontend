@@ -59,7 +59,8 @@
   │   ├── growth-record/    # 宝宝生长记录
   │   └── weight-record/    # 妈妈体重记录
   ├── components/           # 公共组件
-  │   ├── SubjectSelector.vue
+  │   ├── SubjectSelector.vue       # 档案选择器（含宝妈档案编辑入口）
+  │   ├── ScorePoster.vue           # 营养评分海报生成（canvas + mp-painter）
   │   └── camera/           # 拍照识食材子组件
   │       ├── RecognitionResult.vue   # 高置信度识别结果确认
   │       ├── IngredientPicker.vue    # 低置信度 fallback 食材勾选
@@ -211,3 +212,4 @@
   33. **宝宝头像上传**：profile 页选择头像后上传到 OSS（POST /baby/{id}/avatar），先本地预览再替换为签名 URL；新建档案时头像仅本地预览，保存后才上传
   34. **新手引导流程**：首次登录后 setup 完成 → profile 完成 → 跳 onboarding 页，分 3 步引导用户选择宝宝阶段、标记常见过敏、记第一餐；完成后标记 onboarded 不再触发
   35. **宝妈档案入口提升**：SubjectSelector 组件中妈妈选项旁增加"编辑我的信息 ›"快捷入口，点击 @tap.stop 跳转 mother-profile 编辑模式
+  36. **营养评分一键分享**：meal-record 页面评分结果卡片下方增加"分享给朋友"按钮，生成精致海报（ScorePoster 组件 + mp-painter canvas 渲染），支持保存到相册或分享给微信好友
