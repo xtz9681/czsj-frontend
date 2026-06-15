@@ -9,8 +9,24 @@
 
     <!-- 内容区域 -->
     <view class="content-area">
-      <!-- 热门问题（无回答时显示） -->
-      <view v-if="!answer && !loading" class="hot-questions">
+      <!-- 对话列表 -->
+      <view v-if="chatMessages.length > 0" class="chat-list">
+        <view
+          v-for="(msg, idx) in chatMessages"
+          :key="idx"
+          :class="['chat-bubble', msg.role === 'user' ? 'bubble-user' : 'bubble-assistant']"
+        >
+          <text class="bubble-content">{{ msg.content }}</text>
+          <text v-if="msg.disclaimer" class="bubble-disclaimer">{{ msg.disclaimer }}</text>
+        </view>
+        <!-- AI 正在思考 -->
+        <view v-if="loading" class="chat-bubble bubble-assistant">
+          <text class="bubble-content typing">AI 正在思考...</text>
+        </view>
+      </view>
+
+      <!-- 热门问题（无对话时显示） -->
+      <view v-if="chatMessages.length === 0 && !loading" class="hot-questions">
         <text class="hot-title">热门问题</text>
         <view class="hot-list">
           <view
@@ -25,22 +41,14 @@
         </view>
       </view>
 
-      <!-- AI 回答 -->
-      <view v-if="answer && !loading" class="answer-card card anim-fade-in-up">
-        <text class="answer-title">AI 回答</text>
-        <text class="answer-text">{{ answer }}</text>
-        <text class="disclaimer">{{ disclaimer }}</text>
-      </view>
-
       <!-- 错误提示 -->
-      <view v-if="errorMsg && !loading" class="error-card card">
-        <text class="error-text">{{ errorMsg }}</text>
+      <view v-if="errorMsg" class="error-msg">
+        <text>{{ errorMsg }}</text>
       </view>
 
-      <!-- Loading 状态 -->
-      <view v-if="loading" class="loading-state">
-        <text class="loading-icon">⏳</text>
-        <text class="loading-text">AI 正在思考中...</text>
+      <!-- 开启新对话按钮 -->
+      <view v-if="chatMessages.length > 0" class="new-chat-btn" @tap="clearChat">
+        <text>开启新对话</text>
       </view>
     </view>
 
@@ -79,8 +87,7 @@ const systemInfo = uni.getSystemInfoSync()
 const safeTop = (systemInfo.statusBarHeight + 44) + 'px'
 
 const question = ref('')
-const answer = ref('')
-const disclaimer = ref('')
+const chatMessages = ref([])  // [{ role: 'user'|'assistant', content: '', disclaimer: '' }]
 const loading = ref(false)
 const errorMsg = ref('')
 
@@ -96,8 +103,11 @@ async function handleAsk(q) {
   if (!text) return
 
   loading.value = true
-  answer.value = ''
   errorMsg.value = ''
+
+  // 用户消息立即显示
+  chatMessages.value.push({ role: 'user', content: text })
+  question.value = ''
 
   try {
     const params = { question: text }
@@ -110,17 +120,30 @@ async function handleAsk(q) {
       params.subjectType = 'MOTHER'
     }
 
+    // 注入最近 5 轮历史（排除当前提问，取之前的 10 条消息）
+    const historyMessages = chatMessages.value
+      .slice(0, -1)  // 排除刚 push 的当前提问
+      .slice(-10)    // 最多 10 条（5 轮）
+      .map(m => ({ role: m.role, content: m.content }))
+    if (historyMessages.length > 0) {
+      params.history = historyMessages
+    }
+
     const res = await askAi(params)
-    answer.value = res.answer || ''
-    disclaimer.value = res.disclaimer || ''
-    question.value = ''
+    chatMessages.value.push({
+      role: 'assistant',
+      content: res.answer || '',
+      disclaimer: res.disclaimer || ''
+    })
   } catch (e) {
     // 检查 402 错误
     if (e?.statusCode === 402 || e?.code === 402 || e?.message?.includes('402')) {
       errorMsg.value = '今日免费次数已用完，明天再来问吧～'
     } else {
-      errorMsg.value = '网络异常，请稍后重试'
+      errorMsg.value = e?.message || '网络开小差了，请稍后再试~'
     }
+    // 提问失败时移除用户消息
+    chatMessages.value.pop()
   } finally {
     loading.value = false
   }
@@ -129,6 +152,11 @@ async function handleAsk(q) {
 function tapHotQuestion(q) {
   question.value = q
   handleAsk(q)
+}
+
+function clearChat() {
+  chatMessages.value = []
+  errorMsg.value = ''
 }
 
 function goBack() {
@@ -284,5 +312,75 @@ function goBack() {
 .input-wrapper :deep(.wd-input__wrapper) {
   background: #F5F5F5;
   border-radius: 8rpx;
+}
+
+/* 对话列表 */
+.chat-list {
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+}
+
+.chat-bubble {
+  max-width: 85%;
+  padding: 24rpx 28rpx;
+  border-radius: 20rpx;
+  word-break: break-all;
+}
+
+.bubble-user {
+  align-self: flex-end;
+  background: #F5A85B;
+  color: #fff;
+  border-bottom-right-radius: 4rpx;
+}
+
+.bubble-assistant {
+  align-self: flex-start;
+  background: #fff;
+  color: #3D3935;
+  border-bottom-left-radius: 4rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.06);
+}
+
+.bubble-content {
+  font-size: 28rpx;
+  line-height: 1.6;
+}
+
+.bubble-disclaimer {
+  display: block;
+  margin-top: 12rpx;
+  font-size: 22rpx;
+  color: #999;
+}
+
+.typing {
+  color: #999;
+}
+
+.error-msg {
+  padding: 24rpx;
+  background: #FDEEE9;
+  border-radius: 16rpx;
+  border: 1rpx solid #E07A5F;
+}
+
+.error-msg text {
+  display: block;
+  font-size: 26rpx;
+  color: #E07A5F;
+}
+
+.new-chat-btn {
+  text-align: center;
+  margin-top: 32rpx;
+  padding: 16rpx 0;
+}
+
+.new-chat-btn text {
+  font-size: 26rpx;
+  color: #999;
+  text-decoration: underline;
 }
 </style>
