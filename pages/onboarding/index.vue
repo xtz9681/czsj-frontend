@@ -147,6 +147,7 @@ function goMealRecord() {
 
 function finishOnboarding() {
   uni.setStorageSync('onboarded', true)
+  uni.reLaunch({ url: '/pages/index/index' })
 }
 </script>
 

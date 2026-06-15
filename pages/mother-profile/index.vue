@@ -406,7 +406,16 @@ async function save() {
       setTimeout(() => uni.navigateTo({ url: `/pages/profile/index?babyDeliveryDate=${babyDeliveryDate}` }), 1000)
     } else {
       uni.showToast({ title: isEdit.value ? '修改成功~' : '设置完成！', icon: 'success' })
-      setTimeout(() => uni.reLaunch({ url: '/pages/index/index' }), 1000)
+      setTimeout(() => {
+        // 编辑模式直接回首页，新建模式检查 onboarded
+        if (isEdit.value) {
+          uni.reLaunch({ url: '/pages/index/index' })
+        } else if (!uni.getStorageSync('onboarded')) {
+          uni.reLaunch({ url: '/pages/onboarding/index' })
+        } else {
+          uni.reLaunch({ url: '/pages/index/index' })
+        }
+      }, 1000)
     }
   } catch (e) {
     uni.showToast({ title: e.message || '保存失败，请稍后再试~', icon: 'none' })
@@ -416,7 +425,11 @@ async function save() {
 }
 
 function skip() {
-  uni.reLaunch({ url: '/pages/index/index' })
+  if (!uni.getStorageSync('onboarded')) {
+    uni.reLaunch({ url: '/pages/onboarding/index' })
+  } else {
+    uni.reLaunch({ url: '/pages/index/index' })
+  }
 }
 
 // 日常管理模式直接进首页
