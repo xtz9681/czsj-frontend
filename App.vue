@@ -1,15 +1,27 @@
 <script>
+  import { getUserInfo } from '@/api/auth.js'
+
   export default {
-    onLaunch: function() {
+    onLaunch: async function() {
       const token = uni.getStorageSync('token')
       if (!token) {
         uni.reLaunch({ url: '/pages/login/index' })
         return
       }
-      const babies = uni.getStorageSync('babies') || []
-      const mother = uni.getStorageSync('mother')
-      if (babies.length === 0 && !mother) {
-        uni.reLaunch({ url: '/pages/setup/index' })
+
+      // 校验 token 是否仍然有效
+      try {
+        await getUserInfo()
+        // token 有效，继续正常流程
+        const babies = uni.getStorageSync('babies') || []
+        const mother = uni.getStorageSync('mother')
+        if (babies.length === 0 && !mother) {
+          uni.reLaunch({ url: '/pages/setup/index' })
+        }
+      } catch (e) {
+        // token 无效（401 或其他错误），清除并跳登录页
+        uni.removeStorageSync('token')
+        uni.reLaunch({ url: '/pages/login/index' })
       }
     },
     onShow: function() {},

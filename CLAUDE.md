@@ -65,8 +65,8 @@
   │       └── RecordActions.vue       # 动作按钮组（记录/记录我的/记录多个）
   ├── api/                  # 后端 API 封装
   │   ├── request.js        # 基础请求封装
-  │   ├── auth.js           # wxLogin、getUserInfo
-  │   ├── baby.js           # getBabyList、createBaby、updateBaby、deleteBaby、getGrowthRecords、addGrowthRecord
+  │   ├── auth.js           # wxLogin、getUserInfo（校验 token 有效性）
+  │   ├── baby.js           # getBabyList、createBaby、updateBaby、deleteBaby、getGrowthRecords、addGrowthRecord、uploadBabyAvatar
   │   ├── meal.js           # quickRecord、checkMultiRecordWarning、recordMultiple、getMealList(babyId, page, size, date可选)、getIngredientsByAge、getDailySummary、getWeekSummary、deleteMeal、updateMeal、getFrequentIngredients、getMealById
   │   ├── ai.js             # photoRecord、getWeeklyPlan、getLatestPlan、askAi、getChatHistory、clearChatHistory
   │   ├── allergy.js        # getAllergyList、addAllergy、removeAllergy
@@ -206,3 +206,5 @@
   29. **photoRecord 401 处理**：uni.uploadFile 的 success 回调增加 401 状态码处理（清除 token + reLaunch 跳转登录页），不再走 else 通用错误分支导致用户被锁死在无效会话。
   30. **ai-chat 安全区适配**：导航栏加 :style="{ paddingTop: safeTop }" 动态绑定（statusBarHeight + 44px），与 camera 页面写法一致。
   31. **用餐提醒模板 ID**：MEAL_REMINDER_TPL_ID 当前为占位符 'your-template-id-here'，需在上线前替换为微信公众平台申请的真实模板 ID（上线阻断项）。
+  32. **Token 有效性校验**：App.vue onLaunch 有 token 时调 GET /auth/me 校验，401 则清除 token 跳登录页，防止过期 token 导致所有请求返回 401
+  33. **宝宝头像上传**：profile 页选择头像后上传到 OSS（POST /baby/{id}/avatar），先本地预览再替换为签名 URL；新建档案时头像仅本地预览，保存后才上传

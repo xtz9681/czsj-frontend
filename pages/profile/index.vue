@@ -144,7 +144,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { onLoad, onBackPress } from '@dcloudio/uni-app'
-import { createBaby, updateBaby } from '@/api/baby.js'
+import { createBaby, updateBaby, uploadBabyAvatar } from '@/api/baby.js'
 import { useUserStore } from '@/store/user.js'
 import { calcAgeMonths, formatAge } from '@/utils/age.js'
 
@@ -207,13 +207,33 @@ function onBirthdayChange(e) {
 }
 
 function chooseAvatar() {
+  // 新建模式下没有 ID，只做本地预览
+  if (!isEdit.value) {
+    uni.chooseImage({
+      count: 1,
+      sizeType: ['compressed'],
+      sourceType: ['album', 'camera'],
+      success(res) {
+        form.value.avatar = res.tempFilePaths[0]
+      }
+    })
+    return
+  }
+
+  // 编辑模式下选图后立即上传
   uni.chooseImage({
     count: 1,
     sizeType: ['compressed'],
     sourceType: ['album', 'camera'],
     success(res) {
-      form.value.avatar = res.tempFilePaths[0]
-      // TODO: 上传图片到 OSS，将返回 URL 赋给 form.avatar
+      const localPath = res.tempFilePaths[0]
+      form.value.avatar = localPath  // 先本地预览
+      // 上传到 OSS
+      uploadBabyAvatar(form.value.id, localPath).then(data => {
+        form.value.avatar = data.avatarUrl  // 替换为签名 URL
+      }).catch(e => {
+        uni.showToast({ title: '头像上传失败', icon: 'none' })
+      })
     }
   })
 }

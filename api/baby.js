@@ -1,4 +1,4 @@
-import { request } from './request'
+import { request, BASE_URL } from './request'
 
 export function getBabyList() {
   return request({ url: '/baby' })
@@ -26,3 +26,32 @@ export function addGrowthRecord(babyId, data) {
   return request({ url: '/baby/' + babyId + '/growth-records', method: 'POST', data })
 }
 
+// 上传宝宝头像
+export function uploadBabyAvatar(babyId, filePath) {
+  return new Promise((resolve, reject) => {
+    const token = uni.getStorageSync('token')
+    uni.uploadFile({
+      url: BASE_URL + '/baby/' + babyId + '/avatar',
+      filePath,
+      name: 'file',
+      header: { 'Authorization': 'Bearer ' + token },
+      success(res) {
+        if (res.statusCode === 200) {
+          try {
+            resolve(JSON.parse(res.data))
+          } catch (e) {
+            reject(new Error('服务器返回格式错误'))
+          }
+        } else if (res.statusCode === 401) {
+          uni.removeStorageSync('token')
+          uni.reLaunch({ url: '/pages/login/index' })
+        } else {
+          reject(new Error('上传头像遇到了点问题~'))
+        }
+      },
+      fail(err) {
+        reject(new Error('网络开小差了，请检查网络~'))
+      }
+    })
+  })
+}
