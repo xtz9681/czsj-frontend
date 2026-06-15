@@ -269,7 +269,7 @@ async function startRecognition(filePath) {
         id: idx,
         name,
         selected: true,
-        isAllergy: allergyList.value.some(a => (a.name || a.ingredientName) === name)
+        isAllergy: allergyList.value.some(a => (a.ingredientName || a.name) === name)
       }))
       stage.value = 'high-confidence'
     } else {
