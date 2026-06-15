@@ -19,7 +19,10 @@
             </view>
           </view>
           <view class="subject-info">
-            <text class="subject-name">{{ motherPhaseLabel }}</text>
+            <view class="mother-header">
+              <text class="subject-name">{{ motherPhaseLabel }}</text>
+              <text class="edit-link" @tap.stop="goEditMother">编辑我的信息 ›</text>
+            </view>
             <text class="subject-sub">我的营养</text>
           </view>
         </view>
@@ -99,6 +102,10 @@ const motherPhaseLabel = computed(() => {
 function babyPhaseLabel(baby) {
   if (!baby.birthday) return baby.name
   return formatAge(baby.birthday)
+}
+
+function goEditMother() {
+  uni.navigateTo({ url: '/pages/mother-profile/index?edit=true' })
 }
 
 function toggleSubject(id) {
@@ -258,12 +265,24 @@ defineExpose({
   flex: 1;
 }
 
+.mother-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4rpx;
+}
+
 .subject-name {
   display: block;
   font-size: 28rpx;
   font-weight: 600;
   color: #3D3935;
-  margin-bottom: 4rpx;
+}
+
+.edit-link {
+  font-size: 24rpx;
+  color: #F5A85B;
+  flex-shrink: 0;
 }
 
 .subject-sub {

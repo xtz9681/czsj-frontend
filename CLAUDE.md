@@ -210,3 +210,4 @@
   32. **Token 有效性校验**：App.vue onLaunch 有 token 时调 GET /auth/me 校验，401 则清除 token 跳登录页，防止过期 token 导致所有请求返回 401
   33. **宝宝头像上传**：profile 页选择头像后上传到 OSS（POST /baby/{id}/avatar），先本地预览再替换为签名 URL；新建档案时头像仅本地预览，保存后才上传
   34. **新手引导流程**：首次登录后 setup 完成 → profile 完成 → 跳 onboarding 页，分 3 步引导用户选择宝宝阶段、标记常见过敏、记第一餐；完成后标记 onboarded 不再触发
+  35. **宝妈档案入口提升**：SubjectSelector 组件中妈妈选项旁增加"编辑我的信息 ›"快捷入口，点击 @tap.stop 跳转 mother-profile 编辑模式
