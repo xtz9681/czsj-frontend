@@ -55,6 +55,12 @@
       }
     },
     {
+      "path": "pages/onboarding/index",
+      "style": {
+        "navigationBarTitleText": "新手引导"
+      }
+    },
+    {
       "path": "pages/mother-profile/index",
       "style": {
         "navigationBarTitleText": "我的档案"

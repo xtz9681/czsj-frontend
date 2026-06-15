@@ -280,7 +280,11 @@ async function saveBaby() {
 
     uni.showToast({ title: isEdit.value ? '修改成功~' : '太棒了，开始记录吧！', icon: 'success' })
     setTimeout(() => {
-      uni.reLaunch({ url: '/pages/index/index' })
+      if (!isEdit.value && !uni.getStorageSync('onboarded')) {
+        uni.reLaunch({ url: '/pages/onboarding/index' })
+      } else {
+        uni.reLaunch({ url: '/pages/index/index' })
+      }
     }, 1200)
   } catch (e) {
     uni.showToast({ title: e.message || '保存时出了点问题~', icon: 'none' })
@@ -290,7 +294,11 @@ async function saveBaby() {
 }
 
 function skipToHome() {
-  uni.reLaunch({ url: '/pages/index/index' })
+  if (!uni.getStorageSync('onboarded')) {
+    uni.reLaunch({ url: '/pages/onboarding/index' })
+  } else {
+    uni.reLaunch({ url: '/pages/index/index' })
+  }
 }
 </script>
 

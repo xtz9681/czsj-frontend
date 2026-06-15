@@ -432,7 +432,13 @@ async function saveAndGoHome() {
     const res = await createMother(payload)
     userStore.setMother(res)
     uni.showToast({ title: '设置完成！', icon: 'success' })
-    setTimeout(() => uni.reLaunch({ url: '/pages/index/index' }), 1000)
+    setTimeout(() => {
+      if (!uni.getStorageSync('onboarded')) {
+        uni.reLaunch({ url: '/pages/onboarding/index' })
+      } else {
+        uni.reLaunch({ url: '/pages/index/index' })
+      }
+    }, 1000)
   } catch (e) {
     uni.showToast({ title: e.message || '保存失败，请稍后再试~', icon: 'none' })
   } finally {
