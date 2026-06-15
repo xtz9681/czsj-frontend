@@ -34,6 +34,8 @@
     - **重要**：写调用后端接口或修改接口调用之前，**必须先扫描后端代码**（`/Users/xutianzhe/czsj` 下的后端项目）
     - 找到对应的 Controller、DTO、接口规范和参数定义后，再写前端代码
     - 这样避免参数不匹配或接口变更导致的问题
+  - **过敏列表读取规范**：所有页面通过 `useUserStore().allergyList`（computed）读取过敏列表，不再直接 `uni.getStorageSync('allergyList')`。修改过敏后调用 `useUserStore().loadAllergyList()` 刷新 store。过敏检测字段名统一使用 `(a.ingredientName || a.name)`，因为后端 AllergyResponse 返回的字段名是 ingredientName。
+  - **日期计算规范**：获取本地日期字符串时使用 `const d = new Date(); return \`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}\``，不要用 `toISOString().split('T')[0]`（后者受 UTC 时区偏移影响）。解析后端返回的 ISO 时间字符串时使用 `new Date(isoStr)` 转本地时间再取日期，不要直接 `split('T')[0]`。
   - 数据：先用 ref + mock 数据让 UI 跑起来，API 调用留 TODO 注释
   - 国际化：暂不做，中文硬编码
 
@@ -64,13 +66,15 @@
   │   ├── request.js        # 基础请求封装
   │   ├── auth.js           # wxLogin、getUserInfo
   │   ├── baby.js           # getBabyList、createBaby、updateBaby、deleteBaby、getGrowthRecords、addGrowthRecord
-  │   ├── meal.js           # quickRecord、checkMultiRecordWarning、recordMultiple、getMealList、getIngredientsByAge、getDailySummary、getWeekSummary、deleteMeal、updateMeal、getFrequentIngredients、getMealById
+  │   ├── meal.js           # quickRecord、checkMultiRecordWarning、recordMultiple、getMealList(babyId, page, size, date可选)、getIngredientsByAge、getDailySummary、getWeekSummary、deleteMeal、updateMeal、getFrequentIngredients、getMealById
   │   ├── ai.js             # photoRecord、getWeeklyPlan、getLatestPlan、askAi
   │   ├── allergy.js        # getAllergyList、addAllergy、removeAllergy
   │   ├── mother.js         # getMother、createMother、updateMother、getWeightRecords、addWeightRecord
   │   ├── reminder.js       # subscribeReminder、getReminderList、toggleReminder、deleteReminder
   │   └── record.js         # deleteGrowthRecord、deleteWeightRecord
   ├── store/                # Pinia 状态
+  │   ├── user.js           # 用户状态（token、userId、babies、currentBabyId、mother、allergyList）
+  │   └── meal.js           # 餐食状态（pendingMeal）
   ├── utils/                # 工具函数
   │   └── age.js            # calcAgeMonths(birthday) 计算月龄、formatAge(birthday) 格式化为"X 个月"或"X 岁 X 个月"
   ├── constants/            # 常量枚举
@@ -192,3 +196,10 @@
       - 登录页勾选：用户需勾选《隐私政策》才能登录，登录按钮动态启用/禁用
       - 宝宝档案监护人确认：新建宝宝时需勾选"我确认是该宝宝的监护人"，编辑模式下不需要
       - AI 首次使用提示：首次使用拍照识食材或拍照记餐时，弹出 AI 使用须知，用户确认后存储到本地缓存，后续使用不再提示
+  25. **过敏列表 Store 统一管理**：allergyList 从 Storage 缓存改为 Pinia store（user.js 的 allergyList state + loadAllergyList action）。4 个页面（camera、meal-record、mine、allergy）统一从 store 读取，allergy 页修改后调用 store.loadAllergyList() 刷新。过敏检测字段名统一用 (a.ingredientName || a.name) 兼容后端返回格式。
+  26. **meal-list 触底分页**：历史记录改为初始拉 20 条 + 触底加载下一页，有 noMore 标志位和 loading 态。删除记录和页面重入时通过 resetAndLoad() 重置分页状态再刷新。
+  27. **首页按日筛选**：loadTodayMeals 改为传 date 参数给后端筛选今日记录，删除前端 .filter() 过滤。date 用本地日期计算（getFullYear/getMonth+1/getDate + padStart），避免 UTC 时区偏移。
+  28. **mealTime 时区兼容**：meal-list 中解析后端返回的 Instant 格式 mealTime 时，改用 new Date(isoStr) 转本地日期再取年月日（toLocalDateStr 函数），不再用 split('T')[0] 取 UTC 日期。
+  29. **photoRecord 401 处理**：uni.uploadFile 的 success 回调增加 401 状态码处理（清除 token + reLaunch 跳转登录页），不再走 else 通用错误分支导致用户被锁死在无效会话。
+  30. **ai-chat 安全区适配**：导航栏加 :style="{ paddingTop: safeTop }" 动态绑定（statusBarHeight + 44px），与 camera 页面写法一致。
+  31. **用餐提醒模板 ID**：MEAL_REMINDER_TPL_ID 当前为占位符 'your-template-id-here'，需在上线前替换为微信公众平台申请的真实模板 ID（上线阻断项）。
