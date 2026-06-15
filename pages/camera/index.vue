@@ -151,7 +151,7 @@ async function loadAgeIngredients() {
       emoji: '🥗',
       name: i.name,
       selected: false,
-      isAllergy: allergyList.value.some(a => a.name === i.name),
+      isAllergy: allergyList.value.some(a => (a.ingredientName || a.name) === i.name),
       allergyDesc: ''
     }))
   } catch (e) {
@@ -280,7 +280,7 @@ async function startRecognition(filePath) {
           emoji: i.emoji || '🍴',
           name: i.name,
           selected: false,
-          isAllergy: allergyList.some(a => (a.name || a.ingredientName) === i.name)
+          isAllergy: allergyList.value.some(a => (a.ingredientName || a.name) === i.name)
         }))
       }
       stage.value = 'low-confidence'
@@ -309,7 +309,7 @@ function showAddIngredient() {
           id: Date.now(),
           name: res.content.trim(),
           selected: true,
-          isAllergy: allergyList.value.some(a => a.name === res.content.trim())
+          isAllergy: allergyList.value.some(a => (a.ingredientName || a.name) === res.content.trim())
         })
       }
     }
@@ -328,7 +328,7 @@ function addCustomIngredient() {
     emoji: '🍴',
     name,
     selected: true,
-    isAllergy: allergyList.value.some(a => a.name === name)
+    isAllergy: allergyList.value.some(a => (a.ingredientName || a.name) === name)
   })
   customIngredient.value = ''
 }
@@ -344,7 +344,7 @@ function handleCustomIngredient(name) {
     emoji: '🍴',
     name,
     selected: true,
-    isAllergy: allergyList.value.some(a => a.name === name)
+    isAllergy: allergyList.value.some(a => (a.ingredientName || a.name) === name)
   })
 }
 

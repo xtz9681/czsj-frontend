@@ -421,7 +421,7 @@ function selectIngredient(item) {
     name: item.name,
     emoji: '🍴',
     amount: 30,
-    isAllergy: item.allergyRisk === 'high'
+    isAllergy: allergyList.value.some(a => (a.ingredientName || a.name) === item.name)
   })
   scoreResult.value = null
   // 从常用列表中移除
@@ -443,7 +443,7 @@ function addCustomIngredient() {
     name: name,
     emoji: '🍴',
     amount: 30,
-    isAllergy: false
+    isAllergy: allergyList.value.some(a => (a.ingredientName || a.name) === name)
   })
   scoreResult.value = null
   customIngredientName.value = ''
