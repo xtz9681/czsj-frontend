@@ -17,7 +17,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, getCurrentInstance } from 'vue'
 import Painter from 'mp-painter'
 
 const props = defineProps({
@@ -43,6 +43,7 @@ const props = defineProps({
   }
 })
 
+const instance = getCurrentInstance()
 const painter = ref(null)
 const ringTempPath = ref('')
 
@@ -58,7 +59,7 @@ const scoreInfo = computed(() => {
 // ── Step 1: 动态生成圆弧进度环图片 ──
 async function generateRingImage() {
   return new Promise((resolve, reject) => {
-    const query = uni.createSelectorQuery()
+    const query = uni.createSelectorQuery().in(instance.proxy)
     query
       .select('#scoreRingCanvas')
       .node((res) => {
