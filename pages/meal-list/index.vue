@@ -132,6 +132,13 @@ const noMore = ref(false)
 
 const weekNutrition = ref([])
 
+function resetAndLoad() {
+  currentPage.value = 0
+  noMore.value = false
+  allMeals.value = []
+  loadMeals()
+}
+
 async function loadMeals() {
   const baby = useUserStore().currentBaby
   if (!baby?.id) return
@@ -199,7 +206,7 @@ function getNutritionIcon(name) {
 }
 
 onShow(() => {
-  loadMeals()
+  resetAndLoad()
   loadWeekSummary()
 })
 
@@ -295,7 +302,7 @@ function confirmDeleteMeal(meal) {
         try {
           await deleteMeal(meal.id)
           uni.showToast({ title: '已删除', icon: 'success' })
-          loadMeals()
+          resetAndLoad()
           loadWeekSummary()
         } catch (e) {
           uni.showToast({ title: '删除失败，请重试', icon: 'none' })
@@ -306,13 +313,14 @@ function confirmDeleteMeal(meal) {
 }
 
 function getTodayStr() {
-  return new Date().toISOString().split('T')[0]
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
 }
 
 function getDateStr(offset) {
   const d = new Date()
   d.setDate(d.getDate() + offset)
-  return d.toISOString().split('T')[0]
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
 }
 </script>
 

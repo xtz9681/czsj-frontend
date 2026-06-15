@@ -399,7 +399,8 @@ const todayStr = computed(() => {
 async function loadTodayMeals() {
   if (subjectMode.value !== 'baby' || !currentBaby.value?.id) return
   try {
-    const todayDate = new Date().toISOString().split('T')[0]
+    const d = new Date()
+    const todayDate = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
     const list = await getMealList(currentBaby.value.id, 0, 20, todayDate)
     todayMeals.value = (list || []).map(m => ({
       id: m.id,
