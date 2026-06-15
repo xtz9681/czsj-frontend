@@ -81,11 +81,10 @@ import { ref, computed } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
 import { askAi, getChatHistory, clearChatHistory } from '@/api/ai.js'
 import { useUserStore } from '@/store/user.js'
+import { useSafeArea } from '@/composables/useSafeArea.js'
 
 const userStore = useUserStore()
-
-const systemInfo = uni.getSystemInfoSync()
-const safeTop = (systemInfo.statusBarHeight + 44) + 'px'
+const { safeTop } = useSafeArea()
 
 const question = ref('')
 const chatMessages = ref([])  // [{ role: 'user'|'assistant', content: '', disclaimer: '' }]

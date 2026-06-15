@@ -36,6 +36,7 @@
     - 这样避免参数不匹配或接口变更导致的问题
   - **过敏列表读取规范**：所有页面通过 `useUserStore().allergyList`（computed）读取过敏列表，不再直接 `uni.getStorageSync('allergyList')`。修改过敏后调用 `useUserStore().loadAllergyList()` 刷新 store。过敏检测字段名统一使用 `(a.ingredientName || a.name)`，因为后端 AllergyResponse 返回的字段名是 ingredientName。
   - **日期计算规范**：获取本地日期字符串时使用 `const d = new Date(); return \`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}\``，不要用 `toISOString().split('T')[0]`（后者受 UTC 时区偏移影响）。解析后端返回的 ISO 时间字符串时使用 `new Date(isoStr)` 转本地时间再取日期，不要直接 `split('T')[0]`。
+  - **安全区适配规范**：所有自定义导航栏页面统一使用 `useSafeArea()` 获取 safeTop，不再各自计算 statusBarHeight。useSafeArea 优先使用胶囊按钮位置（更精准），降级使用 statusBarHeight + 44px。
   - 数据：先用 ref + mock 数据让 UI 跑起来，API 调用留 TODO 注释
   - 国际化：暂不做，中文硬编码
 
@@ -75,6 +76,8 @@
   ├── store/                # Pinia 状态
   │   ├── user.js           # 用户状态（token、userId、babies、currentBabyId、mother、allergyList）
   │   └── meal.js           # 餐食状态（pendingMeal）
+  ├── composables/          # 组合式函数
+  │   └── useSafeArea.js    # 安全区域 Hook（导航栏顶部安全距离）
   ├── utils/                # 工具函数
   │   └── age.js            # calcAgeMonths(birthday) 计算月龄、formatAge(birthday) 格式化为"X 个月"或"X 岁 X 个月"
   ├── constants/            # 常量枚举

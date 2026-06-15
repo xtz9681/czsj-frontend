@@ -106,17 +106,14 @@ import { photoRecord } from '@/api/ai.js'
 import { getIngredientsByAge, quickRecord, recordMultiple } from '@/api/meal.js'
 import { useUserStore } from '@/store/user.js'
 import { useMealStore } from '@/store/meal'
+import { useSafeArea } from '@/composables/useSafeArea.js'
 
 const userStore = useUserStore()
 const mealStore = useMealStore()
 const subjectSelectorRef = ref(null)
 
 // ── 安全区适配 ──────────────────────────────
-const systemInfo = uni.getSystemInfoSync()
-const menuButton = uni.getMenuButtonBoundingClientRect?.() || null
-const safeTop = menuButton
-  ? (menuButton.bottom + 8) + 'px'
-  : (systemInfo.statusBarHeight + 44) + 'px'
+const { safeTop } = useSafeArea()
 const navBarStyle = computed(() => ({
   paddingTop: safeTop
 }))

@@ -5,10 +5,6 @@ import { request, BASE_URL } from './request'
 export function photoRecord(filePath, babyId) {
   return new Promise((resolve, reject) => {
     const token = uni.getStorageSync('token')
-    console.log('📤 photoRecord 开始上传')
-    console.log('  token:', token ? '✓ 存在' : '✗ 不存在')
-    console.log('  babyId:', babyId)
-    console.log('  filePath:', filePath)
 
     uni.uploadFile({
       url: BASE_URL + '/meal/photo-record',
@@ -17,19 +13,14 @@ export function photoRecord(filePath, babyId) {
       formData: { babyId: String(babyId) },
       header: { 'Authorization': 'Bearer ' + token },
       success(res) {
-        console.log('✅ uploadFile success, statusCode:', res.statusCode)
-        console.log('  response data:', res.data)
         if (res.statusCode === 200) {
           try {
             const parsed = JSON.parse(res.data)
-            console.log('✅ 解析成功:', parsed)
             resolve(parsed)
           } catch (e) {
-            console.error('❌ JSON 解析失败:', e)
             reject(new Error('服务器返回格式错误'))
           }
         } else if (res.statusCode === 401) {
-          console.log('❌ 401 未授权，跳转登录')
           uni.removeStorageSync('token')
           uni.reLaunch({ url: '/pages/login/index' })
         } else if (res.statusCode === 402) {
@@ -44,7 +35,6 @@ export function photoRecord(filePath, babyId) {
         }
       },
       fail(err) {
-        console.error('❌ uploadFile fail:', err)
         reject(new Error('网络开小差了，请检查网络~'))
       }
     })
@@ -63,7 +53,7 @@ export function getLatestPlan(babyId) {
 
 // AI 即时问答
 export function askAi(data) {
-  return request({ url: '/ai/ask', method: 'post', data })
+  return request({ url: '/ai/ask', method: 'POST', data })
 }
 
 // 获取 AI 问答对话历史（最近 5 轮）

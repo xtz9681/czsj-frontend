@@ -54,7 +54,7 @@ export function getFrequentIngredients(subjectId, subjectType) {
 
 // 营养趋势数据（近 N 天的每日评分）
 export function getNutritionTrend(params) {
-  return request({ url: '/meal/nutrition-trend', method: 'get', data: params })
+  return request({ url: '/meal/nutrition-trend', method: 'GET', data: params })
 }
 
 // 获取单条餐食记录

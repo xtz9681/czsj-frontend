@@ -290,16 +290,13 @@ import { getMealList, getIngredientsByAge, getDailySummary, getNutritionTrend } 
 import { useUserStore } from '@/store/user.js'
 import { calcAgeMonths, formatAge } from '@/utils/age.js'
 import { phaseMap } from '@/constants/phase.js'
+import { useSafeArea } from '@/composables/useSafeArea.js'
 import NutritionTrendChart from "@/components/NutritionTrendChart.vue"
 
 const userStore = useUserStore()
 
 // ── 安全区适配 ──────────────────────────────
-const systemInfo = uni.getSystemInfoSync()
-const menuButton = uni.getMenuButtonBoundingClientRect?.() || null
-const safeTop = menuButton
-  ? (menuButton.bottom + 8) + 'px'
-  : (systemInfo.statusBarHeight + 44) + 'px'
+const { safeTop } = useSafeArea()
 const topSectionStyle = computed(() => ({
   paddingTop: safeTop
 }))

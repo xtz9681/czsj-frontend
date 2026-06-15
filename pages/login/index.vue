@@ -48,17 +48,14 @@
 import { ref, computed } from 'vue'
 import { wxLogin } from '@/api/auth.js'
 import { useUserStore } from '@/store/user.js'
+import { useSafeArea } from '@/composables/useSafeArea.js'
 
 const loading = ref(false)
 const agreedPrivacy = ref(false)
 const userStore = useUserStore()
 
 // ── 安全区适配 ──────────────────────────────
-const systemInfo = uni.getSystemInfoSync()
-const menuButton = uni.getMenuButtonBoundingClientRect?.() || null
-const safeTop = menuButton
-  ? (menuButton.bottom + 8) + 'px'
-  : (systemInfo.statusBarHeight + 44) + 'px'
+const { safeTop } = useSafeArea()
 // login 页面原来 padding-top 是 160rpx，比较大，这里在 safeTop 基础上额外加 20px
 const contentStyle = computed(() => ({
   paddingTop: `calc(${safeTop} + 20px)`
