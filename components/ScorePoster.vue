@@ -1,9 +1,8 @@
 <template>
   <view class="score-poster-container">
     <canvas
-      id="scorePosterCanvas"
+      canvas-id="scorePosterCanvas"
       class="poster-canvas"
-      type="2d"
       style="width: 600px; height: 1000px;"
     ></canvas>
   </view>
@@ -33,7 +32,6 @@ const props = defineProps({
 })
 
 const painter = ref(null)
-const canvasCtx = ref(null)
 
 // 获取分数对应的颜色和评价
 const scoreInfo = computed(() => {
@@ -46,214 +44,180 @@ const scoreInfo = computed(() => {
 
 async function renderPoster() {
   return new Promise((resolve, reject) => {
-    // 获取 canvas
-    const query = uni.createSelectorQuery()
-    query
-      .select('#scorePosterCanvas')
-      .node((res) => {
-        if (!res) {
-          reject(new Error('Canvas not found'))
-          return
-        }
+    try {
+      const ctx = uni.createCanvasContext('scorePosterCanvas')
+      painter.value = new Painter(ctx)
 
-        const canvas = res[0]
-        const ctx = canvas.getContext('2d')
-        canvasCtx.value = ctx
+      const posterConfig = buildPosterConfig()
 
-        // 设置 canvas 尺寸
-        const dpr = uni.getSystemInfoSync().pixelRatio
-        canvas.width = 600 * dpr
-        canvas.height = 1000 * dpr
-        ctx.scale(dpr, dpr)
-
-        // 开始绘制
-        try {
-          drawPoster(ctx)
-          resolve()
-        } catch (e) {
-          reject(e)
-        }
+      painter.value.draw(posterConfig).then(() => {
+        resolve()
+      }).catch(err => {
+        reject(err)
       })
-      .exec()
-  })
-}
-
-function drawPoster(ctx) {
-  // 背景
-  ctx.fillStyle = '#FAF7F2'
-  ctx.fillRect(0, 0, 600, 1000)
-
-  // 白色卡片背景 + 阴影
-  ctx.fillStyle = '#FFFFFF'
-  ctx.shadowColor = 'rgba(0,0,0,0.08)'
-  ctx.shadowBlur = 20
-  ctx.shadowOffsetY = 10
-  drawRoundRect(ctx, 30, 40, 540, 920, 24)
-  ctx.fill()
-  ctx.shadowColor = 'transparent'
-
-  let y = 80
-
-  // 标题：宝宝名字 + "今日营养评分"
-  ctx.fillStyle = '#3D3935'
-  ctx.font = 'bold 32px "PingFang SC"'
-  ctx.textAlign = 'center'
-  ctx.fillText(`${props.babyName}今日营养评分`, 300, y)
-  y += 60
-
-  // 圆形进度条 + 分数
-  drawScoreCircle(ctx, 300, y + 60, 80, props.score, scoreInfo.value.color)
-
-  // 分数文字
-  ctx.fillStyle = scoreInfo.value.color
-  ctx.font = 'bold 48px "PingFang SC"'
-  ctx.textAlign = 'center'
-  ctx.fillText(String(props.score), 300, y + 75)
-
-  // 评价标签
-  ctx.fillStyle = scoreInfo.value.color
-  ctx.font = '20px "PingFang SC"'
-  ctx.textAlign = 'center'
-  ctx.fillText(scoreInfo.value.label, 300, y + 110)
-  y += 160
-
-  // 食材标签
-  if (props.ingredients.length > 0) {
-    y += 20
-    ctx.fillStyle = '#666'
-    ctx.font = '20px "PingFang SC"'
-    ctx.textAlign = 'left'
-    ctx.fillText('今日食材：', 60, y)
-    y += 30
-
-    let x = 60
-    const maxWidth = 480
-    const lineHeight = 40
-    let lineCount = 0
-
-    props.ingredients.slice(0, 8).forEach((ingredient) => {
-      const text = ingredient
-      const textMetrics = ctx.measureText(text)
-      const tagWidth = textMetrics.width + 24
-      const tagHeight = 32
-
-      // 换行逻辑
-      if (x + tagWidth > maxWidth) {
-        x = 60
-        y += lineHeight
-        lineCount++
-      }
-
-      if (lineCount > 1) return // 最多显示两行
-
-      // 绘制药丸形标签
-      ctx.fillStyle = '#E8F8EE'
-      drawRoundRect(ctx, x, y - tagHeight + 8, tagWidth, tagHeight, 16)
-      ctx.fill()
-
-      // 标签文字
-      ctx.fillStyle = '#5CB87A'
-      ctx.font = '18px "PingFang SC"'
-      ctx.textAlign = 'left'
-      ctx.fillText(text, x + 12, y + 2)
-
-      x += tagWidth + 12
-    })
-    y += 80
-  }
-
-  // AI 评语气泡
-  y += 20
-  ctx.fillStyle = '#FFF3E6'
-  drawRoundRect(ctx, 50, y, 500, 100, 16)
-  ctx.fill()
-
-  ctx.fillStyle = '#F5A85B'
-  ctx.font = 'bold 18px "PingFang SC"'
-  ctx.textAlign = 'left'
-  ctx.fillText('AI 评语', 70, y + 28)
-
-  // 换行文字
-  const feedbackLines = wrapText(ctx, props.feedback, 460, 16)
-  ctx.fillStyle = '#666'
-  ctx.font = '16px "PingFang SC"'
-  feedbackLines.forEach((line, idx) => {
-    ctx.fillText(line, 70, y + 52 + idx * 24)
-  })
-  y += 120
-
-  // 底部信息
-  y += 30
-  ctx.fillStyle = '#999'
-  ctx.font = '18px "PingFang SC"'
-  ctx.textAlign = 'center'
-  ctx.fillText('扫码记录宝宝饮食', 300, y)
-  y += 40
-
-  // 小程序码占位
-  ctx.fillStyle = '#E8E8E8'
-  drawRoundRect(ctx, 250, y, 100, 100, 8)
-  ctx.fill()
-
-  ctx.fillStyle = '#999'
-  ctx.font = '12px "PingFang SC"'
-  ctx.textAlign = 'center'
-  ctx.fillText('小程序码', 300, y + 50)
-}
-
-function drawRoundRect(ctx, x, y, width, height, radius) {
-  ctx.beginPath()
-  ctx.moveTo(x + radius, y)
-  ctx.lineTo(x + width - radius, y)
-  ctx.arcTo(x + width, y, x + width, y + radius, radius)
-  ctx.lineTo(x + width, y + height - radius)
-  ctx.arcTo(x + width, y + height, x + width - radius, y + height, radius)
-  ctx.lineTo(x + radius, y + height)
-  ctx.arcTo(x, y + height, x, y + height - radius, radius)
-  ctx.lineTo(x, y + radius)
-  ctx.arcTo(x, y, x + radius, y, radius)
-  ctx.closePath()
-}
-
-function drawScoreCircle(ctx, x, y, radius, score, color) {
-  // 背景圆
-  ctx.fillStyle = '#F0F0F0'
-  ctx.beginPath()
-  ctx.arc(x, y, radius, 0, Math.PI * 2)
-  ctx.fill()
-
-  // 分数进度圆弧
-  const percentage = Math.min(score / 100, 1)
-  const startAngle = -Math.PI / 2
-  const endAngle = startAngle + Math.PI * 2 * percentage
-
-  ctx.strokeStyle = color
-  ctx.lineWidth = 10
-  ctx.lineCap = 'round'
-  ctx.beginPath()
-  ctx.arc(x, y, radius - 5, startAngle, endAngle)
-  ctx.stroke()
-}
-
-function wrapText(ctx, text, maxWidth, fontSize) {
-  const lines = []
-  let line = ''
-
-  for (let i = 0; i < text.length; i++) {
-    const char = text[i]
-    const testLine = line + char
-    const metrics = ctx.measureText(testLine)
-
-    if (metrics.width > maxWidth) {
-      if (line) lines.push(line)
-      line = char
-    } else {
-      line = testLine
+    } catch (e) {
+      reject(e)
     }
-  }
+  })
+}
 
-  if (line) lines.push(line)
-  return lines
+function buildPosterConfig() {
+  const scoreColor = scoreInfo.value.color
+  const ingredientOffset = props.ingredients.length > 0 ? 100 : 0
+
+  return {
+    width: 600,
+    height: 1000,
+    background: '#FAF7F2',
+    views: [
+      // 白色卡片背景 + 阴影
+      {
+        type: 'rect',
+        left: 30,
+        top: 40,
+        width: 540,
+        height: 920,
+        radius: 24,
+        background: '#FFFFFF'
+      },
+      // 标题：宝宝名字 + "今日营养评分"
+      {
+        type: 'text',
+        content: `${props.babyName}今日营养评分`,
+        left: 300,
+        top: 80,
+        width: 300,
+        fontSize: 32,
+        fontWeight: 'bold',
+        color: '#3D3935',
+        align: 'center',
+        textAlign: 'center'
+      },
+      // 分数圆形背景
+      {
+        type: 'rect',
+        left: 220,
+        top: 140,
+        width: 160,
+        height: 160,
+        radius: 80,
+        background: '#F0F0F0'
+      },
+      // 分数文字
+      {
+        type: 'text',
+        content: String(props.score),
+        left: 300,
+        top: 200,
+        width: 200,
+        fontSize: 48,
+        fontWeight: 'bold',
+        color: scoreColor,
+        align: 'center',
+        textAlign: 'center'
+      },
+      // 评价标签
+      {
+        type: 'text',
+        content: scoreInfo.value.label,
+        left: 300,
+        top: 255,
+        width: 200,
+        fontSize: 20,
+        color: scoreColor,
+        align: 'center',
+        textAlign: 'center'
+      },
+      // 食材部分
+      ...(props.ingredients.length > 0 ? [
+        // 食材标题
+        {
+          type: 'text',
+          content: '今日食材：',
+          left: 60,
+          top: 330,
+          fontSize: 20,
+          color: '#666666'
+        },
+        // 食材标签（用空格分隔自动换行）
+        {
+          type: 'text',
+          content: props.ingredients.slice(0, 8).join('  '),
+          left: 60,
+          top: 360,
+          width: 480,
+          fontSize: 18,
+          color: '#5CB87A',
+          lineHeight: 40
+        }
+      ] : []),
+      // AI 评语气泡背景
+      {
+        type: 'rect',
+        left: 50,
+        top: 480 + ingredientOffset,
+        width: 500,
+        height: 100,
+        radius: 16,
+        background: '#FFF3E6'
+      },
+      // AI 评语标题
+      {
+        type: 'text',
+        content: 'AI 评语',
+        left: 70,
+        top: 508 + ingredientOffset,
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: '#F5A85B'
+      },
+      // AI 评语内容
+      {
+        type: 'text',
+        content: props.feedback,
+        left: 70,
+        top: 532 + ingredientOffset,
+        width: 460,
+        fontSize: 16,
+        color: '#666666',
+        lineHeight: 24
+      },
+      // 底部提示
+      {
+        type: 'text',
+        content: '扫码记录宝宝饮食',
+        left: 300,
+        top: 820 + ingredientOffset,
+        width: 200,
+        fontSize: 18,
+        color: '#999999',
+        align: 'center',
+        textAlign: 'center'
+      },
+      // 小程序码占位
+      {
+        type: 'rect',
+        left: 250,
+        top: 860 + ingredientOffset,
+        width: 100,
+        height: 100,
+        radius: 8,
+        background: '#E8E8E8'
+      },
+      // 小程序码文字
+      {
+        type: 'text',
+        content: '小程序码',
+        left: 300,
+        top: 910 + ingredientOffset,
+        width: 200,
+        fontSize: 12,
+        color: '#999999',
+        align: 'center',
+        textAlign: 'center'
+      }
+    ]
+  }
 }
 
 async function exportImage() {
@@ -267,8 +231,7 @@ async function exportImage() {
         fail(err) {
           reject(err)
         }
-      },
-      this
+      }
     )
   })
 }
@@ -294,3 +257,4 @@ defineExpose({
   height: 1000px;
 }
 </style>
+
