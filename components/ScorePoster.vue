@@ -66,32 +66,32 @@ function buildPosterConfig() {
   const ingredientOffset = props.ingredients.length > 0 ? 100 : 0
 
   return {
+    type: 'container',
+    direction: 'vertical',
     width: 600,
     height: 1000,
     background: '#FAF7F2',
-    views: [
-      // 白色卡片背景 + 阴影
+    children: [
+      // 白色卡片背景
       {
         type: 'rect',
         left: 30,
         top: 40,
         width: 540,
         height: 920,
-        radius: 24,
+        borderRadius: 24,
         background: '#FFFFFF'
       },
-      // 标题：宝宝名字 + "今日营养评分"
+      // 标题
       {
         type: 'text',
         content: `${props.babyName}今日营养评分`,
         left: 300,
         top: 80,
-        width: 300,
         fontSize: 32,
         fontWeight: 'bold',
         color: '#3D3935',
-        align: 'center',
-        textAlign: 'center'
+        align: 'center'
       },
       // 分数圆形背景
       {
@@ -100,7 +100,7 @@ function buildPosterConfig() {
         top: 140,
         width: 160,
         height: 160,
-        radius: 80,
+        borderRadius: 80,
         background: '#F0F0F0'
       },
       // 分数文字
@@ -109,12 +109,10 @@ function buildPosterConfig() {
         content: String(props.score),
         left: 300,
         top: 200,
-        width: 200,
         fontSize: 48,
         fontWeight: 'bold',
         color: scoreColor,
-        align: 'center',
-        textAlign: 'center'
+        align: 'center'
       },
       // 评价标签
       {
@@ -122,15 +120,12 @@ function buildPosterConfig() {
         content: scoreInfo.value.label,
         left: 300,
         top: 255,
-        width: 200,
         fontSize: 20,
         color: scoreColor,
-        align: 'center',
-        textAlign: 'center'
+        align: 'center'
       },
       // 食材部分
       ...(props.ingredients.length > 0 ? [
-        // 食材标题
         {
           type: 'text',
           content: '今日食材：',
@@ -139,9 +134,8 @@ function buildPosterConfig() {
           fontSize: 20,
           color: '#666666'
         },
-        // 食材标签（用空格分隔自动换行）
         {
-          type: 'text',
+          type: 'text-block',
           content: props.ingredients.slice(0, 8).join('  '),
           left: 60,
           top: 360,
@@ -158,7 +152,7 @@ function buildPosterConfig() {
         top: 480 + ingredientOffset,
         width: 500,
         height: 100,
-        radius: 16,
+        borderRadius: 16,
         background: '#FFF3E6'
       },
       // AI 评语标题
@@ -171,9 +165,9 @@ function buildPosterConfig() {
         fontWeight: 'bold',
         color: '#F5A85B'
       },
-      // AI 评语内容
+      // AI 评语内容（用 text-block 支持换行）
       {
-        type: 'text',
+        type: 'text-block',
         content: props.feedback,
         left: 70,
         top: 532 + ingredientOffset,
@@ -188,11 +182,9 @@ function buildPosterConfig() {
         content: '扫码记录宝宝饮食',
         left: 300,
         top: 820 + ingredientOffset,
-        width: 200,
         fontSize: 18,
         color: '#999999',
-        align: 'center',
-        textAlign: 'center'
+        align: 'center'
       },
       // 小程序码占位
       {
@@ -201,7 +193,7 @@ function buildPosterConfig() {
         top: 860 + ingredientOffset,
         width: 100,
         height: 100,
-        radius: 8,
+        borderRadius: 8,
         background: '#E8E8E8'
       },
       // 小程序码文字
@@ -210,11 +202,9 @@ function buildPosterConfig() {
         content: '小程序码',
         left: 300,
         top: 910 + ingredientOffset,
-        width: 200,
         fontSize: 12,
         color: '#999999',
-        align: 'center',
-        textAlign: 'center'
+        align: 'center'
       }
     ]
   }
