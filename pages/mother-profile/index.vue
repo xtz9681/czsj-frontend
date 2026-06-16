@@ -407,10 +407,14 @@ async function save() {
     } else {
       uni.showToast({ title: isEdit.value ? '修改成功~' : '设置完成！', icon: 'success' })
       setTimeout(() => {
-        // 编辑模式直接回首页，新建模式检查 onboarded
+        // 编辑模式直接回首页，新建模式根据阶段判断
         if (isEdit.value) {
           uni.reLaunch({ url: '/pages/index/index' })
+        } else if (form.value.phase === 'pregnancy' || form.value.phase === 'preconception') {
+          // 备孕和孕期直接跳首页（无宝宝，不需要 onboarding）
+          uni.reLaunch({ url: '/pages/index/index' })
         } else if (!uni.getStorageSync('onboarded')) {
+          // 哺乳期和日常管理：检查是否已 onboarded
           uni.reLaunch({ url: '/pages/onboarding/index' })
         } else {
           uni.reLaunch({ url: '/pages/index/index' })
