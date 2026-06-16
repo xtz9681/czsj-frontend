@@ -1,5 +1,6 @@
 <script>
   import { getUserInfo } from '@/api/auth.js'
+  import { useUserStore } from '@/store/user.js'
 
   export default {
     onLaunch: async function() {
@@ -13,6 +14,10 @@
       try {
         await getUserInfo()
         // token 有效，继续正常流程
+
+        // 启动时刷新过敏列表，避免依赖过期的 Storage 缓存
+        useUserStore().loadAllergyList()
+
         const babies = uni.getStorageSync('babies') || []
         const mother = uni.getStorageSync('mother')
         if (babies.length === 0 && !mother) {

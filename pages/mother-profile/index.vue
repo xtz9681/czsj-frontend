@@ -315,13 +315,20 @@ const birthDateForPicker = computed(() => form.value.birthYear ? `${form.value.b
 
 const currentYear = new Date().getFullYear()
 const yearRange = computed(() => {
-  const start = 1950
+  const start = currentYear - 60
+  const end = currentYear
   const years = []
-  for (let i = start; i <= currentYear; i++) years.push(i.toString())
+  for (let i = start; i <= end; i++) years.push(i.toString())
   return years
 })
 
-const yearIndex = computed(() => yearRange.value.indexOf(form.value.birthYear?.toString() || ''))
+const defaultBirthYear = computed(() => new Date().getFullYear() - 25)
+const yearIndex = computed(() => {
+  if (form.value.birthYear) {
+    return yearRange.value.indexOf(form.value.birthYear.toString())
+  }
+  return yearRange.value.indexOf(defaultBirthYear.value.toString())
+})
 
 function onYearSelect(e) {
   form.value.birthYear = Number(yearRange.value[e.detail.value])
@@ -410,7 +417,7 @@ async function save() {
         // 编辑模式直接回首页，新建模式根据阶段判断
         if (isEdit.value) {
           uni.reLaunch({ url: '/pages/index/index' })
-        } else if (form.value.phase === 'pregnancy' || form.value.phase === 'preconception') {
+        } else if (form.value.phase === 'preconception' || isPregnancy.value) {
           // 备孕和孕期直接跳首页（无宝宝，不需要 onboarding）
           uni.reLaunch({ url: '/pages/index/index' })
         } else if (!uni.getStorageSync('onboarded')) {

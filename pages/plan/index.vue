@@ -164,7 +164,7 @@ import { onShow } from '@dcloudio/uni-app'
 import { getWeeklyPlan, getLatestPlan } from '@/api/ai.js'
 import { useUserStore } from '@/store/user.js'
 
-const isPremium = ref(true)  // dev-mode: 测试期间默认全部放行，上线前改 false
+const isPremium = ref(false)
 const showPay = ref(false)
 const selectedPlan = ref('year')
 const planReady = ref(false)
