@@ -383,7 +383,6 @@ onUnmounted(() => {
     clearInterval(pollingTimer.value)
   }
 })
-})
 
 function changeAmount(idx, delta) {
   const cur = form.value.ingredients[idx].amount || 30
