@@ -1,15 +1,14 @@
 import { request } from './request'
 
-// subjectType: 'BABY', subjectId: babyId
-export function getAllergyList(babyId) {
-  return request({ url: '/allergy', data: { subjectType: 'BABY', subjectId: babyId } })
+export function getAllergyList(subjectType, subjectId) {
+  return request({ url: '/allergy', data: { subjectType, subjectId } })
 }
 
-export function addAllergy(babyId, ingredientName, severity) {
+export function addAllergy(subjectType, subjectId, ingredientName, severity) {
   return request({
     url: '/allergy',
     method: 'POST',
-    data: { subjectType: 'BABY', subjectId: babyId, ingredientName, severity: severity || 'MILD' }
+    data: { subjectType, subjectId, ingredientName, severity: severity || 'MILD' }
   })
 }
 

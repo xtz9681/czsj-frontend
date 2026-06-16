@@ -10,6 +10,16 @@
       </text>
     </view>
 
+    <!-- 主体切换 -->
+    <view class="subject-bar" v-if="userStore.babies.length > 0 && userStore.mother">
+      <view class="subject-item" :class="{ active: activeSubject === 'BABY' }" @tap="switchSubject('BABY')">
+        🍼 {{ userStore.currentBaby?.name || '宝宝' }}
+      </view>
+      <view class="subject-item" :class="{ active: activeSubject === 'MOTHER' }" @tap="switchSubject('MOTHER')">
+        🤱 妈妈过敏
+      </view>
+    </view>
+
     <!-- Tab 切换 -->
     <view class="tab-bar">
       <view class="tab-item" :class="{ active: activeTab === 'marked' }" @tap="activeTab = 'marked'">
@@ -35,7 +45,9 @@
 
       <view v-else-if="allergyList.length === 0" class="empty-allergy">
         <image src="/static/empty/no-allergy.png" class="empty-img" mode="aspectFit" />
-        <text class="empty-text">还没有标记过敏食材，宝宝目前没有已知过敏~</text>
+        <text class="empty-text">
+          {{ activeSubject === 'BABY' ? '还没有标记过敏食材，目前没有已知过敏~' : '还没有标记妈妈的过敏食材~' }}
+        </text>
       </view>
 
       <view v-else class="allergy-list" style="padding: 0 40rpx;">
@@ -58,8 +70,8 @@
         </view>
       </view>
 
-      <!-- 月龄禁忌提示 -->
-      <view class="forbidden-card" style="margin: 32rpx 40rpx 0;">
+      <!-- 月龄禁忌提示（仅 BABY 显示） -->
+      <view v-if="activeSubject === 'BABY'" class="forbidden-card" style="margin: 32rpx 40rpx 0;">
         <text class="forbidden-title">🚫 月龄禁忌（规则硬限制）</text>
         <text class="forbidden-desc">以下食物系统会自动拦截，无需手动标记</text>
         <view class="forbidden-list">
@@ -108,7 +120,7 @@
 
       <!-- 常见过敏原参考 -->
       <view class="common-section" style="padding: 0 40rpx;">
-        <text class="common-title">常见婴幼儿过敏原</text>
+        <text class="common-title">{{ activeSubject === 'BABY' ? '常见婴幼儿过敏原' : '哺乳期常见过敏原' }}</text>
         <text class="common-sub">点击快速标记</text>
       </view>
 
@@ -136,17 +148,49 @@ import { getAllergyList, addAllergy, removeAllergy as removeAllergyApi } from '@
 import { getIngredientsByAge } from '@/api/meal.js'
 import { useUserStore } from '@/store/user.js'
 
+const userStore = useUserStore()
 const searchKeyword = ref('')
-const allergyList = computed(() => useUserStore().allergyList)
+const allergyList = ref([])
 const allergyLoading = ref(false)
 const activeTab = ref('marked')
+const activeSubject = ref('BABY')
 
-function getBabyId() {
-  return useUserStore().currentBaby?.id
-}
+const activeSubjectId = computed(() => {
+  if (activeSubject.value === 'BABY') return userStore.currentBaby?.id
+  return userStore.mother?.id
+})
 
 async function loadAllergyList() {
-  await useUserStore().loadAllergyList()
+  allergyLoading.value = true
+  try {
+    if (!activeSubjectId.value) {
+      allergyList.value = []
+      allergyLoading.value = false
+      return
+    }
+    const list = await getAllergyList(activeSubject.value, activeSubjectId.value)
+    allergyList.value = list || []
+    // BABY 时同步到 userStore，供其他页面使用
+    if (activeSubject.value === 'BABY') {
+      useUserStore().allergyList = list || []
+    }
+  } catch (e) {
+    allergyList.value = []
+  }
+  allergyLoading.value = false
+}
+
+function switchSubject(type) {
+  if (type === 'MOTHER' && !userStore.mother) {
+    uni.showToast({ title: '请先完善妈妈档案~', icon: 'none' })
+    return
+  }
+  if (type === 'BABY' && !userStore.currentBaby) {
+    uni.showToast({ title: '请先完善宝宝档案~', icon: 'none' })
+    return
+  }
+  activeSubject.value = type
+  loadAllergyList()
 }
 
 onShow(() => { loadAllergyList(); loadIngredientDatabase() })
@@ -155,6 +199,8 @@ onShow(() => { loadAllergyList(); loadIngredientDatabase() })
 const ingredientDatabase = ref([])
 
 async function loadIngredientDatabase() {
+  // 仅 BABY 主体才加载食材库（MOTHER 无月龄食材推荐）
+  if (activeSubject.value !== 'BABY') return
   const baby = useUserStore().currentBaby
   if (!baby?.id) return
   try {
@@ -178,7 +224,7 @@ const searchResults = computed(() => {
   )
 })
 
-const commonAllergens = ref([
+const babyCommonAllergens = [
   { id: 101, emoji: '🦐', name: '虾', crossAllergies: ['螃蟹', '龙虾'] },
   { id: 103, emoji: '🥛', name: '牛奶', crossAllergies: ['奶酪', '酸奶'] },
   { id: 104, emoji: '🥚', name: '鸡蛋', crossAllergies: ['蛋糕', '蛋挞'] },
@@ -187,7 +233,20 @@ const commonAllergens = ref([
   { id: 107, emoji: '🌰', name: '坚果', crossAllergies: ['核桃', '腰果'] },
   { id: 108, emoji: '🐟', name: '鱼', crossAllergies: [] },
   { id: 102, emoji: '🦀', name: '螃蟹', crossAllergies: ['虾', '龙虾'] },
-])
+]
+const motherCommonAllergens = [
+  { id: 201, emoji: '🥛', name: '牛奶', crossAllergies: ['奶酪', '酸奶'] },
+  { id: 202, emoji: '🥚', name: '鸡蛋', crossAllergies: [] },
+  { id: 203, emoji: '🦐', name: '海鲜', crossAllergies: ['虾', '螃蟹'] },
+  { id: 204, emoji: '🥜', name: '花生', crossAllergies: ['花生酱'] },
+  { id: 205, emoji: '🌰', name: '坚果', crossAllergies: ['核桃', '腰果'] },
+  { id: 206, emoji: '🌾', name: '麦麸', crossAllergies: ['面包', '饼干'] },
+  { id: 207, emoji: '🫘', name: '大豆', crossAllergies: ['豆浆', '豆腐'] },
+  { id: 208, emoji: '☕', name: '咖啡因', crossAllergies: ['茶', '可乐'] },
+]
+const commonAllergens = computed(() =>
+  activeSubject.value === 'BABY' ? babyCommonAllergens : motherCommonAllergens
+)
 
 const forbiddenFoods = [
   { name: '🍯 蜂蜜', reason: '< 12 个月 · 肉毒杆菌风险' },
@@ -208,11 +267,13 @@ async function addAllergyIngredient(item) {
     uni.showToast({ title: '已经标记过了~', icon: 'none' })
     return
   }
-  const babyId = getBabyId()
-  if (!babyId) { uni.showToast({ title: '请先完善宝宝档案~', icon: 'none' }); return }
+  if (!activeSubjectId.value) {
+    uni.showToast({ title: activeSubject.value === 'BABY' ? '请先完善宝宝档案~' : '请先完善妈妈档案~', icon: 'none' })
+    return
+  }
   try {
-    await addAllergy(babyId, item.name)
-    await useUserStore().loadAllergyList()
+    await addAllergy(activeSubject.value, activeSubjectId.value, item.name)
+    await loadAllergyList()
     searchKeyword.value = ''
     activeTab.value = 'marked'
     uni.showToast({ title: `已标记 ${item.name} 过敏`, icon: 'success' })
@@ -249,7 +310,7 @@ function doRemove(item) {
     success(res) {
       if (!res.confirm) return
       removeAllergyApi(item.id).then(async () => {
-        await useUserStore().loadAllergyList()
+        await loadAllergyList()
       }).catch(e => {
         uni.showToast({ title: e.message || '移除失败，稍后再试~', icon: 'none' })
       })
@@ -270,6 +331,31 @@ function doRemove(item) {
 
 .explain-title { display: block; font-size: 30rpx; font-weight: 700; color: #3D3935; margin-bottom: 12rpx; }
 .explain-text { font-size: 26rpx; color: #666; line-height: 1.8; }
+
+/* 主体切换 */
+.subject-bar {
+  display: flex;
+  margin: 0 40rpx 24rpx;
+  gap: 16rpx;
+}
+
+.subject-item {
+  flex: 1;
+  text-align: center;
+  padding: 18rpx 0;
+  border-radius: 12rpx;
+  font-size: 28rpx;
+  color: #999;
+  background: #F0EAE0;
+  font-weight: 600;
+  transition: all 0.3s;
+}
+
+.subject-item.active {
+  background: #FFFFFF;
+  color: #3D3935;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.08);
+}
 
 /* Tab 切换 */
 .tab-bar {
