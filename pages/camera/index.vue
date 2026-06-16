@@ -126,7 +126,6 @@ const suggestedSubjectType = ref(null)
 const showSubjectSelector = ref(false)
 const pendingIngredients = ref([])
 
-const userStore = useUserStore()
 const baby = computed(() => userStore.currentBaby || { ageMonths: 8 })
 const allergyList = computed(() => userStore.allergyList)
 const subjectMode = ref('baby')
