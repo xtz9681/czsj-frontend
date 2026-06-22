@@ -117,11 +117,6 @@
           </view>
         </view>
       </view>
-      <view v-if="ageMonths >= 0" class="age-badge">
-        <text>宝宝现在 </text>
-        <text class="age-num">{{ displayAge }}</text>
-        <text class="age-tip"> · {{ autoPhaseLabel }}</text>
-      </view>
     </view>
 
     <!-- 保存按钮 -->
@@ -145,7 +140,7 @@ import { ref, computed } from 'vue'
 import { onLoad, onBackPress } from '@dcloudio/uni-app'
 import { createBaby, updateBaby, uploadBabyAvatar } from '@/api/baby.js'
 import { useUserStore } from '@/store/user.js'
-import { calcAgeMonths, formatAge } from '@/utils/age.js'
+import { calcAgeMonths } from '@/utils/age.js'
 
 const userStore = useUserStore()
 const isEdit = ref(false)
@@ -170,8 +165,6 @@ const ageMonths = computed(() => {
   if (!form.value.birthday) return -1
   return calcAgeMonths(form.value.birthday)
 })
-
-const displayAge = computed(() => formatAge(form.value.birthday))
 
 const autoPhase = computed(() => {
   const months = ageMonths.value
@@ -464,26 +457,6 @@ function skipToHome() {
   font-size: 40rpx;
   color: #C8C8C8;
   margin-left: 8rpx;
-}
-
-.age-badge {
-  background: #F5F5F5;
-  border-radius: 12rpx;
-  padding: 16rpx 24rpx;
-  font-size: 26rpx;
-  color: #666;
-  margin-top: 8rpx;
-  line-height: 1.6;
-}
-
-.age-num {
-  font-size: 36rpx;
-  font-weight: 700;
-  color: #F5A85B;
-}
-
-.age-tip {
-  color: #A3D9B1;
 }
 
 .skip-btn {
