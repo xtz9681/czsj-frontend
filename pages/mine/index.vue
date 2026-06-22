@@ -123,9 +123,7 @@ const motherPhaseText = computed(() => {
   return phaseMap[mother.value.phase] || '妈妈档案'
 })
 
-const allergyCount = computed(() => {
-  return useUserStore().allergyList.length
-})
+const allergyCount = computed(() => userStore.allergyList.length)
 
 // ── 页面初始化 ──────────────────────────────
 function initUserMode() {
