@@ -144,7 +144,7 @@ function goToBabyProfile() {
       url: `/pages/profile/index?babyId=${currentBaby.value.id}&edit=1`
     })
   } else {
-    uni.showToast({ title: '请先添加宝宝档案', icon: 'none' })
+    uni.navigateTo({ url: '/pages/profile/index' })
   }
 }
 
@@ -166,7 +166,7 @@ function goToGrowthRecord() {
       url: `/pages/growth-record/index?babyId=${currentBaby.value.id}`
     })
   } else {
-    uni.showToast({ title: '请先添加宝宝档案', icon: 'none' })
+    uni.navigateTo({ url: '/pages/profile/index' })
   }
 }
 

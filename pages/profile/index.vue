@@ -16,21 +16,6 @@
 
     <!-- 表单 -->
     <view class="form-card card">
-      <!-- 宝宝阶段 -->
-      <view class="form-item">
-        <text class="form-label">宝贝当前阶段</text>
-        <view class="phase-row">
-          <view
-            v-for="p in babyPhaseOptions"
-            :key="p.value"
-            class="phase-chip"
-            :class="{ active: form.phase === p.value }"
-            @tap="form.phase = p.value"
-          >{{ p.label }}</view>
-        </view>
-      </view>
-      <view class="divider"></view>
-
       <!-- 姓名/昵称 -->
       <view class="form-item">
         <text class="form-label">宝贝叫什么</text>
@@ -79,6 +64,28 @@
         </picker>
       </view>
 
+      <!-- 阶段自动判断显示（仅新建模式） -->
+      <view v-if="!isEdit && form.birthday" class="form-item">
+        <text class="form-label">宝贝当前阶段</text>
+        <text class="phase-auto-text">{{ autoPhaseLabel }}</text>
+      </view>
+      <view v-if="!isEdit && form.birthday" class="divider"></view>
+
+      <!-- 阶段手动选择（仅编辑模式） -->
+      <view v-if="isEdit" class="form-item">
+        <text class="form-label">宝贝当前阶段</text>
+        <view class="phase-row">
+          <view
+            v-for="p in babyPhaseOptions"
+            :key="p.value"
+            class="phase-chip"
+            :class="{ active: form.phase === p.value }"
+            @tap="form.phase = p.value"
+          >{{ p.label }}</view>
+        </view>
+      </view>
+      <view v-if="isEdit" class="divider"></view>
+
       <!-- 身高 -->
       <view class="form-item">
         <text class="form-label">身高</text>
@@ -120,8 +127,7 @@
       <view v-if="ageMonths >= 0" class="age-badge">
         <text>宝宝现在 </text>
         <text class="age-num">{{ displayAge }}</text>
-        <text v-if="ageMonths < 6" class="age-tip"> · 辅食还没开始哦，6 个月后再记录~</text>
-        <text v-else-if="ageMonths > 24" class="age-tip"> · 宝宝已经过了辅食期，加油~</text>
+        <text class="age-tip"> · {{ autoPhaseLabel }}</text>
       </view>
     </view>
 
@@ -160,14 +166,14 @@ const form = ref({
   gender: 'male',
   birthday: '',
   avatar: '',
-  phase: 'weaning',
+  phase: '',
   heightCm: null,
   weightG: null,
   babyWeaned: 0,
   foodIntolerance: 0
 })
 
-const isToddler = computed(() => form.value.phase === 'toddler')
+const isToddler = computed(() => (isEdit.value ? form.value.phase : autoPhase.value) === 'toddler')
 
 const babyPhaseOptions = [
   { value: 'nursing', label: '哺乳期（0-6月）' },
@@ -181,6 +187,19 @@ const ageMonths = computed(() => {
 })
 
 const displayAge = computed(() => formatAge(form.value.birthday))
+
+const autoPhase = computed(() => {
+  const months = ageMonths.value
+  if (months < 0) return 'weaning'
+  if (months < 6) return 'nursing'
+  if (months < 24) return 'weaning'
+  return 'toddler'
+})
+
+const autoPhaseLabel = computed(() => {
+  const map = { nursing: '哺乳期（0-6月）', weaning: '辅食期（6-24月）', toddler: '幼儿期（24-36月）' }
+  return map[autoPhase.value] || '辅食期'
+})
 
 onLoad((options) => {
   if (options?.babyDeliveryDate) {
@@ -204,6 +223,9 @@ onBackPress(() => {
 
 function onBirthdayChange(e) {
   form.value.birthday = e.detail.value
+  if (!isEdit.value) {
+    form.value.phase = autoPhase.value
+  }
 }
 
 function chooseAvatar() {
@@ -258,7 +280,7 @@ async function saveBaby() {
       name: form.value.name,
       gender: form.value.gender,
       birthday: form.value.birthday,
-      phase: form.value.phase || 'weaning',
+      phase: isEdit.value ? form.value.phase : autoPhase.value,
       heightCm: form.value.heightCm ? Number(form.value.heightCm) : null,
       weightG: form.value.weightG ? Number(form.value.weightG) : null,
       babyWeaned: form.value.babyWeaned,
@@ -391,6 +413,12 @@ function skipToHome() {
   font-weight: 500;
   flex-shrink: 0;
   width: 180rpx;
+}
+
+.phase-auto-text {
+  font-size: 30rpx;
+  color: #F5A85B;
+  font-weight: 600;
 }
 
 .form-input {

@@ -130,7 +130,7 @@
   - `pages/meal-record/index` - 记一餐（手动/拍照）
   - `pages/camera/index` - 拍照识食材，AI 首次使用确认
   - `pages/plan/index` - AI 周计划
-  - `pages/profile/index` - 宝宝档案，新建时需监护人确认
+  - `pages/profile/index` - 宝宝档案，新建时需监护人确认，阶段根据出生日期自动推断并只读显示；编辑模式下阶段仍可手动修改
   - `pages/mother-profile/index` - 妈妈档案
   - `pages/growth-record/index` - 生长记录
   - `pages/weight-record/index` - 体重记录
@@ -217,3 +217,5 @@
       - mp-painter 用声明式 JSON 绘制海报主体（container + children）
       - 包含：圆形头像（clip 裁剪）、独立药丸形食材标签、AI 评语气泡
       - 支持保存到相册或分享给微信好友
+  37. **档案相关页无宝宝时流畅跳转**：mine 页面点击「宝宝档案」或「生长记录」无宝宝时，直接跳转到宝宝创建页面（而非仅显示 toast），用户可无障碍完成添加操作
+  38. **宝宝阶段自动推断**：profile 页新建模式下，宝贝当前阶段根据出生日期自动计算并以只读文本展示（0-6月哺乳期、6-24月辅食期、24-36月幼儿期）；编辑模式下仍可手动修改；toddler 专属字段（断母乳/食物不耐受）在新建模式下也根据 autoPhase 动态显示
