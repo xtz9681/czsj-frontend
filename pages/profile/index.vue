@@ -64,13 +64,6 @@
         </picker>
       </view>
 
-      <!-- 阶段自动判断显示（仅新建模式） -->
-      <view v-if="!isEdit && form.birthday" class="form-item">
-        <text class="form-label">宝贝当前阶段</text>
-        <text class="phase-auto-text">{{ autoPhaseLabel }}</text>
-      </view>
-      <view v-if="!isEdit && form.birthday" class="divider"></view>
-
       <!-- 阶段手动选择（仅编辑模式） -->
       <view v-if="isEdit" class="form-item">
         <text class="form-label">宝贝当前阶段</text>
@@ -413,12 +406,6 @@ function skipToHome() {
   font-weight: 500;
   flex-shrink: 0;
   width: 180rpx;
-}
-
-.phase-auto-text {
-  font-size: 30rpx;
-  color: #F5A85B;
-  font-weight: 600;
 }
 
 .form-input {
