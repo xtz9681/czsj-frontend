@@ -174,11 +174,6 @@ const autoPhase = computed(() => {
   return 'toddler'
 })
 
-const autoPhaseLabel = computed(() => {
-  const map = { nursing: '哺乳期（0-6月）', weaning: '辅食期（6-24月）', toddler: '幼儿期（24-36月）' }
-  return map[autoPhase.value] || '辅食期'
-})
-
 const isToddler = computed(() => (isEdit.value ? form.value.phase : autoPhase.value) === 'toddler')
 
 const babyPhaseOptions = [

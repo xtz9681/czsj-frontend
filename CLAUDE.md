@@ -34,6 +34,7 @@
     - **重要**：写调用后端接口或修改接口调用之前，**必须先扫描后端代码**（`/Users/xutianzhe/czsj` 下的后端项目）
     - 找到对应的 Controller、DTO、接口规范和参数定义后，再写前端代码
     - 这样避免参数不匹配或接口变更导致的问题
+  - **登录流程规范**：微信登录时调用 `uni.getUserProfile()` 获取用户昵称和头像，与 code 一起发给后端保存到 users 表；getUserProfile 可能返回匿名数据或被拒绝，此时 nickName 和 avatarUrl 为空字符串，不影响登录（fallback 到仅 openid 登录）
   - **过敏列表读取规范**：所有页面通过 `useUserStore().allergyList`（computed）读取过敏列表，不再直接 `uni.getStorageSync('allergyList')`。修改过敏后调用 `useUserStore().loadAllergyList()` 刷新 store。过敏检测字段名统一使用 `(a.ingredientName || a.name)`，因为后端 AllergyResponse 返回的字段名是 ingredientName。
   - **日期计算规范**：获取本地日期字符串时使用 `const d = new Date(); return \`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}\``，不要用 `toISOString().split('T')[0]`（后者受 UTC 时区偏移影响）。解析后端返回的 ISO 时间字符串时使用 `new Date(isoStr)` 转本地时间再取日期，不要直接 `split('T')[0]`。
   - **安全区适配规范**：所有自定义导航栏页面统一使用 `useSafeArea()` 获取 safeTop，不再各自计算 statusBarHeight。useSafeArea 优先使用胶囊按钮位置（更精准），降级使用 statusBarHeight + 44px。

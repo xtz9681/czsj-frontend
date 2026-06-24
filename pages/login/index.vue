@@ -87,7 +87,26 @@ async function handleWxLogin() {
       return
     }
 
-    const res = await wxLogin(loginRes.code)
+    // 尝试获取用户头像和昵称（getUserProfile 可能返回匿名数据或被拒绝）
+    let nickName = ''
+    let avatarUrl = ''
+    try {
+      const [profileErr, profileRes] = await new Promise(resolve => {
+        uni.getUserProfile({
+          desc: '用于完善用户资料',
+          success: res => resolve([null, res]),
+          fail: err => resolve([err, null])
+        })
+      })
+      if (!profileErr && profileRes?.userInfo) {
+        nickName = profileRes.userInfo.nickName || ''
+        avatarUrl = profileRes.userInfo.avatarUrl || ''
+      }
+    } catch (e) {
+      // getUserProfile 失败不影响登录流程
+    }
+
+    const res = await wxLogin(loginRes.code, nickName, avatarUrl)
     userStore.setLoginResult(res)
 
     if (!res.babies?.length && !res.mother) {
