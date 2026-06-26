@@ -128,7 +128,7 @@ async function handleSubscribe(slot) {
       uni.showToast({ title: '提醒已开启', icon: 'success' })
       await loadReminders()
     } else {
-      handleError(e, { fallback: '操作失败，请稍后重试' })
+      uni.showToast({ title: '已取消订阅提醒', icon: 'none' })
     }
   } catch (e) {
     handleError(e, { fallback: '操作失败，请稍后重试' })
@@ -136,7 +136,7 @@ async function handleSubscribe(slot) {
   // #endif
 
   // #ifndef MP-WEIXIN
-  handleError(e, { fallback: '操作失败，请稍后重试' })
+  uni.showToast({ title: '提醒功能仅支持微信小程序', icon: 'none' })
   // #endif
 }
 
@@ -156,8 +156,12 @@ async function handleDelete(item) {
     content: '确定删除这个提醒吗？',
     success: async (res) => {
       if (res.confirm) {
-        await deleteReminder(item.id)
-        await loadReminders()
+        try {
+          await deleteReminder(item.id)
+          await loadReminders()
+        } catch (e) {
+          handleError(e, { fallback: '删除提醒时出了点问题' })
+        }
       }
     }
   })

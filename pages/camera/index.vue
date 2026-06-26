@@ -314,22 +314,6 @@ function showAddIngredient() {
   })
 }
 
-function addCustomIngredient() {
-  const name = customIngredient.value.trim()
-  if (!name) return
-  if (ageBasedIngredients.value.some(i => i.name === name)) {
-    uni.showToast({ title: '该食材已添加', icon: 'none' })
-    return
-  }
-  ageBasedIngredients.value.push({
-    id: Date.now(),
-    emoji: '🍴',
-    name,
-    selected: true,
-    isAllergy: allergyList.value.some(a => (a.ingredientName || a.name) === name)
-  })
-  customIngredient.value = ''
-}
 
 // 用于 IngredientPicker 子组件的处理函数
 function handleCustomIngredient(name) {

@@ -185,7 +185,7 @@ async function loadRecords() {
 
 async function submitRecord() {
   if (!formData.value.weight) {
-    handleError(e, { fallback: '操作失败，请稍后重试' })
+    uni.showToast({ title: '请输入体重', icon: 'none' })
     return
   }
 
