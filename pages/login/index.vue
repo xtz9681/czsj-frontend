@@ -49,10 +49,12 @@ import { ref, computed } from 'vue'
 import { wxLogin } from '@/api/auth.js'
 import { useUserStore } from '@/store/user.js'
 import { useSafeArea } from '@/composables/useSafeArea.js'
+import { useErrorHandler } from '@/composables/useErrorHandler.js'
 
 const loading = ref(false)
 const agreedPrivacy = ref(false)
 const userStore = useUserStore()
+const { handleError } = useErrorHandler()
 
 // ── 安全区适配 ──────────────────────────────
 const { safeTop } = useSafeArea()
@@ -74,6 +76,28 @@ async function handleWxLogin() {
   }
   if (loading.value) return
   loading.value = true
+
+  // 在点击事件的同步上下文中，先获取用户资料权限
+  let nickName = ''
+  let avatarUrl = ''
+  try {
+    const profileRes = await new Promise(resolve => {
+      uni.getUserProfile({
+        desc: '用于完善用户资料',
+        success: res => resolve(res),
+        fail: err => resolve(null)
+      })
+    })
+    console.log('[wxLogin] getUserProfile result:', profileRes?.userInfo)
+    if (profileRes?.userInfo) {
+      nickName = profileRes.userInfo.nickName || ''
+      avatarUrl = profileRes.userInfo.avatarUrl || ''
+    }
+  } catch (e) {
+    console.warn('[wxLogin] getUserProfile exception:', e)
+  }
+
+  // 然后再异步调用登录
   try {
     const [err, loginRes] = await new Promise(resolve => {
       uni.login({
@@ -87,26 +111,9 @@ async function handleWxLogin() {
       return
     }
 
-    // 尝试获取用户头像和昵称（getUserProfile 可能返回匿名数据或被拒绝）
-    let nickName = ''
-    let avatarUrl = ''
-    try {
-      const [profileErr, profileRes] = await new Promise(resolve => {
-        uni.getUserProfile({
-          desc: '用于完善用户资料',
-          success: res => resolve([null, res]),
-          fail: err => resolve([err, null])
-        })
-      })
-      if (!profileErr && profileRes?.userInfo) {
-        nickName = profileRes.userInfo.nickName || ''
-        avatarUrl = profileRes.userInfo.avatarUrl || ''
-      }
-    } catch (e) {
-      // getUserProfile 失败不影响登录流程
-    }
-
+    console.log('[wxLogin] calling backend with:', { code: loginRes.code, nickName, avatarUrl })
     const res = await wxLogin(loginRes.code, nickName, avatarUrl)
+    console.log('[wxLogin] backend response:', res)
     userStore.setLoginResult(res)
 
     if (!res.babies?.length && !res.mother) {
@@ -115,7 +122,7 @@ async function handleWxLogin() {
       uni.reLaunch({ url: '/pages/index/index' })
     }
   } catch (e) {
-    uni.showToast({ title: e.message || '登录遇到了点小问题~', icon: 'none' })
+    handleError(e, { fallback: '登录失败，请稍后重试' })
   } finally {
     loading.value = false
   }

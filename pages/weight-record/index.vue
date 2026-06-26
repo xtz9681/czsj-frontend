@@ -124,6 +124,7 @@
 
 <script setup>
 import { ref, computed } from 'vue'
+import { useErrorHandler } from '@/composables/useErrorHandler.js'
 import { onShow } from '@dcloudio/uni-app'
 import { useUserStore } from '@/store/user.js'
 import { getWeightRecords, addWeightRecord } from '@/api/mother.js'
@@ -154,6 +155,7 @@ const isLactation = computed(() => {
 })
 
 const formData = ref({
+const { handleError } = useErrorHandler()
   date: getTodayStr(),
   weight: '',
   weekOfPregnancy: '',
@@ -175,7 +177,7 @@ async function loadRecords() {
     const list = await getWeightRecords()
     records.value = (list || []).sort((a, b) => new Date(b.recordDate) - new Date(a.recordDate))
   } catch (e) {
-    uni.showToast({ title: '加载记录失败', icon: 'none' })
+    handleError(e, { fallback: '操作失败，请稍后重试' })
   } finally {
     recordsLoading.value = false
   }
@@ -183,7 +185,7 @@ async function loadRecords() {
 
 async function submitRecord() {
   if (!formData.value.weight) {
-    uni.showToast({ title: '请填写体重', icon: 'none' })
+    handleError(e, { fallback: '操作失败，请稍后重试' })
     return
   }
 
@@ -214,7 +216,7 @@ async function submitRecord() {
     }
     loadRecords()
   } catch (e) {
-    uni.showToast({ title: '保存失败，请重试', icon: 'none' })
+    handleError(e, { fallback: '操作失败，请稍后重试' })
   } finally {
     saving.value = false
   }
@@ -233,7 +235,7 @@ async function deleteRecord(recordId) {
           uni.showToast({ title: '已删除', icon: 'success' })
           loadRecords()
         } catch (e) {
-          uni.showToast({ title: '删除失败', icon: 'none' })
+          handleError(e, { fallback: '操作失败，请稍后重试' })
         }
       }
     }

@@ -229,12 +229,14 @@
 
 <script setup>
 import { ref, computed } from 'vue'
+import { useErrorHandler } from '@/composables/useErrorHandler.js'
 import { onLoad, onBackPress } from '@dcloudio/uni-app'
 import { createMother, updateMother } from '@/api/mother.js'
 import { useUserStore } from '@/store/user.js'
 
 const userStore = useUserStore()
 const isEdit = ref(false)
+const { handleError } = useErrorHandler()
 const saving = ref(false)
 const today = new Date().toISOString().split('T')[0]
 
@@ -366,13 +368,13 @@ onBackPress(() => {
 async function save() {
   // 孕期必须填预产期
   if (isPregnancy.value && !form.value.dueDate) {
-    uni.showToast({ title: '请填写预产期，AI 需要它来判断你的孕周～', icon: 'none' })
+    uni.showToast({ title: '请填写预产期', icon: 'none' })
     return
   }
 
   // 哺乳期必须填宝宝出生日期
   if (form.value.phase === 'lactation' && !form.value.deliveryDate) {
-    uni.showToast({ title: '请填写宝宝出生日期，用于计算产后周数～', icon: 'none' })
+    uni.showToast({ title: '请填写宝宝出生日期', icon: 'none' })
     return
   }
 
@@ -429,7 +431,7 @@ async function save() {
       }, 1000)
     }
   } catch (e) {
-    uni.showToast({ title: e.message || '保存失败，请稍后再试~', icon: 'none' })
+    handleError(e, { fallback: '保存失败，请稍后再试' })
   } finally {
     saving.value = false
   }
@@ -464,7 +466,7 @@ async function saveAndGoHome() {
       }
     }, 1000)
   } catch (e) {
-    uni.showToast({ title: e.message || '保存失败，请稍后再试~', icon: 'none' })
+    handleError(e, { fallback: '保存失败，请稍后再试' })
   } finally {
     saving.value = false
   }

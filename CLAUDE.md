@@ -1,47 +1,48 @@
 # 成长食记 — 前端项目说明
 
-  ## 项目背景
+## 项目背景
 
-  「成长食记」是面向新手妈妈的母婴全周期营养记录小程序。支持宝宝辅食记录 + 妈妈孕期/哺乳期营养管理 + AI 营养评分。
+「成长食记」是面向新手妈妈的母婴全周期营养记录小程序。支持宝宝辅食记录 + 妈妈孕期/哺乳期营养管理 + AI 营养评分。
 
-  **详细 PRD**：`/Users/xutianzhe/czsj/成长食记 — PRD（母婴全周期营养助手）.md`
-  **技术架构**：`/Users/xutianzhe/czsj/成长食记 — Stage 1 技术架构文档.md`
+**详细 PRD**：`/Users/xutianzhe/czsj/成长食记 — PRD（母婴全周期营养助手）.md`  
+**技术架构**：`/Users/xutianzhe/czsj/成长食记 — Stage 1 技术架构文档.md`
 
-  ## 技术栈
+## 技术栈
 
-  - 前端框架：**uni-app + Vue 3**（一份代码出微信小程序）
-  - UI 组件库：**wot-design-uni**（必用，不要用 vant / element 等其他库）
-  - 语法：`<script setup>` 组合式 API
-  - 状态管理：Pinia（如果需要）
-  - 后端 API：Spring Boot（不在本项目目录，假设走 `/api/*` 路径）
+- 前端框架：**uni-app + Vue 3**（一份代码出微信小程序）
+- UI 组件库：**wot-design-uni**（必用，不要用 vant / element 等其他库）
+- 语法：`<script setup>` 组合式 API
+- 状态管理：Pinia（如果需要）
+- 后端 API：Spring Boot（不在本项目目录，假设走 `/api/*` 路径）
 
-  ## 视觉规范
+## 视觉规范
 
-  - 主色：`#F5A85B`（奶油橙）—— 按钮、强调、主操作
-  - 副色：`#A3D9B1`（薄荷绿）—— 健康/营养相关、积极反馈
-  - 辅色：`#FF8FA3`（柔粉）—— 母婴相关元素
-  - 警示色：`#E07A5F`（暖红橙）—— 过敏警告（用暖红不用刺眼红）
-  - 中性色：`#FAF7F2`（暖白背景）/ `#F0E9DE`（分割线）/ `#3D3935`（深色文字）
-  - 字体：PingFang SC / OPPO Sans
-  - 圆角：16rpx 卡片 / 8rpx 按钮
-  - 阴影：`box-shadow: 0 4rpx 12rpx rgba(0,0,0,0.05)`（轻柔感）
+- 主色：`#F5A85B`（奶油橙）—— 按钮、强调、主操作
+- 副色：`#A3D9B1`（薄荷绿）—— 健康/营养相关、积极反馈
+- 辅色：`#FF8FA3`（柔粉）—— 母婴相关元素
+- 警示色：`#E07A5F`（暖红橙）—— 过敏警告（用暖红不用刺眼红）
+- 中性色：`#FAF7F2`（暖白背景）/ `#F0E9DE`（分割线）/ `#3D3935`（深色文字）
+- 字体：PingFang SC / OPPO Sans
+- 圆角：16rpx 卡片 / 8rpx 按钮
+- 阴影：`box-shadow: 0 4rpx 12rpx rgba(0,0,0,0.05)`（轻柔感）
 
-  ## 代码风格
+## 代码风格
 
-  - 单位：必须用 `rpx`（750 设计稿），不要用 px
-  - 命名：组件 PascalCase，文件 kebab-case
-  - API 请求：封装在 `api/` 目录，每个模块一个文件（如 `api/meal.js`）
-    - **重要**：写调用后端接口或修改接口调用之前，**必须先扫描后端代码**（`/Users/xutianzhe/czsj` 下的后端项目）
-    - 找到对应的 Controller、DTO、接口规范和参数定义后，再写前端代码
-    - 这样避免参数不匹配或接口变更导致的问题
-  - **登录流程规范**：微信登录时调用 `uni.getUserProfile()` 获取用户昵称和头像，与 code 一起发给后端保存到 users 表；getUserProfile 可能返回匿名数据或被拒绝，此时 nickName 和 avatarUrl 为空字符串，不影响登录（fallback 到仅 openid 登录）
-  - **过敏列表读取规范**：所有页面通过 `useUserStore().allergyList`（computed）读取过敏列表，不再直接 `uni.getStorageSync('allergyList')`。修改过敏后调用 `useUserStore().loadAllergyList()` 刷新 store。过敏检测字段名统一使用 `(a.ingredientName || a.name)`，因为后端 AllergyResponse 返回的字段名是 ingredientName。
-  - **日期计算规范**：获取本地日期字符串时使用 `const d = new Date(); return \`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}\``，不要用 `toISOString().split('T')[0]`（后者受 UTC 时区偏移影响）。解析后端返回的 ISO 时间字符串时使用 `new Date(isoStr)` 转本地时间再取日期，不要直接 `split('T')[0]`。
-  - **安全区适配规范**：所有自定义导航栏页面统一使用 `useSafeArea()` 获取 safeTop，不再各自计算 statusBarHeight。useSafeArea 优先使用胶囊按钮位置（更精准），降级使用 statusBarHeight + 44px。
-  - 数据：先用 ref + mock 数据让 UI 跑起来，API 调用留 TODO 注释
-  - 国际化：暂不做，中文硬编码
+- 单位：必须用 `rpx`（750 设计稿），不要用 px
+- 命名：组件 PascalCase，文件 kebab-case
+- API 请求：封装在 `api/` 目录，每个模块一个文件（如 `api/meal.js`）
+  - **重要**：写调用后端接口或修改接口调用之前，**必须先扫描后端代码**（`/Users/xutianzhe/czsj` 下的后端项目）
+  - 找到对应的 Controller、DTO、接口规范和参数定义后，再写前端代码
+  - 这样避免参数不匹配或接口变更导致的问题
+- **登录流程规范**：微信登录时调用 `uni.getUserProfile()` 获取用户昵称和头像，与 code 一起发给后端保存到 users 表；getUserProfile 可能返回匿名数据或被拒绝，此时 nickName 和 avatarUrl 为空字符串，不影响登录（fallback 到仅 openid 登录）
+- **过敏列表读取规范**：所有页面通过 `useUserStore().allergyList`（computed）读取过敏列表，不再直接 `uni.getStorageSync('allergyList')`。修改过敏后调用 `useUserStore().loadAllergyList()` 刷新 store。过敏检测字段名统一使用 `(a.ingredientName || a.name)`，因为后端 AllergyResponse 返回的字段名是 ingredientName。
+- **日期计算规范**：获取本地日期字符串时使用 `const d = new Date(); return \`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}\``，不要用 `toISOString().split('T')[0]`（后者受 UTC 时区偏移影响）。解析后端返回的 ISO 时间字符串时使用 `new Date(isoStr)` 转本地时间再取日期，不要直接 `split('T')[0]`。
+- **安全区适配规范**：所有自定义导航栏页面统一使用 `useSafeArea()` 获取 safeTop，不再各自计算 statusBarHeight。useSafeArea 优先使用胶囊按钮位置（更精准），降级使用 statusBarHeight + 44px。
+- **错误处理规范**：所有 API 调用的 catch 块都必须使用 `useErrorHandler()` 统一处理，不要硬编码错误提示。后端返回的具体错误信息（如"6个月以下宝宝不能吃蜂蜜"）会自动显示给用户，无需前端重复处理。详见 `ERROR_HANDLING.md`。
+- 数据：先用 ref + mock 数据让 UI 跑起来，API 调用留 TODO 注释
+- 国际化：暂不做，中文硬编码
 
-  ## 目录结构
+## 目录结构
 
   frontend/
   ├── pages/                # 页面
@@ -220,3 +221,39 @@
       - 支持保存到相册或分享给微信好友
   37. **档案相关页无宝宝时流畅跳转**：mine 页面点击「宝宝档案」或「生长记录」无宝宝时，直接跳转到宝宝创建页面（而非仅显示 toast），用户可无障碍完成添加操作
   38. **宝宝阶段自动推断**：profile 页新建模式下，宝贝当前阶段根据出生日期自动计算并以只读文本展示（0-6月哺乳期、6-24月辅食期、24-36月幼儿期）；编辑模式下仍可手动修改；toddler 专属字段（断母乳/食物不耐受）在新建模式下也根据 autoPhase 动态显示
+
+# 变更复检规则
+
+1. 在对变更复检时，结合项目的代码进行复检，不能只根据给出的提示词来检查是否变更对了。
+
+2. 在对变更复检时，结合项目的代码，查看完整代码逻辑是否正确，无业务问题，无编译错误等。
+
+3. 如果变更涉及前端和后端代码，要两边的代码结合起来检查，不能只看一边来。
+
+4. 复检必须**深入业务逻辑**，不能只做"有没有改"的形式检查。必须：
+
+- 读取改动涉及的完整方法/函数代码，理解上下游数据流
+
+- 验证改动后的逻辑是否和原有业务语义一致（如：缓存替换了查库，要确认分子/分母的计算逻辑没被破坏）
+
+- 检查是否引入新的隐患（如：线程安全、空指针、类型不匹配等）
+
+- 检查前后端数据格式变更是否两端一致（如：后端删了字段，前端也要同步删）
+
+5. 复检中发现**可优化的地方或潜在隐患**，必须立即向用户指出并确认是否修复，**不要说"留后续优化"或"当前不阻断"**。由用户决定是否处理，不要替用户做跳过的决定。
+
+# 问题分析规则
+
+1. **禁止猜测**：遇到代码问题时，严禁凭经验或假设给出"可能的原因"。必须通过阅读实际代码、配置文件、依赖声明等来定位真正原因。
+
+2. **深入代码验证**：在给出任何结论前，必须：
+
+- 读取相关文件的完整代码，理解实际实现逻辑
+
+- 检查配置文件（如 pages.json、package.json、main.js 等）确认依赖和注册情况
+
+- 追踪组件/函数的引用链，确认是否被正确引入和使用
+
+- 对比预期行为与实际代码的差异，找出根本原因
+
+3. **结论必须有代码依据**：每个问题诊断结论都必须指出具体的代码位置（文件路径 + 行号或代码片段），不能只说"可能是 XX 问题"。

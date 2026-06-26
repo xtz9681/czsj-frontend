@@ -248,9 +248,11 @@ import ScorePoster from '@/components/ScorePoster.vue'
 import { quickRecord, recordMultiple, getIngredientsByAge, getFrequentIngredients, getMealById } from '@/api/meal.js'
 import { useUserStore } from '@/store/user.js'
 import { useMealStore } from '@/store/meal'
+import { useErrorHandler } from '@/composables/useErrorHandler.js'
 
 const userStore = useUserStore()
 const mealStore = useMealStore()
+const { handleError } = useErrorHandler()
 const subjectSelectorRef = ref(null)
 const posterRef = ref(null)
 const showSubjectSelector = ref(false)
@@ -340,8 +342,12 @@ const selectedSubjectLabels = computed(() => {
 })
 
 onLoad((options) => {
+  // 编辑已有的餐食记录
+  if (options?.id) {
+    loadMealData(options.id)
+  }
   // 从拍照页带入的食材
-  if (options?.from === 'camera') {
+  else if (options?.from === 'camera') {
     const pending = mealStore.clearPendingMeal()
     if (pending?.ingredients) {
       form.value.ingredients = pending.ingredients.map(i => ({ ...i, amount: 30 }))
@@ -351,7 +357,7 @@ onLoad((options) => {
     }
   }
   // 从首页点击带入的单个食材
-  if (options?.ingredient) {
+  else if (options?.ingredient) {
     // 从首页食材快捷入口进入，暂不自动填充（食材库接口需要 babyId）
   }
 })
@@ -401,7 +407,7 @@ async function showIngredientPicker() {
       const list = await getIngredientsByAge(userStore.currentBaby?.id)
       allIngredients.value = list || []
     } catch (e) {
-      uni.showToast({ title: '加载食材库失败', icon: 'none' })
+      handleError(e, { fallback: '操作失败，请稍后重试' })
     }
   }
   // 加载常用食材
@@ -429,7 +435,7 @@ function selectIngredient(item) {
   // 检查是否已添加
   const exists = form.value.ingredients.find(i => i.name === item.name)
   if (exists) {
-    uni.showToast({ title: '已添加过该食材', icon: 'none' })
+    uni.showToast({ title: '该食材已添加', icon: 'none' })
     return
   }
   form.value.ingredients.push({
@@ -451,7 +457,7 @@ function addCustomIngredient() {
   const name = customIngredientName.value.trim()
   const exists = form.value.ingredients.find(i => i.name === name)
   if (exists) {
-    uni.showToast({ title: '已添加过该食材', icon: 'none' })
+    uni.showToast({ title: '食材已存在', icon: 'none' })
     return
   }
   form.value.ingredients.push({
@@ -477,6 +483,42 @@ function onSubjectSelectorConfirm(ids) {
   selectedSubjectIds.value = ids
   useMultipleSubjects.value = true
   showSubjectSelector.value = false
+}
+
+async function loadMealData(mealId) {
+  try {
+    const meal = await getMealById(mealId)
+    if (!meal) {
+      handleError(new Error('餐食不存在'), { fallback: '餐食不存在' })
+      return
+    }
+
+    // 填充表单数据
+    form.value.mealType = (meal.mealType || 'breakfast').toLowerCase()
+    form.value.ingredients = (meal.ingredients || []).map(i => ({
+      id: i.id,
+      name: i.name,
+      emoji: i.emoji || '🍴',
+      amount: i.amount || 30,
+      isAllergy: i.isAllergy || false,
+      allergyDesc: i.allergyDesc || ''
+    }))
+    form.value.note = meal.note || ''
+    form.value.photo = meal.photoUrl || ''
+    form.value.photoKey = meal.photoKey || null
+    form.value.recognitionId = meal.recognitionId || null
+
+    // 如果已有评分，直接显示
+    if (meal.aiScore !== null && meal.aiScore !== undefined) {
+      scoreResult.value = {
+        score: meal.aiScore,
+        analysis: meal.aiFeedback || '',
+        improvements: meal.improvements || []
+      }
+    }
+  } catch (e) {
+    handleError(e, { fallback: '加载餐食数据失败，请稍后重试' })
+  }
 }
 
 async function pollScoreResult(mealId) {
@@ -511,7 +553,7 @@ async function pollScoreResult(mealId) {
 
 async function saveMeal() {
   if (form.value.ingredients.length === 0) {
-    uni.showToast({ title: '先添加食材吧~', icon: 'none' })
+    uni.showToast({ title: '请先添加食材', icon: 'none' })
     return
   }
 
@@ -548,7 +590,7 @@ async function saveMeal() {
         }, 1200)
       }
     } catch (e) {
-      uni.showToast({ title: e.message || '保存时遇到了点小问题~', icon: 'none' })
+      handleError(e, { fallback: '保存失败，请稍后重试' })
     } finally {
       saving.value = false
     }
@@ -557,7 +599,7 @@ async function saveMeal() {
 
   const baby = userStore.currentBaby
   if (!baby?.id) {
-    uni.showToast({ title: '请先完善宝宝档案~', icon: 'none' })
+    uni.showToast({ title: '请先添加宝宝档案', icon: 'none' })
     return
   }
 
@@ -576,8 +618,13 @@ async function saveMeal() {
     const res = await quickRecord(payload)
     scoreResult.value = buildScoreResult(res)
     uni.showToast({ title: '已保存，评分出来了！', icon: 'success' })
+
+    // 单档案提交后也轮询评分状态，确保获取最新评分
+    if (res && res.id) {
+      pollScoreResult(res.id)
+    }
   } catch (e) {
-    uni.showToast({ title: e.message || '保存时遇到了点小问题~', icon: 'none' })
+    handleError(e, { fallback: '保存失败，请稍后重试' })
   } finally {
     saving.value = false
   }
@@ -616,19 +663,19 @@ async function showSharePanel() {
           uni.saveImageToPhotosAlbum({
             filePath: tempPath,
             success() { uni.showToast({ title: '已保存到相册', icon: 'success' }) },
-            fail() { uni.showToast({ title: '保存失败', icon: 'none' }) }
+            fail(err) { handleError(err, { fallback: '保存失败，请稍后重试' }) }
           })
         } else if (res.tapIndex === 1) {
           uni.shareImageMessage({
             imageUrl: tempPath,
             success() { uni.showToast({ title: '分享成功', icon: 'success' }) },
-            fail() { uni.showToast({ title: '分享失败', icon: 'none' }) }
+            fail(err) { handleError(err, { fallback: '分享失败，请稍后重试' }) }
           })
         }
       }
     })
   } catch (e) {
-    uni.showToast({ title: '生成海报失败', icon: 'none' })
+    handleError(e, { fallback: '操作失败，请稍后重试' })
   }
 }
 </script>

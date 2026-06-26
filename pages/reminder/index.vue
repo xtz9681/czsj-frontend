@@ -58,12 +58,14 @@
 
 <script setup>
 import { ref } from 'vue'
+import { useErrorHandler } from '@/composables/useErrorHandler.js'
 import { onShow } from '@dcloudio/uni-app'
 import { getReminderList, subscribeReminder, toggleReminder, deleteReminder } from '@/api/reminder.js'
 import { useUserStore } from '@/store/user.js'
 
 const userStore = useUserStore()
 const reminders = ref([])
+const { handleError } = useErrorHandler()
 const loading = ref(false)
 
 // 微信订阅消息模板 ID（需要在微信公众平台申请后填入）
@@ -126,15 +128,15 @@ async function handleSubscribe(slot) {
       uni.showToast({ title: '提醒已开启', icon: 'success' })
       await loadReminders()
     } else {
-      uni.showToast({ title: '需要授权才能发送提醒哦', icon: 'none' })
+      handleError(e, { fallback: '操作失败，请稍后重试' })
     }
   } catch (e) {
-    uni.showToast({ title: '授权失败，请重试', icon: 'none' })
+    handleError(e, { fallback: '操作失败，请稍后重试' })
   }
   // #endif
 
   // #ifndef MP-WEIXIN
-  uni.showToast({ title: '提醒功能仅在微信小程序中可用', icon: 'none' })
+  handleError(e, { fallback: '操作失败，请稍后重试' })
   // #endif
 }
 
@@ -144,7 +146,7 @@ async function handleToggle(item) {
     await toggleReminder(item.id, newValue)
   } catch (e) {
     item.enabled = !newValue
-    uni.showToast({ title: '操作失败', icon: 'none' })
+    handleError(e, { fallback: '操作失败，请稍后重试' })
   }
 }
 

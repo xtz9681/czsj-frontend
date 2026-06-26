@@ -1,6 +1,19 @@
 // 基础请求封装
 const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080'
 
+/**
+ * 自定义错误类，包含错误类型、状态码和原始数据
+ */
+class ApiError extends Error {
+  constructor(message, statusCode, errorCode, rawData) {
+    super(message)
+    this.name = 'ApiError'
+    this.statusCode = statusCode
+    this.errorCode = errorCode // 后端 code 字段（FEATURE_DENIED、VALIDATION_ERROR 等）
+    this.rawData = rawData // 完整的后端响应
+  }
+}
+
 export function request(options) {
   return new Promise((resolve, reject) => {
     const token = uni.getStorageSync('token')
@@ -14,23 +27,53 @@ export function request(options) {
         ...(options.header || {})
       },
       success(res) {
-        if (res.statusCode === 200) {
-          resolve(res.data)
-        } else if (res.statusCode === 401) {
-          uni.removeStorageSync('token')
-          uni.reLaunch({ url: '/pages/login/index' })
-          reject(new Error('请重新登录'))
+        // 新格式：所有响应都是 HTTP 200，通过 response.code 判断成功/失败
+        // 成功：code=0（数字），失败：code="ERROR_CODE"（字符串）
+        if (res.statusCode === 200 || res.statusCode === 204) {
+          const response = res.data
+
+          // 成功响应：code 为数字 0
+          if (response?.code === 0) {
+            resolve(response.data)
+            return
+          }
+
+          // 失败响应：code 为字符串，message 为错误提示
+          if (typeof response?.code === 'string') {
+            const errorCode = response.code
+            const message = response.message || '请求失败，请稍后重试'
+
+            // 根据错误代码判断 HTTP 等价状态码
+            let statusCode = 400
+            if (errorCode === 'FEATURE_DENIED') statusCode = 402
+            else if (errorCode === 'UNAUTHORIZED') statusCode = 401
+            else if (errorCode === 'FORBIDDEN') statusCode = 403
+            else if (errorCode === 'NOT_FOUND') statusCode = 404
+            else if (errorCode === 'SERVER_ERROR') statusCode = 500
+
+            // 401 特殊处理：登出并跳转登录页
+            if (errorCode === 'UNAUTHORIZED') {
+              uni.removeStorageSync('token')
+              uni.reLaunch({ url: '/pages/login/index' })
+            }
+
+            reject(new ApiError(message, statusCode, errorCode, response))
+            return
+          }
+
+          // 异常：返回既不是成功也不是失败格式
+          reject(new ApiError('响应格式异常', 500, 'INVALID_RESPONSE', response))
         } else {
-          const err = new Error(res.data?.message || '请求出错了，稍后再试~')
-          err.statusCode = res.statusCode
-          reject(err)
+          // HTTP 非 200 响应（理论上新格式不会出现）
+          const message = res.data?.message || '请求出错了，稍后再试~'
+          reject(new ApiError(message, res.statusCode, res.data?.code || 'HTTP_ERROR', res.data))
         }
       },
       fail(err) {
-        reject(new Error('网络开小差了，请检查网络~'))
+        reject(new ApiError('网络开小差了，请检查网络~', 0, 'NETWORK_ERROR', err))
       }
     })
   })
 }
 
-export { BASE_URL }
+export { BASE_URL, ApiError }

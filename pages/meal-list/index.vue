@@ -117,6 +117,7 @@ import { ref, computed } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
 import { useUserStore } from '@/store/user.js'
 import { getMealList, getWeekSummary, deleteMeal } from '@/api/meal.js'
+import { useErrorHandler } from '@/composables/useErrorHandler.js'
 
 const activeFilter = ref('week')
 const filterOptions = [
@@ -131,6 +132,8 @@ const currentPage = ref(0)
 const noMore = ref(false)
 
 const weekNutrition = ref([])
+
+const { handleError } = useErrorHandler()
 
 function resetAndLoad() {
   currentPage.value = 0
@@ -166,7 +169,7 @@ async function loadMeals() {
     }
     currentPage.value++
   } catch (e) {
-    uni.showToast({ title: '加载记录失败，请稍后再试~', icon: 'none' })
+    handleError(e, { fallback: '加载记录失败，请稍后再试' })
   } finally {
     mealsLoading.value = false
   }
@@ -192,7 +195,7 @@ async function loadWeekSummary() {
       ok: item.ok
     }))
   } catch (e) {
-    uni.showToast({ title: '加载周统计失败', icon: 'none' })
+    handleError(e, { fallback: '加载周统计失败' })
   }
 }
 
@@ -305,7 +308,7 @@ function confirmDeleteMeal(meal) {
           resetAndLoad()
           loadWeekSummary()
         } catch (e) {
-          uni.showToast({ title: '删除失败，请重试', icon: 'none' })
+          handleError(e, { fallback: '删除失败，请重试' })
         }
       }
     }

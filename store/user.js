@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import { getAllergyList } from '@/api/allergy.js'
 
 export const useUserStore = defineStore('user', () => {
 
@@ -80,11 +81,19 @@ export const useUserStore = defineStore('user', () => {
 
   async function loadAllergyList() {
     try {
-      const { default: request } = await import('@/api/request.js')
-      const list = await request({ url: '/allergy/list', method: 'GET' })
-      allergyList.value = list || []
-      uni.setStorageSync('allergyList', allergyList.value)
+      // 获取当前主体的过敏列表
+      // 优先加载宝宝的过敏列表（作为默认主体），如果没有宝宝则加载妈妈的
+      if (currentBaby.value?.id) {
+        const list = await getAllergyList('BABY', currentBaby.value.id)
+        allergyList.value = list || []
+        uni.setStorageSync('allergyList', allergyList.value)
+      } else if (mother.value?.id) {
+        const list = await getAllergyList('MOTHER', mother.value.id)
+        allergyList.value = list || []
+        uni.setStorageSync('allergyList', allergyList.value)
+      }
     } catch (e) {
+      // 加载失败，降级到 localStorage 缓存
       allergyList.value = uni.getStorageSync('allergyList') || []
     }
   }

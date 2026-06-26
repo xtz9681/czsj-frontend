@@ -98,6 +98,7 @@
 
 <script setup>
 import { ref, computed, nextTick } from 'vue'
+import { useErrorHandler } from '@/composables/useErrorHandler.js'
 import { onLoad } from '@dcloudio/uni-app'
 import SubjectSelector from '@/components/SubjectSelector.vue'
 import RecognitionResult from '@/components/camera/RecognitionResult.vue'
@@ -111,6 +112,7 @@ import { useSafeArea } from '@/composables/useSafeArea.js'
 const userStore = useUserStore()
 const mealStore = useMealStore()
 const subjectSelectorRef = ref(null)
+const { handleError } = useErrorHandler()
 
 // ── 安全区适配 ──────────────────────────────
 const { safeTop } = useSafeArea()
@@ -316,7 +318,7 @@ function addCustomIngredient() {
   const name = customIngredient.value.trim()
   if (!name) return
   if (ageBasedIngredients.value.some(i => i.name === name)) {
-    uni.showToast({ title: '食材已在列表里了~', icon: 'none' })
+    uni.showToast({ title: '该食材已添加', icon: 'none' })
     return
   }
   ageBasedIngredients.value.push({
@@ -332,7 +334,7 @@ function addCustomIngredient() {
 // 用于 IngredientPicker 子组件的处理函数
 function handleCustomIngredient(name) {
   if (ageBasedIngredients.value.some(i => i.name === name)) {
-    uni.showToast({ title: '食材已在列表里了~', icon: 'none' })
+    uni.showToast({ title: '该食材已添加', icon: 'none' })
     return
   }
   ageBasedIngredients.value.push({
@@ -357,7 +359,7 @@ function getFinalIngredients() {
 function recordToMother() {
   const finalIngredients = getFinalIngredients()
   if (finalIngredients.length === 0) {
-    uni.showToast({ title: '请选择至少一种食材~', icon: 'none' })
+    uni.showToast({ title: '请先选择食材', icon: 'none' })
     return
   }
 
@@ -381,14 +383,14 @@ function recordToMother() {
     })
     .catch(e => {
       uni.hideLoading()
-      uni.showToast({ title: e.message || '保存失败，请重试', icon: 'none' })
+      handleError(e, { fallback: '保存失败，请重试' })
     })
 }
 
 function recordToBaby() {
   const finalIngredients = getFinalIngredients()
   if (finalIngredients.length === 0) {
-    uni.showToast({ title: '请选择至少一种食材~', icon: 'none' })
+    uni.showToast({ title: '请先选择食材', icon: 'none' })
     return
   }
 
@@ -405,7 +407,7 @@ function recordToBaby() {
 function showMultipleSelect() {
   const finalIngredients = getFinalIngredients()
   if (finalIngredients.length === 0) {
-    uni.showToast({ title: '请选择至少一种食材~', icon: 'none' })
+    uni.showToast({ title: '请先选择食材', icon: 'none' })
     return
   }
 
@@ -448,7 +450,7 @@ function onSubjectSelectorConfirm(selectedSubjectIds) {
     })
     .catch(e => {
       uni.hideLoading()
-      uni.showToast({ title: e.message || '保存失败，请重试', icon: 'none' })
+      handleError(e, { fallback: '保存失败，请重试' })
     })
 }
 

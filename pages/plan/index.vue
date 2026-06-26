@@ -163,12 +163,15 @@ import { ref, computed } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
 import { getWeeklyPlan, getLatestPlan } from '@/api/ai.js'
 import { useUserStore } from '@/store/user.js'
+import { useErrorHandler } from '@/composables/useErrorHandler.js'
 
 const isPremium = ref(false)
 const showPay = ref(false)
 const selectedPlan = ref('year')
 const planReady = ref(false)
 const planLoading = ref(false)
+
+const { handleError } = useErrorHandler()
 
 const benefits = [
   '无限次 AI 拍照识食材',
@@ -261,7 +264,7 @@ function confirmPay() {
 async function generatePlan() {
   if (planLoading.value) return
   const baby = useUserStore().currentBaby
-  if (!baby?.id) { uni.showToast({ title: '请先完善宝宝档案~', icon: 'none' }); return }
+  if (!baby?.id) { uni.showToast({ title: '请先添加宝宝档案', icon: 'none' }); return }
   planLoading.value = true
   planReady.value = false
   try {
@@ -273,11 +276,7 @@ async function generatePlan() {
     uni.showToast({ title: '周计划已更新~', icon: 'success' })
   } catch (e) {
     planReady.value = true
-    if (e.message?.includes('402') || e.message?.includes('会员')) {
-      uni.showToast({ title: 'AI 周计划是会员功能~', icon: 'none' })
-    } else {
-      uni.showToast({ title: e.message || '生成失败，请稍后再试~', icon: 'none' })
-    }
+    handleError(e, { fallback: '生成失败，请稍后再试' })
   } finally {
     planLoading.value = false
   }

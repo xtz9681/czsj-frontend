@@ -137,6 +137,7 @@
 
 <script setup>
 import { ref, computed } from 'vue'
+import { useErrorHandler } from '@/composables/useErrorHandler.js'
 import { onLoad, onBackPress } from '@dcloudio/uni-app'
 import { createBaby, updateBaby, uploadBabyAvatar } from '@/api/baby.js'
 import { useUserStore } from '@/store/user.js'
@@ -144,6 +145,7 @@ import { calcAgeMonths } from '@/utils/age.js'
 
 const userStore = useUserStore()
 const isEdit = ref(false)
+const { handleError } = useErrorHandler()
 const saving = ref(false)
 const guardianConfirmed = ref(false)
 const today = new Date().toISOString().split('T')[0]
@@ -235,7 +237,7 @@ function chooseAvatar() {
       uploadBabyAvatar(form.value.id, localPath).then(data => {
         form.value.avatar = data.avatarUrl  // 替换为签名 URL
       }).catch(e => {
-        uni.showToast({ title: '头像上传失败', icon: 'none' })
+        handleError(e, { fallback: '操作失败，请稍后重试' })
       })
     }
   })
@@ -243,15 +245,15 @@ function chooseAvatar() {
 
 async function saveBaby() {
   if (!isEdit.value && !guardianConfirmed.value) {
-    uni.showToast({ title: '请确认监护人身份', icon: 'none' })
+    uni.showToast({ title: '请确认您是该宝宝的监护人', icon: 'none' })
     return
   }
   if (!form.value.name.trim()) {
-    uni.showToast({ title: '给宝宝起个昵称吧~', icon: 'none' })
+    uni.showToast({ title: '请输入宝宝名字', icon: 'none' })
     return
   }
   if (!form.value.birthday) {
-    uni.showToast({ title: '填一下出生日期，AI 评分更准确~', icon: 'none' })
+    uni.showToast({ title: '请选择宝宝出生日期', icon: 'none' })
     return
   }
 
@@ -290,7 +292,7 @@ async function saveBaby() {
       }
     }, 1200)
   } catch (e) {
-    uni.showToast({ title: e.message || '保存时出了点问题~', icon: 'none' })
+    handleError(e, { fallback: '保存时出了点问题' })
   } finally {
     saving.value = false
   }

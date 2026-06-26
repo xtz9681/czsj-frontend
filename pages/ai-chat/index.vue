@@ -78,6 +78,7 @@
 
 <script setup>
 import { ref, computed } from 'vue'
+import { useErrorHandler } from '@/composables/useErrorHandler.js'
 import { onShow } from '@dcloudio/uni-app'
 import { askAi, getChatHistory, clearChatHistory } from '@/api/ai.js'
 import { useUserStore } from '@/store/user.js'
@@ -87,6 +88,7 @@ const userStore = useUserStore()
 const { safeTop } = useSafeArea()
 
 const question = ref('')
+const { handleError } = useErrorHandler()
 const chatMessages = ref([])  // [{ role: 'user'|'assistant', content: '', disclaimer: '' }]
 const loading = ref(false)
 const errorMsg = ref('')

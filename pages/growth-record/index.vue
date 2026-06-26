@@ -113,8 +113,10 @@ import { useUserStore } from '@/store/user.js'
 import { getGrowthRecords, addGrowthRecord } from '@/api/baby.js'
 import { deleteGrowthRecord } from '@/api/record.js'
 import { formatAge } from '@/utils/age.js'
+import { useErrorHandler } from '@/composables/useErrorHandler.js'
 
 const userStore = useUserStore()
+const { handleError } = useErrorHandler()
 const babyId = ref('')
 const currentBaby = computed(() => userStore.babies.find(b => b.id === babyId.value))
 
@@ -146,7 +148,7 @@ async function loadRecords() {
     const list = await getGrowthRecords(babyId.value)
     records.value = (list || []).sort((a, b) => new Date(b.recordDate) - new Date(a.recordDate))
   } catch (e) {
-    uni.showToast({ title: '加载记录失败', icon: 'none' })
+    handleError(e, { fallback: '加载记录失败' })
   } finally {
     recordsLoading.value = false
   }
@@ -154,7 +156,7 @@ async function loadRecords() {
 
 async function submitRecord() {
   if (!formData.value.height || !formData.value.weight) {
-    uni.showToast({ title: '请填写身高和体重', icon: 'none' })
+    handleError(e, { fallback: '操作失败，请稍后重试' })
     return
   }
 
@@ -175,7 +177,7 @@ async function submitRecord() {
     }
     loadRecords()
   } catch (e) {
-    uni.showToast({ title: '保存失败，请重试', icon: 'none' })
+    handleError(e, { fallback: '保存失败，请重试' })
   } finally {
     saving.value = false
   }
@@ -194,7 +196,7 @@ async function deleteRecord(recordId) {
           uni.showToast({ title: '已删除', icon: 'success' })
           loadRecords()
         } catch (e) {
-          uni.showToast({ title: '删除失败', icon: 'none' })
+          handleError(e, { fallback: '删除失败' })
         }
       }
     }

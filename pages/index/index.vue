@@ -285,6 +285,7 @@
 
 <script setup>
 import { ref, computed } from 'vue'
+import { useErrorHandler } from '@/composables/useErrorHandler.js'
 import { onShow } from '@dcloudio/uni-app'
 import { getMealList, getIngredientsByAge, getDailySummary, getNutritionTrend } from '@/api/meal.js'
 import { useUserStore } from '@/store/user.js'
@@ -304,6 +305,7 @@ const topSectionStyle = computed(() => ({
 // ── 当前主体状态 ──────────────────────────────
 // subjectMode: 'baby' | 'mother'
 const subjectMode = ref('baby')
+const { handleError } = useErrorHandler()
 const showSwitcher = ref(false)
 
 // 直接从 store 取，不再手动维护本地 ref

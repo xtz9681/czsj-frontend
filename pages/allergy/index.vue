@@ -147,8 +147,10 @@ import { onShow } from '@dcloudio/uni-app'
 import { getAllergyList, addAllergy, removeAllergy as removeAllergyApi } from '@/api/allergy.js'
 import { getIngredientsByAge } from '@/api/meal.js'
 import { useUserStore } from '@/store/user.js'
+import { useErrorHandler } from '@/composables/useErrorHandler.js'
 
 const userStore = useUserStore()
+const { handleError } = useErrorHandler()
 const searchKeyword = ref('')
 const allergyList = ref([])
 const allergyLoading = ref(false)
@@ -264,7 +266,7 @@ function isAdded(item) {
 
 async function addAllergyIngredient(item) {
   if (isAdded(item)) {
-    uni.showToast({ title: '已经标记过了~', icon: 'none' })
+    uni.showToast({ title: '该食材已标记过敏', icon: 'none' })
     return
   }
   if (!activeSubjectId.value) {
@@ -278,7 +280,7 @@ async function addAllergyIngredient(item) {
     activeTab.value = 'marked'
     uni.showToast({ title: `已标记 ${item.name} 过敏`, icon: 'success' })
   } catch (e) {
-    uni.showToast({ title: e.message || '标记失败，稍后再试~', icon: 'none' })
+    handleError(e, { fallback: '标记失败，稍后再试' })
   }
 }
 
@@ -312,7 +314,7 @@ function doRemove(item) {
       removeAllergyApi(item.id).then(async () => {
         await loadAllergyList()
       }).catch(e => {
-        uni.showToast({ title: e.message || '移除失败，稍后再试~', icon: 'none' })
+        handleError(e, { fallback: '移除失败，稍后再试' })
       })
     }
   })
