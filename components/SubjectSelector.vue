@@ -128,6 +128,17 @@ function onCancel() {
 
 function closeNursingWarning() {
   showNursingWarning.value = false
+  // 用户已确认警告，继续提交
+  const subjects = selectedSubjects.value.map(id => {
+    if (id === userStore.userId) {
+      return { subjectType: 'user', subjectId: userStore.userId }
+    } else {
+      return { subjectType: 'baby', subjectId: id }
+    }
+  })
+  emit('confirm', subjects)
+  selectedSubjects.value = []
+  isChecking.value = false
 }
 
 async function onConfirm() {
@@ -153,11 +164,14 @@ async function onConfirm() {
       ingredients: props.ingredients.map(i => ({ name: i.name || i }))
     })
 
-    if (res.hasWarning && res.warningMessage) {
-      // 有 nursing 孩子警告，先弹提示
-      nursingWarningText.value = res.warningMessage
-      showNursingWarning.value = true
-      return
+    if (res.hasWarning) {
+      // warningMessage 在 results 数组内各条目中，顶层没有
+      const warningResult = res.results?.find(r => r.hasWarning)
+      if (warningResult?.warningMessage) {
+        nursingWarningText.value = warningResult.warningMessage
+        showNursingWarning.value = true
+        return
+      }
     }
 
     // 没有警告或用户已确认，直接提交结构化对象数组
