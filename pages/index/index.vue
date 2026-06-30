@@ -421,7 +421,8 @@ async function loadDailySummary() {
       subjectId = currentBaby.value.id
       subjectType = 'baby'
     } else if (subjectMode.value === 'mother') {
-      subjectId = userStore.mother.id
+      // USER 类型的 subjectId 存的是 userId（非 mothers.id）
+      subjectId = userStore.userId
       subjectType = 'user'
     } else {
       return
@@ -457,8 +458,9 @@ async function loadTrend() {
     return
   }
   try {
+    // USER 类型的 subjectId 存的是 userId（非 mothers.id）
     const params = subjectMode.value === "mother"
-      ? { subjectType: "user", days: 7 }
+      ? { subjectType: "user", subjectId: userStore.userId, days: 7 }
       : { subjectType: "baby", subjectId: currentBaby.value?.id, days: 7 }
     const res = await getNutritionTrend(params)
     trendData.value = res.points || []

@@ -419,7 +419,8 @@ async function loadFrequentIngredients() {
   if (!baby?.id && !mother?.id) return
 
   try {
-    const subject = baby ? { subjectId: baby.id, subjectType: 'baby' } : { subjectId: mother.id, subjectType: 'user' }
+    // USER 类型的 subjectId 存的是 userId（非 mothers.id）
+    const subject = baby ? { subjectId: baby.id, subjectType: 'baby' } : { subjectId: userStore.userId, subjectType: 'user' }
     const list = await getFrequentIngredients(subject.subjectId, subject.subjectType)
     // 过滤掉已经在 form.ingredients 中的食材
     const selectedNames = form.value.ingredients.map(i => i.name)
