@@ -25,7 +25,8 @@ export const useUserStore = defineStore('user', () => {
       return { ...baby, subjectType: 'baby' }
     }
     if (mother.value?.id) {
-      return { ...mother.value, subjectType: 'user' }
+      // USER 类型的 subjectId 存储的是 userId（不是 mothers.id）
+      return { ...mother.value, id: userId.value, subjectType: 'user' }
     }
     return null
   })
@@ -104,8 +105,8 @@ export const useUserStore = defineStore('user', () => {
         const list = await getAllergyList('baby', currentBaby.value.id)
         allergyList.value = list || []
         uni.setStorageSync('allergyList', allergyList.value)
-      } else if (mother.value?.id) {
-        const list = await getAllergyList('user', mother.value.id)
+      } else if (userId.value) {
+        const list = await getAllergyList('user', userId.value)
         allergyList.value = list || []
         uni.setStorageSync('allergyList', allergyList.value)
       }

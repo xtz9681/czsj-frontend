@@ -328,7 +328,7 @@ const currentTargetLabel = computed(() => {
 
 const selectedSubjectLabels = computed(() => {
   return selectedSubjectIds.value.map(id => {
-    if (userStore.mother && id === userStore.mother.id) {
+    if (id === userStore.userId) {
       return '🤱 妈妈'
     }
     const baby = userStore.babies.find(b => b.id === id)

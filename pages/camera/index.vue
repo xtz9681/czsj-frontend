@@ -349,7 +349,7 @@ function recordToMother() {
 
   // 调用妈妈餐快速记录接口
   const payload = {
-    subjectIdList: [userStore.mother.id],  // 妈妈档案 ID
+    subjectIdList: [userStore.userId],  // USER 类型用 userId
     ingredients: finalIngredients.map(i => i.name || i),  // 只传食材名称
     mealType: 'DINNER',  // 妈妈餐默认为晚餐，前端可后续优化
     photoKey: pendingRecognition.value?.photoKey || null,

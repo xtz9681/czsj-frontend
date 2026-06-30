@@ -159,7 +159,7 @@ const activeSubject = ref('baby')
 
 const activeSubjectId = computed(() => {
   if (activeSubject.value === 'baby') return userStore.currentBaby?.id
-  return userStore.mother?.id
+  return userStore.userId
 })
 
 async function loadAllergyList() {

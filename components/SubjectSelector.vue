@@ -12,10 +12,10 @@
           <view class="subject-checkbox">
             <view
               class="checkbox"
-              :class="{ checked: selectedSubjects.includes(mother.id) }"
-              @tap="toggleSubject(mother.id)"
+              :class="{ checked: selectedSubjects.includes(userStore.userId) }"
+              @tap="toggleSubject(userStore.userId)"
             >
-              <text v-if="selectedSubjects.includes(mother.id)">✓</text>
+              <text v-if="selectedSubjects.includes(userStore.userId)">✓</text>
             </view>
           </view>
           <view class="subject-info">
@@ -140,7 +140,7 @@ async function onConfirm() {
   try {
     // 将选中的 ID 转换为 subjects 对象数组
     const subjects = selectedSubjects.value.map(id => {
-      if (mother.value && id === mother.value.id) {
+      if (id === userStore.userId) {
         return { subjectType: 'user', subjectId: null }
       } else {
         return { subjectType: 'baby', subjectId: id }
@@ -173,7 +173,7 @@ async function onConfirm() {
 // 初始化时默认选中妈妈档案
 defineExpose({
   open() {
-    selectedSubjects.value = mother.value ? [mother.value.id] : []
+    selectedSubjects.value = mother.value ? [userStore.userId] : []
   }
 })
 </script>
