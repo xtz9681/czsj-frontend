@@ -186,7 +186,7 @@ async function loadWeekSummary() {
   const baby = userStore.currentBaby
   if (!baby?.id) return
   try {
-    const res = await getWeekSummary(baby.id, 'BABY')
+    const res = await getWeekSummary(baby.id, 'baby')
     weekNutrition.value = (res.nutritionItems || []).map(item => ({
       key: item.name,
       icon: getNutritionIcon(item.name),

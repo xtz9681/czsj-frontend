@@ -12,10 +12,10 @@
 
     <!-- 主体切换 -->
     <view class="subject-bar" v-if="userStore.babies.length > 0 && userStore.mother">
-      <view class="subject-item" :class="{ active: activeSubject === 'BABY' }" @tap="switchSubject('BABY')">
+      <view class="subject-item" :class="{ active: activeSubject === 'baby' }" @tap="switchSubject('baby')">
         🍼 {{ userStore.currentBaby?.name || '宝宝' }}
       </view>
-      <view class="subject-item" :class="{ active: activeSubject === 'MOTHER' }" @tap="switchSubject('MOTHER')">
+      <view class="subject-item" :class="{ active: activeSubject === 'user' }" @tap="switchSubject('user')">
         🤱 妈妈过敏
       </view>
     </view>
@@ -46,7 +46,7 @@
       <view v-else-if="allergyList.length === 0" class="empty-allergy">
         <image src="/static/empty/no-allergy.png" class="empty-img" mode="aspectFit" />
         <text class="empty-text">
-          {{ activeSubject === 'BABY' ? '还没有标记过敏食材，目前没有已知过敏~' : '还没有标记妈妈的过敏食材~' }}
+          {{ activeSubject === 'baby' ? '还没有标记过敏食材，目前没有已知过敏~' : '还没有标记妈妈的过敏食材~' }}
         </text>
       </view>
 
@@ -71,7 +71,7 @@
       </view>
 
       <!-- 月龄禁忌提示（仅 BABY 显示） -->
-      <view v-if="activeSubject === 'BABY'" class="forbidden-card" style="margin: 32rpx 40rpx 0;">
+      <view v-if="activeSubject === 'baby'" class="forbidden-card" style="margin: 32rpx 40rpx 0;">
         <text class="forbidden-title">🚫 月龄禁忌（规则硬限制）</text>
         <text class="forbidden-desc">以下食物系统会自动拦截，无需手动标记</text>
         <view class="forbidden-list">
@@ -120,7 +120,7 @@
 
       <!-- 常见过敏原参考 -->
       <view class="common-section" style="padding: 0 40rpx;">
-        <text class="common-title">{{ activeSubject === 'BABY' ? '常见婴幼儿过敏原' : '哺乳期常见过敏原' }}</text>
+        <text class="common-title">{{ activeSubject === 'baby' ? '常见婴幼儿过敏原' : '哺乳期常见过敏原' }}</text>
         <text class="common-sub">点击快速标记</text>
       </view>
 
@@ -145,7 +145,7 @@
 import { ref, computed } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
 import { getAllergyList, addAllergy, removeAllergy as removeAllergyApi } from '@/api/allergy.js'
-import { getIngredientsByAge } from '@/api/meal.js'
+import { getIngredients } from '@/api/meal.js'
 import { useUserStore } from '@/store/user.js'
 import { useErrorHandler } from '@/composables/useErrorHandler.js'
 
@@ -155,10 +155,10 @@ const searchKeyword = ref('')
 const allergyList = ref([])
 const allergyLoading = ref(false)
 const activeTab = ref('marked')
-const activeSubject = ref('BABY')
+const activeSubject = ref('baby')
 
 const activeSubjectId = computed(() => {
-  if (activeSubject.value === 'BABY') return userStore.currentBaby?.id
+  if (activeSubject.value === 'baby') return userStore.currentBaby?.id
   return userStore.mother?.id
 })
 
@@ -173,7 +173,7 @@ async function loadAllergyList() {
     const list = await getAllergyList(activeSubject.value, activeSubjectId.value)
     allergyList.value = list || []
     // BABY 时同步到 userStore，供其他页面使用
-    if (activeSubject.value === 'BABY') {
+    if (activeSubject.value === 'baby') {
       useUserStore().allergyList = list || []
     }
   } catch (e) {
@@ -183,11 +183,11 @@ async function loadAllergyList() {
 }
 
 function switchSubject(type) {
-  if (type === 'MOTHER' && !userStore.mother) {
+  if (type === 'user' && !userStore.mother) {
     uni.showToast({ title: '请先完善妈妈档案~', icon: 'none' })
     return
   }
-  if (type === 'BABY' && !userStore.currentBaby) {
+  if (type === 'baby' && !userStore.currentBaby) {
     uni.showToast({ title: '请先完善宝宝档案~', icon: 'none' })
     return
   }
@@ -202,11 +202,11 @@ const ingredientDatabase = ref([])
 
 async function loadIngredientDatabase() {
   // 仅 BABY 主体才加载食材库（MOTHER 无月龄食材推荐）
-  if (activeSubject.value !== 'BABY') return
+  if (activeSubject.value !== 'baby') return
   const baby = useUserStore().currentBaby
   if (!baby?.id) return
   try {
-    const list = await getIngredientsByAge(baby.id)
+    const list = await getIngredients()
     ingredientDatabase.value = (list || []).map(i => ({
       id: i.id,
       emoji: '🥗',
@@ -247,7 +247,7 @@ const motherCommonAllergens = [
   { id: 208, emoji: '☕', name: '咖啡因', crossAllergies: ['茶', '可乐'] },
 ]
 const commonAllergens = computed(() =>
-  activeSubject.value === 'BABY' ? babyCommonAllergens : motherCommonAllergens
+  activeSubject.value === 'baby' ? babyCommonAllergens : motherCommonAllergens
 )
 
 const forbiddenFoods = [
@@ -270,7 +270,7 @@ async function addAllergyIngredient(item) {
     return
   }
   if (!activeSubjectId.value) {
-    uni.showToast({ title: activeSubject.value === 'BABY' ? '请先完善宝宝档案~' : '请先完善妈妈档案~', icon: 'none' })
+    uni.showToast({ title: activeSubject.value === 'baby' ? '请先完善宝宝档案~' : '请先完善妈妈档案~', icon: 'none' })
     return
   }
   try {

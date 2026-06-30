@@ -234,8 +234,8 @@
       :score="scoreResult?.score || 0"
       :ingredients="meal?.ingredients?.map(i => i.name) || []"
       :feedback="scoreResult?.suggestion || '继续加油！'"
-      :subjectName="userStore.currentBaby?.name || userStore.mother?.name || '我'"
-      :avatarUrl="userStore.currentBaby?.avatarUrl || userStore.mother?.avatarUrl || '/static/images/avatar-default.png'"
+      :subjectName="userStore.currentSubject?.name || '我'"
+      :avatarUrl="userStore.currentSubject?.avatarUrl || '/static/images/avatar-default.png'"
     />
   </view>
 </template>
@@ -245,7 +245,7 @@ import { ref, computed, nextTick, onUnmounted } from 'vue'
 import { onLoad, onBackPress } from '@dcloudio/uni-app'
 import SubjectSelector from '@/components/SubjectSelector.vue'
 import ScorePoster from '@/components/ScorePoster.vue'
-import { quickRecord, recordMultiple, getIngredientsByAge, getFrequentIngredients, getMealById } from '@/api/meal.js'
+import { record, getIngredients, getFrequentIngredients, getMealById } from '@/api/meal.js'
 import { useUserStore } from '@/store/user.js'
 import { useMealStore } from '@/store/meal'
 import { useErrorHandler } from '@/composables/useErrorHandler.js'
@@ -318,14 +318,12 @@ const filteredIngredients = computed(() => {
 const showSubjectSelectorBtn = computed(() => userStore.babies.length > 1 || !!userStore.mother)
 
 const currentTargetLabel = computed(() => {
-  const baby = userStore.currentBaby
-  if (baby?.id) {
-    return `${baby.gender === 'female' ? '👧' : '👦'} ${baby.name}`
+  const subject = userStore.currentSubject
+  if (!subject) return '未选择'
+  if (subject.subjectType === 'baby') {
+    return `${subject.gender === 'female' ? '👧' : '👦'} ${subject.name}`
   }
-  if (userStore.mother) {
-    return '🤱 妈妈'
-  }
-  return '未选择'
+  return '🤱 妈妈'
 })
 
 const selectedSubjectLabels = computed(() => {
@@ -404,7 +402,7 @@ async function showIngredientPicker() {
   showIngredientSheet.value = true
   if (allIngredients.value.length === 0) {
     try {
-      const list = await getIngredientsByAge(userStore.currentBaby?.id)
+      const list = await getIngredients()
       allIngredients.value = list || []
     } catch (e) {
       handleError(e, { fallback: '操作失败，请稍后重试' })
@@ -421,7 +419,7 @@ async function loadFrequentIngredients() {
   if (!baby?.id && !mother?.id) return
 
   try {
-    const subject = baby ? { subjectId: baby.id, subjectType: 'BABY' } : { subjectId: mother.id, subjectType: 'MOTHER' }
+    const subject = baby ? { subjectId: baby.id, subjectType: 'baby' } : { subjectId: mother.id, subjectType: 'user' }
     const list = await getFrequentIngredients(subject.subjectId, subject.subjectType)
     // 过滤掉已经在 form.ingredients 中的食材
     const selectedNames = form.value.ingredients.map(i => i.name)
@@ -557,71 +555,56 @@ async function saveMeal() {
     return
   }
 
-  if (useMultipleSubjects.value && selectedSubjectIds.value.length > 0) {
-    saving.value = true
-    try {
-      const subjects = selectedSubjectIds.value.map(id => {
-        if (userStore.mother && id === userStore.mother.id) {
-          return { subjectType: 'MOTHER', subjectId: null }
-        }
-        return { subjectType: 'BABY', subjectId: id }
-      })
-
-      const payload = {
-        subjects,
-        ingredients: form.value.ingredients.map(i => ({ name: i.name })),
-        photoKey: form.value.photoKey || null,
-        recognitionId: form.value.recognitionId || null,
-        note: form.value.note || ''
-      }
-
-      const res = await recordMultiple(payload)
-      uni.showToast({ title: '保存成功', icon: 'success' })
-
-      // 多档案提交后轮询评分状态
-      if (res && res.length > 0 && res[0].id) {
-        pollScoreResult(res[0].id)
-        setTimeout(() => {
-          uni.navigateBack()
-        }, 5000)
-      } else {
-        setTimeout(() => {
-          uni.navigateBack()
-        }, 1200)
-      }
-    } catch (e) {
-      handleError(e, { fallback: '保存失败，请稍后重试' })
-    } finally {
-      saving.value = false
-    }
-    return
-  }
-
-  const baby = userStore.currentBaby
-  if (!baby?.id) {
-    uni.showToast({ title: '请先添加宝宝档案', icon: 'none' })
-    return
-  }
-
   saving.value = true
   try {
+    // 确定提交的档案列表
+    let subjectIdList = []
+
+    if (useMultipleSubjects.value && selectedSubjectIds.value.length > 0) {
+      // 多档案模式
+      subjectIdList = selectedSubjectIds.value
+    } else {
+      // 单档案模式：使用当前主体
+      const subject = userStore.currentSubject
+      if (!subject?.id) {
+        uni.showToast({ title: '请先添加档案', icon: 'none' })
+        saving.value = false
+        return
+      }
+      subjectIdList = [subject.id]
+    }
+
+    // 构建新接口的 payload
     const payload = {
-      babyId: baby.id,
-      subjectType: 'BABY',
+      subjectIdList,
+      ingredients: form.value.ingredients.map(i => i.name),  // 只传食材名称
       mealType: form.value.mealType.toUpperCase(),
-      ingredients: form.value.ingredients.map(i => ({ name: i.name })),
       note: form.value.note || '',
       photoKey: form.value.photoKey || null,
       recognitionId: form.value.recognitionId || null,
       source: form.value.recognitionId ? 'PHOTO' : 'MANUAL'
     }
-    const res = await quickRecord(payload)
-    scoreResult.value = buildScoreResult(res)
-    uni.showToast({ title: '已保存，评分出来了！', icon: 'success' })
 
-    // 单档案提交后也轮询评分状态，确保获取最新评分
-    if (res && res.id) {
-      pollScoreResult(res.id)
+    const res = await record(payload)
+
+    // 返回值是列表
+    uni.showToast({ title: '保存成功', icon: 'success' })
+
+    // 如果是单档案（列表中只有一个），构建评分结果
+    if (Array.isArray(res) && res.length === 1) {
+      scoreResult.value = buildScoreResult(res[0])
+    }
+
+    // 轮询评分状态（取第一个档案的 id）
+    if (res && res.length > 0 && res[0].id) {
+      pollScoreResult(res[0].id)
+      setTimeout(() => {
+        uni.navigateBack()
+      }, 5000)
+    } else {
+      setTimeout(() => {
+        uni.navigateBack()
+      }, 1200)
     }
   } catch (e) {
     handleError(e, { fallback: '保存失败，请稍后重试' })

@@ -71,7 +71,7 @@
   │   ├── request.js        # 基础请求封装
   │   ├── auth.js           # wxLogin、getUserInfo（校验 token 有效性）
   │   ├── baby.js           # getBabyList、createBaby、updateBaby、deleteBaby、getGrowthRecords、addGrowthRecord、uploadBabyAvatar
-  │   ├── meal.js           # quickRecord、checkMultiRecordWarning、recordMultiple、getMealList(babyId, page, size, date可选)、getIngredientsByAge、getDailySummary、getWeekSummary、deleteMeal、updateMeal、getFrequentIngredients、getMealById
+  │   ├── meal.js           # quickRecord、checkMultiRecordWarning、recordMultiple、getMealList(babyId, page, size, date可选)、getIngredients、getDailySummary、getWeekSummary、deleteMeal、updateMeal、getFrequentIngredients、getMealById
   │   ├── ai.js             # photoRecord、getWeeklyPlan、getLatestPlan、askAi、getChatHistory、clearChatHistory
   │   ├── allergy.js        # getAllergyList、addAllergy、removeAllergy
   │   ├── mother.js         # getMother、createMother、updateMother、getWeightRecords、addWeightRecord

@@ -68,7 +68,7 @@
     </view>
 
     <!-- 近 7 天营养趋势 -->
-    <view v-if="trendData.length > 0" class="section">
+    <view v-if="userStore.isPaid && trendData.length > 0" class="section">
       <view class="section-header">
         <text class="section-title">近 7 天营养趋势</text>
       </view>
@@ -287,7 +287,7 @@
 import { ref, computed } from 'vue'
 import { useErrorHandler } from '@/composables/useErrorHandler.js'
 import { onShow } from '@dcloudio/uni-app'
-import { getMealList, getIngredientsByAge, getDailySummary, getNutritionTrend } from '@/api/meal.js'
+import { getMealList, getIngredients, getDailySummary, getNutritionTrend } from '@/api/meal.js'
 import { useUserStore } from '@/store/user.js'
 import { calcAgeMonths, formatAge } from '@/utils/age.js'
 import { phaseMap } from '@/constants/phase.js'
@@ -419,10 +419,10 @@ async function loadDailySummary() {
     let subjectId, subjectType
     if (subjectMode.value === 'baby' && currentBaby.value?.id) {
       subjectId = currentBaby.value.id
-      subjectType = 'BABY'
+      subjectType = 'baby'
     } else if (subjectMode.value === 'mother') {
-      subjectId = userStore.userId
-      subjectType = 'MOTHER'
+      subjectId = userStore.mother.id
+      subjectType = 'user'
     } else {
       return
     }
@@ -439,7 +439,7 @@ async function loadDailySummary() {
 async function loadRecommendIngredients() {
   if (subjectMode.value !== 'baby' || !currentBaby.value?.id) return
   try {
-    const list = await getIngredientsByAge(currentBaby.value.id)
+    const list = await getIngredients()
     recommendIngredients.value = (list || []).slice(0, 6).map(i => ({
       id: i.id,
       emoji: '🥗',
@@ -452,10 +452,14 @@ async function loadRecommendIngredients() {
 }
 
 async function loadTrend() {
+  if (!userStore.isPaid) {
+    trendData.value = []
+    return
+  }
   try {
     const params = subjectMode.value === "mother"
-      ? { subjectType: "MOTHER", days: 7 }
-      : { subjectType: "BABY", subjectId: currentBaby.value?.id, days: 7 }
+      ? { subjectType: "user", days: 7 }
+      : { subjectType: "baby", subjectId: currentBaby.value?.id, days: 7 }
     const res = await getNutritionTrend(params)
     trendData.value = res.points || []
   } catch (e) {

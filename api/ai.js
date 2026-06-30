@@ -43,7 +43,7 @@ export function photoRecord(filePath, babyId) {
 
 // 获取 AI 周计划
 export function getWeeklyPlan(babyId) {
-  return request({ url: '/plan/generate', method: 'POST', data: { subjectType: 'BABY', subjectId: babyId } })
+  return request({ url: '/plan/generate', method: 'POST', data: { subjectType: 'baby', subjectId: babyId } })
 }
 
 // 获取最新周计划

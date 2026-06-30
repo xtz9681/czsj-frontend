@@ -133,10 +133,10 @@ async function handleAsk(q) {
     // 注入主体上下文
     const baby = userStore.currentBaby
     if (baby) {
-      params.subjectType = 'BABY'
+      params.subjectType = 'baby'
       params.subjectId = baby.id
     } else if (userStore.mother) {
-      params.subjectType = 'MOTHER'
+      params.subjectType = 'user'
     }
 
     // 注入最近 5 轮历史（排除当前提问，取之前的 10 条消息）

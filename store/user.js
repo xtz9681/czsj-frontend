@@ -11,11 +11,24 @@ export const useUserStore = defineStore('user', () => {
   const currentBabyId = ref(uni.getStorageSync('currentBabyId') || null)
   const mother = ref(uni.getStorageSync('mother') || null)
   const allergyList = ref(uni.getStorageSync('allergyList') || [])
+  const isPaid = ref(uni.getStorageSync('isPaid') || false)
 
   // ── 计算属性 ──────────────────────────────────
   const currentBaby = computed(() =>
     babies.value.find(b => b.id === currentBabyId.value) || babies.value[0] || null
   )
+
+  // 当前主体：优先返回宝宝，如果没有则返回妈妈
+  const currentSubject = computed(() => {
+    const baby = currentBaby.value
+    if (baby?.id) {
+      return { ...baby, subjectType: 'baby' }
+    }
+    if (mother.value?.id) {
+      return { ...mother.value, subjectType: 'user' }
+    }
+    return null
+  })
 
   const isLoggedIn = computed(() => !!token.value)
 
@@ -33,12 +46,14 @@ export const useUserStore = defineStore('user', () => {
     babies.value = res.babies || []
     mother.value = res.mother || null
     currentBabyId.value = res.babies?.length > 0 ? res.babies[0].id : null
+    isPaid.value = !!res.isPaid
 
     uni.setStorageSync('token', token.value)
     uni.setStorageSync('userId', userId.value)
     uni.setStorageSync('babies', babies.value)
     uni.setStorageSync('mother', mother.value)
     uni.setStorageSync('currentBabyId', currentBabyId.value)
+    uni.setStorageSync('isPaid', isPaid.value)
   }
 
   function switchBaby(id) {
@@ -71,12 +86,14 @@ export const useUserStore = defineStore('user', () => {
     currentBabyId.value = null
     mother.value = null
     allergyList.value = []
+    isPaid.value = false
     uni.removeStorageSync('token')
     uni.removeStorageSync('userId')
     uni.removeStorageSync('babies')
     uni.removeStorageSync('currentBabyId')
     uni.removeStorageSync('mother')
     uni.removeStorageSync('allergyList')
+    uni.removeStorageSync('isPaid')
   }
 
   async function loadAllergyList() {
@@ -84,11 +101,11 @@ export const useUserStore = defineStore('user', () => {
       // 获取当前主体的过敏列表
       // 优先加载宝宝的过敏列表（作为默认主体），如果没有宝宝则加载妈妈的
       if (currentBaby.value?.id) {
-        const list = await getAllergyList('BABY', currentBaby.value.id)
+        const list = await getAllergyList('baby', currentBaby.value.id)
         allergyList.value = list || []
         uni.setStorageSync('allergyList', allergyList.value)
       } else if (mother.value?.id) {
-        const list = await getAllergyList('MOTHER', mother.value.id)
+        const list = await getAllergyList('user', mother.value.id)
         allergyList.value = list || []
         uni.setStorageSync('allergyList', allergyList.value)
       }
@@ -105,11 +122,12 @@ export const useUserStore = defineStore('user', () => {
     currentBabyId.value = uni.getStorageSync('currentBabyId') || null
     mother.value = uni.getStorageSync('mother') || null
     allergyList.value = uni.getStorageSync('allergyList') || []
+    isPaid.value = uni.getStorageSync('isPaid') || false
   }
 
   return {
-    token, userId, babies, currentBabyId, mother, allergyList,
-    currentBaby, isLoggedIn, currentBabyAgeMonths,
+    token, userId, babies, currentBabyId, mother, allergyList, isPaid,
+    currentBaby, currentSubject, isLoggedIn, currentBabyAgeMonths,
     setLoginResult, switchBaby, addBaby, updateBaby, setMother, logout, loadAllergyList, initFromStorage
   }
 })

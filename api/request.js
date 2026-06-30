@@ -5,12 +5,13 @@ const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080'
  * 自定义错误类，包含错误类型、状态码和原始数据
  */
 class ApiError extends Error {
-  constructor(message, statusCode, errorCode, rawData) {
+  constructor(message, statusCode, errorCode, rawData, traceId) {
     super(message)
     this.name = 'ApiError'
     this.statusCode = statusCode
     this.errorCode = errorCode // 后端 code 字段（FEATURE_DENIED、VALIDATION_ERROR 等）
     this.rawData = rawData // 完整的后端响应
+    this.traceId = traceId // 链路追踪 ID，用于 grep 后端日志
   }
 }
 
@@ -27,6 +28,9 @@ export function request(options) {
         ...(options.header || {})
       },
       success(res) {
+        // 从响应头捕获链路追踪 ID（后端 TraceFilter 设置）
+        const traceId = res.header?.['X-Trace-Id'] || res.data?.traceId || null
+
         // 新格式：所有响应都是 HTTP 200，通过 response.code 判断成功/失败
         // 成功：code=0（数字），失败：code="ERROR_CODE"（字符串）
         if (res.statusCode === 200 || res.statusCode === 204) {
@@ -57,16 +61,20 @@ export function request(options) {
               uni.reLaunch({ url: '/pages/login/index' })
             }
 
-            reject(new ApiError(message, statusCode, errorCode, response))
+            const error = new ApiError(message, statusCode, errorCode, response, traceId)
+            console.error(`[API Error] ${message} | traceId: ${traceId || 'N/A'}`)
+            reject(error)
             return
           }
 
           // 异常：返回既不是成功也不是失败格式
-          reject(new ApiError('响应格式异常', 500, 'INVALID_RESPONSE', response))
+          reject(new ApiError('响应格式异常', 500, 'INVALID_RESPONSE', response, traceId))
         } else {
           // HTTP 非 200 响应（理论上新格式不会出现）
           const message = res.data?.message || '请求出错了，稍后再试~'
-          reject(new ApiError(message, res.statusCode, res.data?.code || 'HTTP_ERROR', res.data))
+          const error = new ApiError(message, res.statusCode, res.data?.code || 'HTTP_ERROR', res.data, traceId)
+          console.error(`[API Error] ${message} | traceId: ${traceId || 'N/A'}`)
+          reject(error)
         }
       },
       fail(err) {

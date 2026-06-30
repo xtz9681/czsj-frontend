@@ -1,8 +1,9 @@
 import { request } from './request'
 
-// 快速记录一餐（手动勾选或拍照确认后调用）
-export function quickRecord(data) {
-  return request({ url: '/meal/quick-record', method: 'POST', data })
+// 记录一餐（单档案或多档案）
+// 入参 subjectIdList（档案 ID 列表），返回单档案时为对象，多档案时为列表
+export function record(data) {
+  return request({ url: '/meal/record', method: 'POST', data })
 }
 
 // 多主体记录前的 suitability 检查（检查 nursing 孩子警告）
@@ -10,9 +11,11 @@ export function checkMultiRecordWarning(data) {
   return request({ url: '/meal/check-multi-record-warning', method: 'POST', data })
 }
 
-// 多主体记录（一次记录到多个档案）
-export function recordMultiple(data) {
-  return request({ url: '/meal/record-multiple', method: 'POST', data })
+// 食材库查询（全年龄段通用食材库，可按分类过滤）
+export function getIngredients(category = null) {
+  const params = {}
+  if (category) params.category = category
+  return request({ url: '/meal/ingredients', method: 'GET', data: params })
 }
 
 // 餐次历史列表
@@ -20,11 +23,6 @@ export function getMealList(babyId, page = 0, size = 20, date = null) {
   const data = { babyId, page, size }
   if (date) data.date = date
   return request({ url: '/meal/list', method: 'GET', data })
-}
-
-// 月龄食材库
-export function getIngredientsByAge(babyId) {
-  return request({ url: '/meal/ingredients/by-age', data: { babyId } })
 }
 
 // 今日营养统计

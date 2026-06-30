@@ -154,8 +154,9 @@ const isLactation = computed(() => {
   return userStore.mother?.phase === 'lactation'
 })
 
-const formData = ref({
 const { handleError } = useErrorHandler()
+
+const formData = ref({
   date: getTodayStr(),
   weight: '',
   weekOfPregnancy: '',

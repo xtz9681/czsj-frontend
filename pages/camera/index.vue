@@ -104,7 +104,7 @@ import SubjectSelector from '@/components/SubjectSelector.vue'
 import RecognitionResult from '@/components/camera/RecognitionResult.vue'
 import IngredientPicker from '@/components/camera/IngredientPicker.vue'
 import { photoRecord } from '@/api/ai.js'
-import { getIngredientsByAge, quickRecord, recordMultiple } from '@/api/meal.js'
+import { getIngredients, record } from '@/api/meal.js'
 import { useUserStore } from '@/store/user.js'
 import { useMealStore } from '@/store/meal'
 import { useSafeArea } from '@/composables/useSafeArea.js'
@@ -143,7 +143,7 @@ const ageBasedIngredients = ref([])
 async function loadAgeIngredients() {
   if (!baby.value?.id) return
   try {
-    const list = await getIngredientsByAge(baby.value.id)
+    const list = await getIngredients()
     ageBasedIngredients.value = (list || []).map(i => ({
       id: i.id,
       emoji: '🥗',
@@ -349,15 +349,16 @@ function recordToMother() {
 
   // 调用妈妈餐快速记录接口
   const payload = {
-    subjectType: 'MOTHER',
-    ingredients: finalIngredients.map(i => ({ name: i.name || i })),
+    subjectIdList: [userStore.mother.id],  // 妈妈档案 ID
+    ingredients: finalIngredients.map(i => i.name || i),  // 只传食材名称
+    mealType: 'DINNER',  // 妈妈餐默认为晚餐，前端可后续优化
     photoKey: pendingRecognition.value?.photoKey || null,
     recognitionId: pendingRecognition.value?.recognitionId || null,
     note: ''
   }
 
   uni.showLoading({ title: '保存中...' })
-  quickRecord(payload)
+  record(payload)
     .then(() => {
       uni.hideLoading()
       uni.showToast({ title: '保存成功~', icon: 'success' })
@@ -383,7 +384,7 @@ function recordToBaby() {
     photo: capturedPhoto.value,
     recognitionId: pendingRecognition.value?.recognitionId || null,
     photoKey: pendingRecognition.value?.photoKey || null,
-    subjectType: 'BABY'
+    subjectType: 'baby'
   })
   uni.navigateTo({ url: '/pages/meal-record/index?from=camera' })
 }
@@ -405,25 +406,17 @@ function showMultipleSelect() {
 function onSubjectSelectorConfirm(selectedSubjectIds) {
   const finalIngredients = getFinalIngredients()
 
-  // 将选中的 ID 转换为 subjects 对象数组
-  const subjects = selectedSubjectIds.map(id => {
-    if (userStore.mother && id === userStore.mother.id) {
-      return { subjectType: 'MOTHER', subjectId: null }
-    } else {
-      return { subjectType: 'BABY', subjectId: id }
-    }
-  })
-
   const payload = {
-    subjects,
-    ingredients: finalIngredients.map(i => ({ name: i.name || i })),
+    subjectIdList: selectedSubjectIds,  // 直接用 ID 列表
+    ingredients: finalIngredients.map(i => i.name || i),  // 只传食材名称
+    mealType: 'DINNER',  // 从相机记录默认为晚餐
     photoKey: pendingRecognition.value?.photoKey || null,
     recognitionId: pendingRecognition.value?.recognitionId || null,
     note: ''
   }
 
   uni.showLoading({ title: '保存中...' })
-  recordMultiple(payload)
+  record(payload)
     .then(() => {
       uni.hideLoading()
       uni.showToast({ title: '保存成功~', icon: 'success' })

@@ -141,9 +141,9 @@ async function onConfirm() {
     // 将选中的 ID 转换为 subjects 对象数组
     const subjects = selectedSubjects.value.map(id => {
       if (mother.value && id === mother.value.id) {
-        return { subjectType: 'MOTHER', subjectId: null }
+        return { subjectType: 'user', subjectId: null }
       } else {
-        return { subjectType: 'BABY', subjectId: id }
+        return { subjectType: 'baby', subjectId: id }
       }
     })
 
