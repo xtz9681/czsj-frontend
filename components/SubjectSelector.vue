@@ -141,7 +141,7 @@ async function onConfirm() {
     // 将选中的 ID 转换为 subjects 对象数组
     const subjects = selectedSubjects.value.map(id => {
       if (id === userStore.userId) {
-        return { subjectType: 'user', subjectId: null }
+        return { subjectType: 'user', subjectId: userStore.userId }
       } else {
         return { subjectType: 'baby', subjectId: id }
       }
@@ -160,8 +160,8 @@ async function onConfirm() {
       return
     }
 
-    // 没有警告或用户已确认，直接提交
-    emit('confirm', selectedSubjects.value)
+    // 没有警告或用户已确认，直接提交结构化对象数组
+    emit('confirm', subjects)
     selectedSubjects.value = []
   } catch (e) {
     uni.showToast({ title: e.message || '检查失败，请重试', icon: 'none' })

@@ -347,9 +347,9 @@ function recordToMother() {
     return
   }
 
-  // 调用妈妈餐快速记录接口
+  // 调用妈妈餐记录接口
   const payload = {
-    subjectIdList: [userStore.userId],  // USER 类型用 userId
+    subjects: [{ subjectType: 'user', subjectId: userStore.userId }],
     ingredients: finalIngredients.map(i => i.name || i),  // 只传食材名称
     mealType: 'DINNER',  // 妈妈餐默认为晚餐，前端可后续优化
     photoKey: pendingRecognition.value?.photoKey || null,
@@ -403,11 +403,11 @@ function showMultipleSelect() {
   })
 }
 
-function onSubjectSelectorConfirm(selectedSubjectIds) {
+function onSubjectSelectorConfirm(selectedSubjects) {
   const finalIngredients = getFinalIngredients()
 
   const payload = {
-    subjectIdList: selectedSubjectIds,  // 直接用 ID 列表
+    subjects: selectedSubjects,  // SubjectSelector emit 的 [{subjectType, subjectId}]
     ingredients: finalIngredients.map(i => i.name || i),  // 只传食材名称
     mealType: 'DINNER',  // 从相机记录默认为晚餐
     photoKey: pendingRecognition.value?.photoKey || null,

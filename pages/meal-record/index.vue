@@ -327,8 +327,9 @@ const currentTargetLabel = computed(() => {
 })
 
 const selectedSubjectLabels = computed(() => {
-  return selectedSubjectIds.value.map(id => {
-    if (id === userStore.userId) {
+  return selectedSubjectIds.value.map(item => {
+    const id = item.subjectId || item
+    if (item.subjectType === 'user' || id === userStore.userId) {
       return '🤱 妈妈'
     }
     const baby = userStore.babies.find(b => b.id === id)
@@ -559,11 +560,11 @@ async function saveMeal() {
   saving.value = true
   try {
     // 确定提交的档案列表
-    let subjectIdList = []
+    let subjects = []
 
     if (useMultipleSubjects.value && selectedSubjectIds.value.length > 0) {
-      // 多档案模式
-      subjectIdList = selectedSubjectIds.value
+      // 多档案模式：SubjectSelector emit 的 [{subjectType, subjectId}]
+      subjects = selectedSubjectIds.value
     } else {
       // 单档案模式：使用当前主体
       const subject = userStore.currentSubject
@@ -572,12 +573,12 @@ async function saveMeal() {
         saving.value = false
         return
       }
-      subjectIdList = [subject.id]
+      subjects = [{ subjectType: subject.subjectType, subjectId: subject.id }]
     }
 
     // 构建新接口的 payload
     const payload = {
-      subjectIdList,
+      subjects,
       ingredients: form.value.ingredients.map(i => i.name),  // 只传食材名称
       mealType: form.value.mealType.toUpperCase(),
       note: form.value.note || '',
