@@ -32,6 +32,58 @@
           <text class="loading-icon">⏳</text>
           <text class="loading-text">加载中...</text>
         </view>
+
+        <!-- 营养拼图（宝宝 / 妈妈模式通用） -->
+        <view v-else-if="dailySummary" class="puzzle-card">
+          <view class="puzzle-body">
+            <!-- SVG 拼图圆盘 -->
+            <view class="puzzle-circle">
+              <!-- #ifdef H5 || APP-PLUS -->
+              <svg width="140" height="140" viewBox="0 0 140 140">
+                <path v-for="(g, i) in puzzlePaths" :key="i"
+                      :d="g.d" :fill="g.color" :opacity="g.covered ? 1 : 0.2"
+                      stroke="#fff" stroke-width="2" />
+                <circle cx="70" cy="70" r="28" fill="#fff" />
+              </svg>
+              <!-- #endif -->
+              <!-- #ifdef MP-WEIXIN -->
+              <!-- 小程序 SVG 兼容：用拼图圆盘背景 + 覆盖数显示（小程序 svg 支持有限，降级用文字+色块） -->
+              <view class="puzzle-mp-fallback">
+                <view class="puzzle-mp-ring" :style="{ background: conicGradientCss }"></view>
+              </view>
+              <!-- #endif -->
+              <view class="puzzle-center">
+                <text class="puzzle-num">{{ coveredCount }}<text class="puzzle-total">/{{ foodGroups.length }}</text></text>
+                <text class="puzzle-label">已覆盖</text>
+              </view>
+            </view>
+            <!-- 图例 -->
+            <view class="puzzle-legend">
+              <view v-for="g in foodGroups" :key="g.group" class="legend-item">
+                <view class="legend-dot" :style="{ background: groupColor(g.group), opacity: g.covered ? 1 : 0.25 }" />
+                <text class="legend-name">{{ g.group }}</text>
+                <text v-if="!g.covered" class="miss-tag">未吃</text>
+              </view>
+            </view>
+          </view>
+          <!-- 建议条 -->
+          <view v-if="missedGroups.length > 0" class="puzzle-suggest">
+            <text class="suggest-icon">💡</text>
+            <text class="suggest-text">还差<text v-for="g in missedGroups" :key="g" class="suggest-highlight"> {{ g }} </text>，可以试试{{ suggestFood }}～</text>
+          </view>
+          <view v-else class="puzzle-suggest puzzle-suggest-ok">
+            <text class="suggest-icon">🎉</text>
+            <text class="suggest-text">今天五大食物组都吃到了，搭配很棒～</text>
+          </view>
+          <!-- 简明统计（餐次/均分/食材种数） -->
+          <view class="quick-stats">
+            <text>{{ dailySummary.mealCount || 0 }}餐</text>
+            <text>{{ dailySummary.avgScore != null ? dailySummary.avgScore : '-' }}分</text>
+            <text>{{ dailySummary.ingredientCount || 0 }}种食材</text>
+          </view>
+        </view>
+
+        <!-- 降级：dailySummary 未加载时显示原始数字竖排 -->
         <view v-else class="nutrition-row">
           <view class="nutrition-item" v-for="n in nutritionStats" :key="n.key">
             <text class="nutrition-icon">{{ n.icon }}</text>
@@ -321,6 +373,8 @@ const showRecommend = ref(false)
 const pageLoading = ref(false)
 const showMotherDetail = ref(false)
 const trendData = ref([])
+// 今日营养概览完整响应（含 foodGroups 食物组拼图数据）
+const dailySummary = ref(null)
 
 const nutritionStats = ref([
   { key: 'meals', icon: '🍽️', label: '餐次', value: '-', unit: '餐', color: '#F5A85B' },
@@ -336,6 +390,85 @@ const ageMonths = computed(() => {
 })
 
 const ageText = computed(() => formatAge(currentBaby.value?.birthday))
+
+// ── 营养拼图（五大食物组）──────────────────────
+// 后端 DailySummaryResponse.foodGroups：[{group, covered, ingredients}]
+const FOOD_GROUP_COLORS = {
+  '谷物': '#F5A85B',
+  '蔬菜': '#A3D9B1',
+  '水果': '#FF8FA3',
+  '肉蛋': '#FFB347',
+  '乳制品': '#B0C4DE'
+}
+
+// 5 等分圆的 SVG path（固定坐标，顺序对应谷物/蔬菜/水果/肉蛋/乳制品）
+// 圆心 (70,70)，半径 65，每个扇形 72°，从正上方开始顺时针
+// 顶点公式：x = 70 + 65*sin(θ), y = 70 - 65*cos(θ)
+const PUZZLE_PATHS = [
+  'M70,70 L70,5 A65,65 0 0,1 131.8,49.9 Z',         // 谷物（0° → 72°）
+  'M70,70 L131.8,49.9 A65,65 0 0,1 108.2,122.6 Z',   // 蔬菜（72° → 144°）
+  'M70,70 L108.2,122.6 A65,65 0 0,1 31.8,122.6 Z',   // 水果（144° → 216°）
+  'M70,70 L31.8,122.6 A65,65 0 0,1 8.2,49.9 Z',      // 肉蛋（216° → 288°）
+  'M70,70 L8.2,49.9 A65,65 0 0,1 70,5 Z'              // 乳制品（288° → 360°）
+]
+
+// 后端返回的组数可能不足 5（降级），按顺序补齐到 5 个
+const foodGroups = computed(() => {
+  const list = dailySummary.value?.foodGroups || []
+  const defaults = ['谷物', '蔬菜', '水果', '肉蛋', '乳制品']
+  return defaults.map((g, i) => list[i] || { group: g, covered: false, ingredients: [] })
+})
+
+const coveredCount = computed(() => foodGroups.value.filter(g => g.covered).length)
+const missedGroups = computed(() => foodGroups.value.filter(g => !g.covered).map(g => g.group))
+
+// 拼图扇形 path + 颜色 + 覆盖状态
+const puzzlePaths = computed(() =>
+  foodGroups.value.map((g, i) => ({
+    d: PUZZLE_PATHS[i] || PUZZLE_PATHS[0],
+    color: FOOD_GROUP_COLORS[g.group] || '#ccc',
+    covered: g.covered
+  }))
+)
+
+// 建议文案：根据缺失食物组给出具体食材建议
+const FOOD_SUGGESTIONS = {
+  '谷物': '米粉或米糊',
+  '蔬菜': '胡萝卜泥或西兰花',
+  '水果': '苹果泥或香蕉泥',
+  '肉蛋': '蛋黄或鱼肉泥',
+  '乳制品': '酸奶溶豆或奶酪条'
+}
+const suggestFood = computed(() =>
+  missedGroups.value.map(g => FOOD_SUGGESTIONS[g]).filter(Boolean).join('或')
+)
+
+function groupColor(group) {
+  return FOOD_GROUP_COLORS[group] || '#ccc'
+}
+
+// 小程序降级：用 conic-gradient 绘制 5 等分圆盘（每段 72°）
+// 已覆盖段满色，未覆盖段 20% 透明度
+const conicGradientCss = computed(() => {
+  const segments = foodGroups.value.map((g, i) => {
+    const color = FOOD_GROUP_COLORS[g.group] || '#ccc'
+    const start = i * 72
+    const end = (i + 1) * 72
+    const alpha = g.covered ? 1 : 0.2
+    // hex 转 rgba
+    const rgba = hexToRgba(color, alpha)
+    return `${rgba} ${start}deg ${end}deg`
+  })
+  return `conic-gradient(${segments.join(',')}, #fff 0 0)`
+})
+
+function hexToRgba(hex, alpha) {
+  const h = hex.replace('#', '')
+  const r = parseInt(h.substring(0, 2), 16)
+  const g = parseInt(h.substring(2, 4), 16)
+  const b = parseInt(h.substring(4, 6), 16)
+  return `rgba(${r},${g},${b},${alpha})`
+}
 
 // 月龄里程碑数据
 const MILESTONES = [
@@ -428,12 +561,14 @@ async function loadDailySummary() {
       return
     }
     const res = await getDailySummary(subjectId, subjectType)
+    dailySummary.value = res
     nutritionStats.value[0].value = res.mealCount || 0
     nutritionStats.value[1].value = res.avgScore != null ? res.avgScore : '-'
     nutritionStats.value[2].value = res.ingredientCount || 0
     nutritionStats.value[3].value = res.nutritionCoverage || 0
   } catch (e) {
     // 静默处理，保持 '-' 显示
+    dailySummary.value = null
   }
 }
 
@@ -932,6 +1067,140 @@ const motherNutritionTips = computed(() => {
 .nutrition-label {
   font-size: 24rpx;
   color: rgba(255,255,255,0.9);
+}
+
+/* ── 营养拼图 ── */
+.puzzle-card {
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+}
+
+.puzzle-body {
+  display: flex;
+  align-items: center;
+  gap: 24rpx;
+}
+
+.puzzle-circle {
+  position: relative;
+  width: 140px;
+  height: 140px;
+  flex-shrink: 0;
+}
+
+.puzzle-mp-fallback {
+  width: 140px;
+  height: 140px;
+}
+
+.puzzle-mp-ring {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+}
+
+.puzzle-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 56px;
+  height: 56px;
+  background: #fff;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.puzzle-num {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: #3D3935;
+  line-height: 1.1;
+}
+
+.puzzle-total {
+  font-size: 22rpx;
+  color: #999;
+  font-weight: 400;
+}
+
+.puzzle-label {
+  font-size: 18rpx;
+  color: #999;
+}
+
+.puzzle-legend {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.legend-dot {
+  width: 24rpx;
+  height: 24rpx;
+  border-radius: 50%;
+}
+
+.legend-name {
+  font-size: 26rpx;
+  color: rgba(255,255,255,0.9);
+  flex: 1;
+}
+
+.miss-tag {
+  font-size: 20rpx;
+  color: #E07A5F;
+  background: rgba(224,122,95,0.15);
+  padding: 2rpx 12rpx;
+  border-radius: 8rpx;
+}
+
+.puzzle-suggest {
+  background: #FFF8F0;
+  border-radius: 12rpx;
+  padding: 16rpx 20rpx;
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+}
+
+.puzzle-suggest-ok {
+  background: rgba(163,217,177,0.2);
+}
+
+.suggest-icon {
+  font-size: 26rpx;
+}
+
+.suggest-text {
+  font-size: 24rpx;
+  color: #3D3935;
+  flex: 1;
+}
+
+.suggest-highlight {
+  color: #E07A5F;
+  font-weight: 600;
+}
+
+.quick-stats {
+  display: flex;
+  justify-content: space-around;
+  font-size: 22rpx;
+  color: rgba(255,255,255,0.85);
+  padding-top: 8rpx;
+  border-top: 1rpx solid rgba(255,255,255,0.2);
 }
 
 /* 快速操作 */
