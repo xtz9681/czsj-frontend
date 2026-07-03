@@ -540,7 +540,7 @@ async function loadTodayMeals() {
       time: m.mealTime ? m.mealTime.substring(11, 16) : '',
       score: m.aiScore,
       photo: m.signedPhotoUrl || '',
-      ingredients: (m.ingredients || []).map(i => ({ id: i.name, name: i.name, isAllergy: false }))
+      ingredients: (m.ingredients || []).map(i => ({ id: i, name: i, isAllergy: false }))
     }))
   } catch (e) {
     // 静默处理
