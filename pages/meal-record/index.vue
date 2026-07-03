@@ -386,7 +386,7 @@ onBackPress(() => {
   // 判断用户是否已填写了内容
   const hasContent = form.value.ingredients.length > 0 || form.value.note || form.value.photo
 
-  if (hasContent && !scoreResult.value) {
+  if (hasContent && !scoreResult.value && !savedMealId.value) {
     uni.showModal({
       title: '提示',
       content: '当前记录尚未保存，确定要离开吗？',
@@ -517,12 +517,12 @@ async function loadMealData(mealId) {
     // 填充表单数据
     form.value.mealType = (meal.mealType || 'breakfast').toLowerCase()
     form.value.ingredients = (meal.ingredients || []).map(i => ({
-      id: i.id,
-      name: i.name,
-      emoji: i.emoji || '🍴',
-      amount: i.amount || 30,
-      isAllergy: i.isAllergy || false,
-      allergyDesc: i.allergyDesc || ''
+      id: typeof i === 'string' ? i : (i.id || i.name),
+      name: typeof i === 'string' ? i : (i.name || i),
+      emoji: '🍴',
+      amount: 30,
+      isAllergy: false,
+      allergyDesc: ''
     }))
     form.value.note = meal.note || ''
     form.value.photo = meal.photoUrl || ''
