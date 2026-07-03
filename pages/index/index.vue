@@ -533,7 +533,7 @@ async function loadTodayMeals() {
   try {
     const d = new Date()
     const todayDate = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
-    const list = await getMealList(currentBaby.value.id, 0, 20, todayDate)
+    const list = await getMealList(currentBaby.value.id, 'baby', 0, 20, todayDate, todayDate)
     todayMeals.value = (list || []).map(m => ({
       id: m.id,
       mealType: m.mealType,

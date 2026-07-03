@@ -19,9 +19,10 @@ export function getIngredients(category = null) {
 }
 
 // 餐次历史列表
-export function getMealList(subjectId, subjectType, page = 0, size = 20, date = null) {
+export function getMealList(subjectId, subjectType, page = 0, size = 20, startDate = null, endDate = null) {
   const data = { subjectId, subjectType, page, size }
-  if (date) data.date = date
+  if (startDate) data.startDate = startDate
+  if (endDate) data.endDate = endDate
   return request({ url: '/meal/list', method: 'GET', data })
 }
 

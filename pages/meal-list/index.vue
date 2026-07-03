@@ -7,7 +7,7 @@
         :key="f.value"
         class="filter-btn"
         :class="{ active: activeFilter === f.value }"
-        @tap="activeFilter = f.value"
+        @tap="onFilterChange(f.value)"
       >
         {{ f.label }}
       </view>
@@ -135,11 +135,34 @@ const weekNutrition = ref([])
 
 const { handleError } = useErrorHandler()
 
+function getDateRange() {
+  const today = new Date()
+  const fmt = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
+  const endDate = fmt(today)
+  if (activeFilter.value === 'today') {
+    return { startDate: endDate, endDate }
+  }
+  if (activeFilter.value === 'week') {
+    const d = new Date(today); d.setDate(d.getDate() - 6)
+    return { startDate: fmt(d), endDate }
+  }
+  if (activeFilter.value === 'month') {
+    const d = new Date(today); d.setDate(d.getDate() - 29)
+    return { startDate: fmt(d), endDate }
+  }
+  return {}
+}
+
 function resetAndLoad() {
   currentPage.value = 0
   noMore.value = false
   allMeals.value = []
   loadMeals()
+}
+
+function onFilterChange(value) {
+  activeFilter.value = value
+  resetAndLoad()
 }
 
 async function loadMeals() {
@@ -148,7 +171,8 @@ async function loadMeals() {
   if (noMore.value) return
   mealsLoading.value = true
   try {
-    const list = await getMealList(subject.id, subject.subjectType, currentPage.value, 20)
+    const { startDate, endDate } = getDateRange()
+    const list = await getMealList(subject.id, subject.subjectType, currentPage.value, 20, startDate, endDate)
     const mappedList = (list || []).map(m => ({
       id: m.id,
       date: toLocalDateStr(m.mealTime),
@@ -213,25 +237,9 @@ onShow(() => {
   loadWeekSummary()
 })
 
-const filteredMeals = computed(() => {
-  const today = getTodayStr()
-  if (activeFilter.value === 'today') {
-    return allMeals.value.filter(m => m.date === today)
-  }
-  if (activeFilter.value === 'week') {
-    const weekAgo = getDateStr(-7)
-    return allMeals.value.filter(m => m.date >= weekAgo)
-  }
-  if (activeFilter.value === 'month') {
-    const monthAgo = getDateStr(-30)
-    return allMeals.value.filter(m => m.date >= monthAgo)
-  }
-  return allMeals.value
-})
-
 const mealGroups = computed(() => {
   const map = {}
-  filteredMeals.value.forEach(m => {
+  allMeals.value.forEach(m => {
     if (!map[m.date]) map[m.date] = []
     map[m.date].push(m)
   })
