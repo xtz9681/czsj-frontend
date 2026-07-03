@@ -356,12 +356,19 @@ function recordToMother() {
 
   uni.showLoading({ title: '保存中...' })
   record(payload)
-    .then(() => {
+    .then((res) => {
       uni.hideLoading()
       uni.showToast({ title: '保存成功~', icon: 'success' })
-      setTimeout(() => {
-        uni.navigateBack()
-      }, 1200)
+      // 跳转到 meal-record 页展示 AI 评分结果（取第一个档案的 id）
+      if (res && res.length > 0 && res[0].id) {
+        setTimeout(() => {
+          uni.redirectTo({ url: '/pages/meal-record/index?id=' + res[0].id + '&waitScore=1' })
+        }, 800)
+      } else {
+        setTimeout(() => {
+          uni.navigateBack()
+        }, 1200)
+      }
     })
     .catch(e => {
       uni.hideLoading()
@@ -414,13 +421,20 @@ function onSubjectSelectorConfirm(selectedSubjects) {
 
   uni.showLoading({ title: '保存中...' })
   record(payload)
-    .then(() => {
+    .then((res) => {
       uni.hideLoading()
       uni.showToast({ title: '保存成功~', icon: 'success' })
       showSubjectSelector.value = false
-      setTimeout(() => {
-        uni.navigateBack()
-      }, 1200)
+      // 跳转到 meal-record 页展示 AI 评分结果（取第一个档案的 id）
+      if (res && res.length > 0 && res[0].id) {
+        setTimeout(() => {
+          uni.redirectTo({ url: '/pages/meal-record/index?id=' + res[0].id + '&waitScore=1' })
+        }, 800)
+      } else {
+        setTimeout(() => {
+          uni.navigateBack()
+        }, 1200)
+      }
     })
     .catch(e => {
       uni.hideLoading()

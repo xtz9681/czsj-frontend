@@ -96,14 +96,20 @@
       </view>
     </view>
 
-    <!-- 保存按钮 -->
-    <wd-button type="primary" @click="saveMeal" :loading="saving" block round>
+    <!-- 保存按钮（已保存等待评分时隐藏，避免重复提交） -->
+    <wd-button v-if="!savedMealId && !isScoring" type="primary" @click="saveMeal" :loading="saving" block round>
       {{ useMultipleSubjects && selectedSubjectIds.length > 0 ? `保存到 ${selectedSubjectIds.length} 个档案` : (scoreResult ? '重新评分' : '保存并获取 AI 评分') }}
     </wd-button>
 
     <!-- 评分加载状态 -->
     <view v-if="isScoring" class="scoring-loading">
       <text>🤖 AI 正在评分中...</text>
+    </view>
+
+    <!-- 评分超时提示 -->
+    <view v-if="scoreTimeout && !scoreResult" class="score-timeout card">
+      <text class="timeout-text">AI 评分稍慢，可稍后在餐食列表中查看结果</text>
+      <wd-button type="primary" size="small" round @click="uni.navigateBack()">返回首页</wd-button>
     </view>
 
     <!-- AI 营养评分结果 -->
@@ -143,7 +149,8 @@
       <text class="disclaimer">AI 评分仅供参考，不构成医疗建议，请咨询专业人员</text>
 
       <view class="share-section">
-        <wd-button type="default" @click="showSharePanel">分享给朋友</wd-button>
+        <wd-button type="primary" round block @click="uni.navigateBack()">完成</wd-button>
+        <wd-button type="default" @click="showSharePanel" style="margin-top: 16rpx;">分享给朋友</wd-button>
       </view>
     </view>
 
@@ -264,6 +271,10 @@ const scoreResult = ref(null)
 const pollingTimer = ref(null)
 const pollingStartTime = ref(0)
 const isScoring = ref(false)
+// 已保存的餐食 ID（保存后等待评分时置位，用于隐藏保存按钮、标识只读等待状态）
+const savedMealId = ref(null)
+// 评分轮询超时标记（30s 未返回评分时置位，展示超时提示）
+const scoreTimeout = ref(false)
 
 // 食材选择相关
 const showIngredientSheet = ref(false)
@@ -341,8 +352,18 @@ const selectedSubjectLabels = computed(() => {
 })
 
 onLoad((options) => {
+  // 等待评分模式：从 camera 直接保存后跳转过来，展示 AI 评分结果
+  if (options?.id && options?.waitScore === '1') {
+    savedMealId.value = options.id
+    loadMealData(options.id).then(() => {
+      // 加载后若还没有评分，自动开始轮询
+      if (!scoreResult.value) {
+        pollScoreResult(options.id)
+      }
+    })
+  }
   // 编辑已有的餐食记录
-  if (options?.id) {
+  else if (options?.id) {
     loadMealData(options.id)
   }
   // 从拍照页带入的食材
@@ -512,7 +533,8 @@ async function loadMealData(mealId) {
     if (meal.aiScore !== null && meal.aiScore !== undefined) {
       scoreResult.value = {
         score: meal.aiScore,
-        analysis: meal.aiFeedback || '',
+        suggestion: meal.aiFeedback || '',
+        nutrients: [],
         improvements: meal.improvements || []
       }
     }
@@ -534,14 +556,15 @@ async function pollScoreResult(mealId) {
         isScoring.value = false
         scoreResult.value = {
           score: meal.aiScore,
-          analysis: meal.aiFeedback,
+          suggestion: meal.aiFeedback || '',
+          nutrients: [],
           improvements: meal.improvements || []
         }
       } else if (Date.now() - pollingStartTime.value > 30000) {
         clearInterval(pollingTimer.value)
         pollingTimer.value = null
         isScoring.value = false
-        uni.showToast({ title: '评分稍慢，可稍后在记录列表中查看', icon: 'none', duration: 3000 })
+        scoreTimeout.value = true
       }
     } catch (e) {
       clearInterval(pollingTimer.value)
@@ -598,11 +621,10 @@ async function saveMeal() {
     }
 
     // 轮询评分状态（取第一个档案的 id）
+    // 评分需 3-10 秒，去掉 5 秒自动返回，改为评分到位后用户手动点"完成"返回
     if (res && res.length > 0 && res[0].id) {
+      savedMealId.value = res[0].id
       pollScoreResult(res[0].id)
-      setTimeout(() => {
-        uni.navigateBack()
-      }, 5000)
     } else {
       setTimeout(() => {
         uni.navigateBack()
@@ -1165,5 +1187,18 @@ async function showSharePanel() {
   padding: 40rpx;
   color: #999;
   font-size: 28rpx;
+}
+
+.score-timeout {
+  text-align: center;
+  padding: 48rpx 32rpx;
+  margin-top: 32rpx;
+}
+
+.timeout-text {
+  display: block;
+  font-size: 28rpx;
+  color: #999;
+  margin-bottom: 32rpx;
 }
 </style>
