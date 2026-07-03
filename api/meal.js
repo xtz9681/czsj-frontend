@@ -19,8 +19,8 @@ export function getIngredients(category = null) {
 }
 
 // 餐次历史列表
-export function getMealList(babyId, page = 0, size = 20, date = null) {
-  const data = { babyId, page, size }
+export function getMealList(subjectId, subjectType, page = 0, size = 20, date = null) {
+  const data = { subjectId, subjectType, page, size }
   if (date) data.date = date
   return request({ url: '/meal/list', method: 'GET', data })
 }

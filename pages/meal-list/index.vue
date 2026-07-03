@@ -143,12 +143,12 @@ function resetAndLoad() {
 }
 
 async function loadMeals() {
-  const baby = useUserStore().currentBaby
-  if (!baby?.id) return
+  const subject = useUserStore().currentSubject
+  if (!subject?.id) return
   if (noMore.value) return
   mealsLoading.value = true
   try {
-    const list = await getMealList(baby.id, currentPage.value, 20)
+    const list = await getMealList(subject.id, subject.subjectType, currentPage.value, 20)
     const mappedList = (list || []).map(m => ({
       id: m.id,
       date: toLocalDateStr(m.mealTime),
@@ -157,7 +157,7 @@ async function loadMeals() {
       score: m.aiScore || null,
       photo: m.signedPhotoUrl || '',
       suggestion: m.aiFeedback ? m.aiFeedback.substring(0, 30) + '...' : null,
-      ingredients: (m.ingredients || []).map(i => ({ id: i.name, name: i.name, isAllergy: false }))
+      ingredients: (m.ingredients || []).map(i => ({ id: typeof i === 'string' ? i : i.name, name: typeof i === 'string' ? i : i.name, isAllergy: false }))
     }))
     if (currentPage.value === 0) {
       allMeals.value = mappedList
@@ -183,10 +183,10 @@ function onReachBottom() {
 
 async function loadWeekSummary() {
   const userStore = useUserStore()
-  const baby = userStore.currentBaby
-  if (!baby?.id) return
+  const subject = userStore.currentSubject
+  if (!subject?.id) return
   try {
-    const res = await getWeekSummary(baby.id, 'baby')
+    const res = await getWeekSummary(subject.id, subject.subjectType)
     weekNutrition.value = (res.nutritionItems || []).map(item => ({
       key: item.name,
       icon: getNutritionIcon(item.name),
