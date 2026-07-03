@@ -19,19 +19,32 @@ export function photoRecord(filePath, babyId) {
       formData,
       header: { 'Authorization': 'Bearer ' + token },
       success(res) {
+        // 后端统一返回 ApiResponse 包装格式 {code, message, data, timestamp, path, traceId}
+        // 成功：code=0（数字），失败：code=字符串错误码（如 FEATURE_DENIED）
+        // 所有响应都是 HTTP 200，业务错误通过 body.code 区分（与 request.js 处理一致）
         if (res.statusCode === 200) {
           try {
             const parsed = JSON.parse(res.data)
-            resolve(parsed)
+            // 成功：解包 data 字段，resolve 内层业务对象
+            if (parsed.code === 0 && parsed.data) {
+              resolve(parsed.data)
+            } else if (parsed.code === 0) {
+              // 成功但 data 为空（理论上不会出现，兼容处理）
+              resolve(parsed.data)
+            } else {
+              // 业务错误：用后端返回的 message，降级为友好提示
+              reject(new Error(parsed.message || '识别遇到了点问题~'))
+            }
           } catch (e) {
             reject(new Error('服务器返回格式错误'))
           }
         } else if (res.statusCode === 401) {
+          // 兼容：理论上不会出现（后端统一 200），保留兜底
           uni.removeStorageSync('token')
           uni.reLaunch({ url: '/pages/login/index' })
-        } else if (res.statusCode === 402) {
-          reject(new Error('今日拍照次数已用完，可以手动选择食材~'))
+          reject(new Error('请重新登录'))
         } else {
+          // HTTP 非 200 兜底
           try {
             const body = JSON.parse(res.data)
             reject(new Error(body?.message || '识别遇到了点问题~'))
