@@ -32,7 +32,11 @@ export function photoRecord(filePath, babyId) {
               // 成功但 data 为空（理论上不会出现，兼容处理）
               resolve(parsed.data)
             } else {
-              // 业务错误：用后端返回的 message，降级为友好提示
+              // 业务错误：与 request.js 对齐，UNAUTHORIZED 时清 token 并跳登录页
+              if (parsed.code === 'UNAUTHORIZED') {
+                uni.removeStorageSync('token')
+                uni.reLaunch({ url: '/pages/login/index' })
+              }
               reject(new Error(parsed.message || '识别遇到了点问题~'))
             }
           } catch (e) {
