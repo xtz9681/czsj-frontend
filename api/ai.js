@@ -6,11 +6,17 @@ export function photoRecord(filePath, babyId) {
   return new Promise((resolve, reject) => {
     const token = uni.getStorageSync('token')
 
+    // babyId 可选：有宝宝时传，无宝宝（纯妈妈用户）时不传，后端 required=false 接收 null
+    const formData = {}
+    if (babyId) {
+      formData.babyId = String(babyId)
+    }
+
     uni.uploadFile({
       url: BASE_URL + '/meal/photo-record',
       filePath,
       name: 'photo',
-      formData: { babyId: String(babyId) },
+      formData,
       header: { 'Authorization': 'Bearer ' + token },
       success(res) {
         if (res.statusCode === 200) {

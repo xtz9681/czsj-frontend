@@ -141,7 +141,7 @@ const babyAgeText = computed(() => {
 const ageBasedIngredients = ref([])
 
 async function loadAgeIngredients() {
-  if (!baby.value?.id) return
+  // getIngredients() 是全量食材库查询，不依赖 babyId，无宝宝用户也能加载勾选库
   try {
     const list = await getIngredients()
     ageBasedIngredients.value = (list || []).map(i => ({
@@ -248,11 +248,8 @@ const pendingRecognition = ref(null)
 
 async function startRecognition(filePath) {
   stage.value = 'recognizing'
-  const babyId = baby.value.id
-  if (!babyId) {
-    stage.value = 'low-confidence'
-    return
-  }
+  // babyId 可选：无宝宝用户也调用 AI 识别，后端对无 babyId 情况不做月龄过滤
+  const babyId = baby.value?.id || null
   try {
     const result = await photoRecord(filePath, babyId)
     pendingRecognition.value = { recognitionId: result.recognitionId, photoKey: result.photoKey }
