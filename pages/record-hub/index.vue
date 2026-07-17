@@ -127,7 +127,7 @@
 
     <!-- 空状态 -->
     <view v-else-if="!recordsLoading && recordGroups.length === 0" class="empty-state">
-      <image src="/static/empty/no-meals.png" class="empty-img" mode="aspectFit" />
+      <image :src="emptyImage" class="empty-img" mode="aspectFit" />
       <text class="empty-text">还没有记录，去记第一笔吧~</text>
       <view class="empty-btn" @tap="goMealRecord">开始记录</view>
     </view>
@@ -393,6 +393,13 @@ function getDateRange() {
 const todayDisplayStr = computed(() => {
   const d = new Date()
   return `${d.getMonth() + 1}月${d.getDate()}日`
+})
+
+const emptyImage = computed(() => {
+  if (selectedSubject.value?.type === 'user') {
+    return '/static/empty/no-records-adult.png'
+  }
+  return '/static/empty/no-meals.png'
 })
 
 // ── 数据加载 ──────────────────────────────

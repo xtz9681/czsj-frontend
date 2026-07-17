@@ -113,7 +113,7 @@
 
     <!-- 空状态 -->
     <view v-else class="empty-state">
-      <image src="/static/empty/no-records.png" class="empty-img" mode="aspectFit" />
+      <image src="/static/empty/no-records-adult.png" class="empty-img" mode="aspectFit" />
       <text class="empty-text">还没有记录过体重数据</text>
       <text class="empty-sub">开始记录，关注自己的健康～</text>
     </view>
