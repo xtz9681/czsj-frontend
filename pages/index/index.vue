@@ -67,7 +67,11 @@
             </view>
           </view>
           <!-- 建议条 -->
-          <view v-if="missedGroups.length > 0" class="puzzle-suggest">
+          <view v-if="dailySummary.mealCount === 0" class="puzzle-suggest">
+            <text class="suggest-icon">🍽️</text>
+            <text class="suggest-text">今天还没记录，先记一餐吧～</text>
+          </view>
+          <view v-else-if="missedGroups.length > 0" class="puzzle-suggest">
             <text class="suggest-icon">💡</text>
             <text class="suggest-text">还差<text v-for="g in missedGroups" :key="g" class="suggest-highlight"> {{ g }} </text>，可以试试{{ suggestFood }}～</text>
           </view>
