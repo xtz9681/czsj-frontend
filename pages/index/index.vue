@@ -435,17 +435,47 @@ const puzzlePaths = computed(() =>
   }))
 )
 
-// 建议文案：根据缺失食物组给出具体食材建议
+// 建议文案：根据当前档案类型（宝宝/妈妈）和过敏情况给出食材建议
 const FOOD_SUGGESTIONS = {
-  '谷物': '米粉或米糊',
-  '蔬菜': '胡萝卜泥或西兰花',
-  '水果': '苹果泥或香蕉泥',
-  '肉蛋': '蛋黄或鱼肉泥',
-  '乳制品': '酸奶溶豆或奶酪条'
+  baby: {
+    '谷物': ['米粉', '米糊', '烂面条', '小米粥'],
+    '蔬菜': ['胡萝卜泥', '西兰花泥', '南瓜泥', '菠菜泥', '土豆泥'],
+    '水果': ['苹果泥', '香蕉泥', '梨泥', '牛油果泥'],
+    '肉蛋': ['蛋黄', '鱼肉泥', '鸡肉泥', '猪肉泥'],
+    '乳制品': ['酸奶溶豆', '奶酪条']
+  },
+  user: {
+    '谷物': ['全麦面包', '糙米饭', '燕麦片', '红薯', '玉米'],
+    '蔬菜': ['菠菜', '西兰花', '胡萝卜', '番茄', '黄瓜', '生菜'],
+    '水果': ['苹果', '香蕉', '橙子', '葡萄', '猕猴桃', '草莓'],
+    '肉蛋': ['鸡蛋', '鸡胸肉', '鱼肉', '牛肉', '虾仁'],
+    '乳制品': ['牛奶', '酸奶', '奶酪']
+  }
 }
-const suggestFood = computed(() =>
-  missedGroups.value.map(g => FOOD_SUGGESTIONS[g]).filter(Boolean).join('或')
-)
+
+// 检查食材是否安全（非过敏原且不在交叉过敏组中）
+function isFoodSafe(foodName) {
+  const allergies = userStore.allergyList || []
+  for (const a of allergies) {
+    const name = a.ingredientName || a.name
+    if (name === foodName) return false
+    if (a.relatedIngredients?.includes(foodName)) return false
+  }
+  return true
+}
+
+const suggestFood = computed(() => {
+  const subject = userStore.currentSubject
+  const subjectType = subject?.subjectType === 'baby' ? 'baby' : 'user'
+  const pool = FOOD_SUGGESTIONS[subjectType] || FOOD_SUGGESTIONS.user
+
+  const parts = missedGroups.value.map(group => {
+    const candidates = (pool[group] || []).filter(isFoodSafe)
+    return candidates.slice(0, 2).join('或')
+  }).filter(Boolean)
+
+  return parts.join('、')
+})
 
 function groupColor(group) {
   return FOOD_GROUP_COLORS[group] || '#ccc'
@@ -695,7 +725,7 @@ function babyAgeText(baby) {
 
 function goCamera() { uni.navigateTo({ url: '/pages/camera/index' }) }
 function goMealRecord() { uni.navigateTo({ url: '/pages/meal-record/index' }) }
-function goMealList() { uni.switchTab({ url: '/pages/meal-list/index' }) }
+function goMealList() { uni.switchTab({ url: '/pages/record-hub/index' }) }
 function goPlan() { uni.switchTab({ url: '/pages/plan/index' }) }
 function goAiChat() { uni.navigateTo({ url: '/pages/ai-chat/index' }) }
 function goMealDetail(id) { uni.navigateTo({ url: `/pages/meal-record/index?id=${id}` }) }

@@ -104,6 +104,12 @@
       }
     },
     {
+      "path": "pages/record-hub/index",
+      "style": {
+        "navigationStyle": "custom"
+      }
+    },
+    {
       "path": "pages/privacy/index",
       "style": {
         "navigationBarTitleText": "隐私政策"
@@ -123,7 +129,7 @@
         "selectedIconPath": "static/images/tab-home-active.png"
       },
       {
-        "pagePath": "pages/meal-list/index",
+        "pagePath": "pages/record-hub/index",
         "text": "记录",
         "iconPath": "static/images/tab-record.png",
         "selectedIconPath": "static/images/tab-record-active.png"

@@ -8,7 +8,7 @@
     </view>
 
     <!-- 内容区域 -->
-    <view class="content-area">
+    <view class="content-area" :style="{ paddingTop: `calc(${safeTop} + 60rpx + 32rpx)` }">
       <!-- 对话列表 -->
       <view v-if="chatMessages.length > 0" class="chat-list">
         <view
@@ -106,7 +106,9 @@ onShow(async () => {
   try {
     const list = await getChatHistory()
     if (list && list.length > 0) {
-      chatMessages.value = list.map(m => ({
+      // 后端返回的可能是倒序（最新在前），需要反转为正序（最旧在前）
+      const sortedList = [...list].reverse()
+      chatMessages.value = sortedList.map(m => ({
         role: m.role,
         content: m.content,
         disclaimer: m.role === 'assistant' ? DISCLAIMER : ''
@@ -194,7 +196,6 @@ function goBack() {
   flex-direction: column;
   height: 100vh;
   background: #FAF7F2;
-  padding-top: 60rpx;
 }
 
 .nav-bar {
@@ -231,7 +232,7 @@ function goBack() {
 .content-area {
   flex: 1;
   overflow-y: auto;
-  padding: 32rpx 40rpx;
+  padding: 0 40rpx;
   padding-bottom: 200rpx;
 }
 
