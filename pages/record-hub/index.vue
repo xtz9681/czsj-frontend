@@ -127,9 +127,9 @@
 
     <!-- 空状态 -->
     <view v-else-if="!recordsLoading && recordGroups.length === 0" class="empty-state">
-      <image src="/static/empty/no-meals.png" class="empty-img" mode="aspectFit" />
+      <image :src="emptyImage" class="empty-img" mode="aspectFit" />
       <text class="empty-text">还没有记录，去记第一笔吧~</text>
-      <view class="empty-btn" @tap="goMealRecord">开始记录</view>
+      <view class="empty-btn" @tap="goEmptyRecord">开始记录</view>
     </view>
 
     <!-- 混合记录流：按日期分组 -->
@@ -182,7 +182,7 @@
                 </view>
               </view>
               <!-- 图片 -->
-              <image v-if="record.photo" :src="record.photo" class="fc-photo" mode="aspectFill" />
+              <image v-if="record.photo && !record.photoError" :src="record.photo" class="fc-photo" mode="aspectFill" @error="onPhotoError(record)" />
               <!-- AI 建议 -->
               <view v-if="record.suggestion" class="fc-suggestion">
                 <text>💡 {{ record.suggestion }}</text>
@@ -395,6 +395,13 @@ const todayDisplayStr = computed(() => {
   return `${d.getMonth() + 1}月${d.getDate()}日`
 })
 
+const emptyImage = computed(() => {
+  if (selectedSubject.value?.type === 'user') {
+    return '/static/empty/no-records-adult.png'
+  }
+  return '/static/empty/no-meals.png'
+})
+
 // ── 数据加载 ──────────────────────────────
 async function loadDailySummary() {
   if (!selectedSubject.value) return
@@ -433,6 +440,7 @@ async function loadMeals() {
         ingredients: (m.ingredients || []).map(i => typeof i === 'string' ? i : (i.name || i)),
         score: m.aiScore || null,
         photo: m.signedPhotoUrl || '',
+        photoError: false,
         suggestion: m.aiFeedback ? (m.aiFeedback.length > 30 ? m.aiFeedback.substring(0, 30) + '...' : m.aiFeedback) : null,
         sortKey: m.mealTime || ''
       }
@@ -500,6 +508,10 @@ function getScoreClass(score) {
   if (score >= 80) return 'score-good'
   if (score >= 60) return 'score-ok'
   return 'score-low'
+}
+
+function onPhotoError(record) {
+  record.photoError = true
 }
 
 // ── 记录合并 + 过滤 + 分组 ──────────────────────────────
@@ -584,6 +596,16 @@ function onRecordTap(record) {
 
 function goMealRecord() {
   uni.navigateTo({ url: '/pages/meal-record/index' })
+}
+
+function goEmptyRecord() {
+  if (activeSegment.value === 'weight') {
+    goWeightRecord()
+  } else if (activeSegment.value === 'growth') {
+    goGrowthRecord()
+  } else {
+    goMealRecord()
+  }
 }
 
 function goCamera() {
