@@ -81,7 +81,8 @@
   │   ├── user.js           # 用户状态（token、userId、babies、currentBabyId、mother、allergyList）
   │   └── meal.js           # 餐食状态（pendingMeal）
   ├── composables/          # 组合式函数
-  │   └── useSafeArea.js    # 安全区域 Hook（导航栏顶部安全距离）
+  │   ├── useSafeArea.js    # 安全区域 Hook（导航栏顶部安全距离）
+  │   └── useAiDisclaimer.js # AI 免责声明 Hook（camera 与 meal-record 共用，storage key ai_disclaimer_confirmed）
   ├── utils/                # 工具函数
   │   └── age.js            # calcAgeMonths(birthday) 计算月龄、formatAge(birthday) 格式化为"X 个月"或"X 岁 X 个月"
   ├── constants/            # 常量枚举
@@ -129,7 +130,7 @@
   - `pages/login/index` - 微信登录，勾选隐私政策确认
   - `pages/index/index` - 首页，宝宝成长卡片、快速记餐
   - `pages/meal-list/index` - 饮食记录列表
-  - `pages/meal-record/index` - 记一餐（手动/拍照）
+  - `pages/meal-record/index` - 记一餐（手动/拍照/AI 文字拆食材）；AI 拆食材入口在食材清单上方，用户输入菜肴描述（如"番茄炒蛋盖饭"）调 POST /meal/parse-text，返回的食材按 name 去重后追加到清单（不覆盖用户已选）；confidence 为 low 时显示"描述有点模糊"提示不阻断；newIngredients 非空时提示"已把 XX 加入食材库"（2 秒后自动消失）；复用拍照识别每日 3 次免费额度，超限或网络异常时 handleError 提示且消耗额度
   - `pages/camera/index` - 拍照识食材，AI 首次使用确认
   - `pages/plan/index` - AI 周计划
   - `pages/profile/index` - 宝宝档案，新建时需监护人确认，阶段根据出生日期自动推断并只读显示；编辑模式下阶段仍可手动修改
@@ -228,20 +229,20 @@
       - 妈妈模式下，若 dueDatePassed 为 true，首页营养卡片会显示"预产期已过啦，去更新一下档案吧～"提示，点击可编辑档案
       - mother-profile 页面删除了本地孕周纠正逻辑，calcPregnancyPhase 函数采用统一的 gestDays 计算（280 - 距今天数），确保前后端口径一致
   40. **AI 文字拆食材**：
-      - 新增 POST /meal/parse-text 接口，用户输入自然语言描述菜肴（如"番茄炒蛋盖饭"），AI 拆解出食材列表
-      - 入口在 meal-record 页面食材清单上方，识别结果按 name 去重后追加到食材清单（不覆盖已选食材）
-      - 复用拍照识别配额（免费用户 3 次/天，超限时后端返回业务错误）
-      - 若识别结果 confidence 为 low，显示"描述有点模糊，识别结果可能不准，记得核对下食材清单"的黄色提示
-      - 若返回 newIngredients，轻提示"已把 XX 加入食材库"（非阻断）
-      - POST /meal/record 的 source 字段现已生效：AI 拆食材记录传 TEXT_AI；拍照记录传 PHOTO；手动记录传 MANUAL
+      - 新增 POST /meal/parse-text 接口（api/meal.js 的 parseFoodText 函数），用户在 meal-record 页面食材清单上方的输入框中输入自然语言描述（如"番茄炒蛋盖饭"），点「AI 帮我拆食材」调用 AI 拆解食材列表
+      - 识别结果按 name 去重后追加到 form.ingredients（不覆盖用户已选食材）；每项结构为 { id, name, emoji: '🍴', isAllergy }，无 amount 字段
+      - 若识别结果 confidence 为 low，显示黄色提示"描述有点模糊，识别结果可能不准，记得核对下食材清单"但不阻断使用
+      - 若返回 newIngredients 非空，显示绿色轻提示"已把 XX 加入食材库"，2 秒后自动消失
+      - 复用拍照识别配额（免费用户每天 3 次），超限或网络异常时走 handleError 提示且消耗额度；AI 调用失败后，用户可继续手动选择食材并保存
+      - POST /meal/record 的 source 字段：AI 拆食材成功后记录为 TEXT_AI，有 recognitionId（拍照来源）为 PHOTO，其他为 MANUAL；编辑接口（updateMeal）不传 source
   41. **克重展示已全部移除**：
-      - meal-record 页面不再显示或编辑食材克重（amount 字段）
-      - form.ingredients 仅包含 id、name、emoji、isAllergy，无 amount 字段
-      - 提交给后端的 payload 仅传食材名称列表
-      - 过敏警告仍独立展示，不受克重移除影响
+      - meal-record 页面不再显示或编辑食材克重（amount 字段），食材行只保留过敏图标 / emoji / 名称 / 删除按钮
+      - form.ingredients 仅包含 { id, name, emoji, isAllergy, allergyDesc }，无 amount 字段
+      - 提交给后端的 payload 仅传食材名称数组，克重完全由后端管理
   42. **AI 免责声明可复用**：
-      - 抽取为 composables/useAiDisclaimer.js，camera 和 meal-record 页面共用
-      - storage key 为 ai_disclaimer_confirmed，用户首次使用 AI 功能时弹窗，后续不再提示
+      - 新增 composables/useAiDisclaimer.js，导出 useAiDisclaimer() 函数，内部提供 showAiDisclaimer() 方法
+      - camera 与 meal-record 两个页面共用该 composable，首次使用 AI 功能时弹窗"AI 使用须知"，用户确认后存储到 localStorage（storage key 为 ai_disclaimer_confirmed），后续使用不再提示
+      - showAiDisclaimer() 返回 Promise<boolean>，用户取消时返回 false，调用方需中断后续 AI 操作
 
 # 变更复检规则
 

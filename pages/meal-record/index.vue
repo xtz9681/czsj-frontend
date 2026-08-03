@@ -574,15 +574,16 @@ async function parseByAi() {
     const result = await parseFoodText(desc)
     const { recognized, newIngredients, confidence } = result
 
+    // 标记已使用 AI 拆解（接口成功返回即算使用）
+    usedAiParse.value = true
+
     // 4. 追加食材到清单，去重
-    const beforeCount = form.value.ingredients.length
     let addedCount = 0
-    let duplicateCount = 0
 
     recognized.forEach(name => {
       const exists = form.value.ingredients.find(i => i.name === name)
       if (exists) {
-        duplicateCount++
+        // 已存在，跳过
       } else {
         form.value.ingredients.push({
           id: name,
@@ -624,7 +625,6 @@ async function parseByAi() {
     handleError(e, { fallback: 'AI 拆解失败，请稍后再试或手动选择食材' })
   } finally {
     parsing.value = false
-    usedAiParse.value = true
   }
 }
 
@@ -651,13 +651,17 @@ async function loadMealData(mealId) {
 
     // 填充表单数据
     form.value.mealType = (meal.mealType || 'breakfast').toLowerCase()
-    form.value.ingredients = (meal.ingredients || []).map(i => ({
-      id: typeof i === 'string' ? i : (i.id || i.name),
-      name: typeof i === 'string' ? i : (i.name || i),
-      emoji: '🍴',
-      isAllergy: false,
-      allergyDesc: ''
-    }))
+    form.value.ingredients = (meal.ingredients || []).map(i => {
+      const name = typeof i === 'string' ? i : (i.name || i)
+      const matched = allergyList.value.find(a => (a.ingredientName || a.name) === name)
+      return {
+        id: typeof i === 'string' ? i : (i.id || name),
+        name,
+        emoji: '🍴',
+        isAllergy: !!matched,
+        allergyDesc: matched?.note || ''
+      }
+    })
     form.value.note = meal.note || ''
     form.value.photo = meal.photoUrl || ''
     form.value.photoKey = meal.photoKey || null
