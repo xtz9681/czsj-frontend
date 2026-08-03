@@ -582,9 +582,7 @@ async function parseByAi() {
 
     recognized.forEach(name => {
       const exists = form.value.ingredients.find(i => i.name === name)
-      if (exists) {
-        // 已存在，跳过
-      } else {
+      if (!exists) {
         form.value.ingredients.push({
           id: name,
           name,
@@ -724,6 +722,16 @@ function editTodayMeal(meal) {
 }
 
 /**
+ * 重置 AI 拆食材相关状态
+ */
+function resetAiParseState() {
+  usedAiParse.value = false
+  foodDescription.value = ''
+  lowConfidenceWarning.value = false
+  newIngredientsAdded.value = []
+}
+
+/**
  * 取消编辑今日记录，重置表单
  */
 function cancelEdit() {
@@ -737,6 +745,7 @@ function cancelEdit() {
     photoKey: null
   }
   scoreResult.value = null
+  resetAiParseState()
 }
 
 /**
@@ -811,10 +820,7 @@ async function saveMeal() {
         photoKey: null
       }
       scoreResult.value = null
-      usedAiParse.value = false
-      foodDescription.value = ''
-      lowConfidenceWarning.value = false
-      newIngredientsAdded.value = []
+      resetAiParseState()
       return
     }
 

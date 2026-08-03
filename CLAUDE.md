@@ -71,7 +71,7 @@
   │   ├── request.js        # 基础请求封装
   │   ├── auth.js           # wxLogin、getUserInfo（校验 token 有效性）
   │   ├── baby.js           # getBabyList、createBaby、updateBaby、deleteBaby、getGrowthRecords、addGrowthRecord、uploadBabyAvatar
-  │   ├── meal.js           # record、checkMultiRecordWarning、getMealList(subjectId, subjectType, page, size, date可选)、getIngredients、getDailySummary、getWeekSummary、deleteMeal、updateMeal、getFrequentIngredients、getMealById
+  │   ├── meal.js           # record、checkMultiRecordWarning、getMealList(subjectId, subjectType, page, size, date可选)、getIngredients、getDailySummary、getWeekSummary、deleteMeal、updateMeal、getFrequentIngredients、getMealById、parseFoodText(description)
   │   ├── ai.js             # photoRecord、getWeeklyPlan、getLatestPlan、askAi、getChatHistory、clearChatHistory
   │   ├── allergy.js        # getAllergyList、addAllergy、removeAllergy
   │   ├── mother.js         # getMother、createMother、updateMother、getWeightRecords、addWeightRecord
@@ -130,7 +130,11 @@
   - `pages/login/index` - 微信登录，勾选隐私政策确认
   - `pages/index/index` - 首页，宝宝成长卡片、快速记餐
   - `pages/meal-list/index` - 饮食记录列表
-  - `pages/meal-record/index` - 记一餐（手动/拍照/AI 文字拆食材）；AI 拆食材入口在食材清单上方，用户输入菜肴描述（如"番茄炒蛋盖饭"）调 POST /meal/parse-text，返回的食材按 name 去重后追加到清单（不覆盖用户已选）；confidence 为 low 时显示"描述有点模糊"提示不阻断；newIngredients 非空时提示"已把 XX 加入食材库"（2 秒后自动消失）；复用拍照识别每日 3 次免费额度，超限或网络异常时 handleError 提示且消耗额度
+  - `pages/meal-record/index` - 记一餐（手动 / 拍照 / AI 文字拆食材）
+    - **AI 文字拆食材入口**：食材清单上方独立卡片，包含最长 200 字的描述输入框和「AI 帮我拆食材」按钮。调用 api/meal.js 的 parseFoodText 走 POST /meal/parse-text，AI 识别结果（recognized 食材名 + newIngredients 新入库食材）按 name 去重后追加到 form.ingredients，绝不覆盖用户已选食材。后端返回 confidence 为 low 时展示黄色「描述有点模糊，识别结果可能不准，记得核对下食材清单」提示但不阻断使用；newIngredients 非空时显示绿色轻提示「已把 XX 加入食材库」，2 秒后自动消失。复用拍照识别的每日 3 次免费额度，超限或网络异常时走 handleError 提示且消耗额度（后端 @RequiresFeature 前置切面控制）；AI 调用失败不阻断继续手动选食材和保存。
+    - **克重（amount）已全部移除**：form.ingredients 不再携带 amount 字段，食材行只显示过敏图标 / emoji / 名称 / 删除按钮。提交给后端的 ingredients 仍是纯食材名称数组。
+    - **编辑出口的状态清理**：编辑保存成功（第 823 行）和点取消（cancelEdit 函数）两条出口都会调 resetAiParseState() 重置 usedAiParse / foodDescription / lowConfidenceWarning / newIngredientsAdded 四个 AI 拆食材状态，避免跨页面操作导致来源标记串味。
+    - **source 字段传值**：POST /meal/record 的 source 字段规则为 AI 拆食材成功后传 TEXT_AI、有 recognitionId（拍照来源）传 PHOTO、其余传 MANUAL；编辑接口 updateMeal 不传 source。
   - `pages/camera/index` - 拍照识食材，AI 首次使用确认
   - `pages/plan/index` - AI 周计划
   - `pages/profile/index` - 宝宝档案，新建时需监护人确认，阶段根据出生日期自动推断并只读显示；编辑模式下阶段仍可手动修改
@@ -229,20 +233,29 @@
       - 妈妈模式下，若 dueDatePassed 为 true，首页营养卡片会显示"预产期已过啦，去更新一下档案吧～"提示，点击可编辑档案
       - mother-profile 页面删除了本地孕周纠正逻辑，calcPregnancyPhase 函数采用统一的 gestDays 计算（280 - 距今天数），确保前后端口径一致
   40. **AI 文字拆食材**：
-      - 新增 POST /meal/parse-text 接口（api/meal.js 的 parseFoodText 函数），用户在 meal-record 页面食材清单上方的输入框中输入自然语言描述（如"番茄炒蛋盖饭"），点「AI 帮我拆食材」调用 AI 拆解食材列表
-      - 识别结果按 name 去重后追加到 form.ingredients（不覆盖用户已选食材）；每项结构为 { id, name, emoji: '🍴', isAllergy }，无 amount 字段
-      - 若识别结果 confidence 为 low，显示黄色提示"描述有点模糊，识别结果可能不准，记得核对下食材清单"但不阻断使用
-      - 若返回 newIngredients 非空，显示绿色轻提示"已把 XX 加入食材库"，2 秒后自动消失
-      - 复用拍照识别配额（免费用户每天 3 次），超限或网络异常时走 handleError 提示且消耗额度；AI 调用失败后，用户可继续手动选择食材并保存
-      - POST /meal/record 的 source 字段：AI 拆食材成功后记录为 TEXT_AI，有 recognitionId（拍照来源）为 PHOTO，其他为 MANUAL；编辑接口（updateMeal）不传 source
-  41. **克重展示已全部移除**：
-      - meal-record 页面不再显示或编辑食材克重（amount 字段），食材行只保留过敏图标 / emoji / 名称 / 删除按钮
-      - form.ingredients 仅包含 { id, name, emoji, isAllergy, allergyDesc }，无 amount 字段
-      - 提交给后端的 payload 仅传食材名称数组，克重完全由后端管理
+      - 入口：meal-record 页面食材清单上方的独立卡片，包含最长 200 字的描述输入框（show-word-limit）和「AI 帮我拆食材」按钮（描述为空时 disabled）
+      - API 调用：调用 api/meal.js 的 parseFoodText(description) 走 POST /meal/parse-text
+      - 结果处理：后端返回 { recognized, newIngredients, confidence, reason }；recognized 是标准食材名列表，newIngredients 是本次新入库的食材名，confidence 反映描述清晰度（high/medium/low）
+      - 去重追加：按 name 比对已选食材，重复项跳过（计数不增），新项追加到 form.ingredients 并按过敏列表标记 isAllergy
+      - 用户反馈：全是重复项时提示「这些食材已经在清单里了」；否则提示「已添加 N 种食材」；confidence=low 时显示黄色提示「描述有点模糊，识别结果可能不准，记得核对下食材清单」但不阻断；newIngredients 非空时显示绿色轻提示「已把 XX 加入食材库」（2 秒自动消失）
+      - 配额管理：复用拍照识别每日 3 次免费额度（后端 @RequiresFeature 前置切面），超限或网络异常时 handleError 提示且消耗额度；AI 调用失败不阻断继续手动操作
+      - 清空输入：成功识别后自动清空 foodDescription
+      - 状态追踪：接口成功返回后立即置 usedAiParse = true（用于后续 source 字段判断），两条编辑出口（保存成功、点取消）都会重置该状态
+  41. **克重（amount）展示已全部移除**：
+      - 界面展示：meal-record 食材行仅显示过敏图标（v-if isAllergy）/ emoji / 名称 / 删除按钮，无加减克重按钮
+      - 数据结构：form.ingredients 每项仅含 { id, name, emoji, isAllergy, allergyDesc }，无 amount 字段
+      - 后端传值：saveMeal 提交时 ingredients 仅传名称数组 ingredients.map(i => i.name)，克重完全由后端管理
+      - 编辑回填：loadMealData 回填历史记录时按 allergyList 动态标记 isAllergy 和 allergyDesc，不硬编码 false/''
   42. **AI 免责声明可复用**：
-      - 新增 composables/useAiDisclaimer.js，导出 useAiDisclaimer() 函数，内部提供 showAiDisclaimer() 方法
-      - camera 与 meal-record 两个页面共用该 composable，首次使用 AI 功能时弹窗"AI 使用须知"，用户确认后存储到 localStorage（storage key 为 ai_disclaimer_confirmed），后续使用不再提示
-      - showAiDisclaimer() 返回 Promise<boolean>，用户取消时返回 false，调用方需中断后续 AI 操作
+      - 新增文件：composables/useAiDisclaimer.js，导出 useAiDisclaimer() 函数
+      - 实现细节：内部用 ref 缓存 ai_disclaimer_confirmed 状态，首次调用 showAiDisclaimer() 时弹窗确认，用户确认后存储到 localStorage，后续调用直接返回 true 无需再弹
+      - 调用方式：camera/index.vue 和 meal-record/index.vue 都通过 const { showAiDisclaimer } = useAiDisclaimer() 引入，在 takePhoto/chooseFromAlbum（camera）和 parseByAi（meal-record）前调用，返回 false 时中断后续 AI 操作
+      - 返回值：Promise<boolean>，用户确认返回 true、用户取消返回 false，调用方必须检查返回值决定是否继续
+  43. **record 接口 source 字段实时传值**（后端已启用 @RequiresFeature 和 source 解析）：
+      - meal-record 的 saveMeal：source 字段由 usedAiParse.value ? 'TEXT_AI' : (form.value.recognitionId ? 'PHOTO' : 'MANUAL') 计算
+      - camera 的两处直接调 record：recordToMother 和 onSubjectSelectorConfirm 都固定传 source: 'PHOTO'（recordToBaby 是 setPendingMeal 跳转至 meal-record，走后者的逻辑）
+      - updateMeal 编辑接口：不传 source 字段，后端不更新来源
+      - 状态清理机制：meal-record 的 cancelEdit 和编辑保存成功分支都调 resetAiParseState() 重置 usedAiParse、foodDescription、lowConfidenceWarning、newIngredientsAdded，避免跨页面操作污染来源标记
 
 # 变更复检规则
 
