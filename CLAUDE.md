@@ -63,6 +63,7 @@
   ├── components/           # 公共组件
   │   ├── SubjectSelector.vue       # 档案选择器（含宝妈档案编辑入口）
   │   ├── ScorePoster.vue           # 营养评分海报生成（canvas + mp-painter）
+  │   ├── CustomIngredientDialog.vue # 用户自定义食材录入弹窗（名称 + 15 类分类选择）
   │   └── camera/           # 拍照识食材子组件
   │       ├── RecognitionResult.vue   # 高置信度识别结果确认
   │       ├── IngredientPicker.vue    # 低置信度 fallback 食材勾选
@@ -71,7 +72,7 @@
   │   ├── request.js        # 基础请求封装
   │   ├── auth.js           # wxLogin、getUserInfo（校验 token 有效性）
   │   ├── baby.js           # getBabyList、createBaby、updateBaby、deleteBaby、getGrowthRecords、addGrowthRecord、uploadBabyAvatar
-  │   ├── meal.js           # record、checkMultiRecordWarning、getMealList(subjectId, subjectType, page, size, date可选)、getIngredients、getDailySummary、getWeekSummary、deleteMeal、updateMeal、getFrequentIngredients、getMealById、parseFoodText(description)
+  │   ├── meal.js           # record、checkMultiRecordWarning、getMealList(subjectId, subjectType, page, size, date可选)、getIngredients、getDailySummary、getWeekSummary、deleteMeal、updateMeal、getFrequentIngredients、getMealById、parseFoodText(description)、createIngredient(name, category)
   │   ├── ai.js             # photoRecord、getWeeklyPlan、getLatestPlan、askAi、getChatHistory、clearChatHistory
   │   ├── allergy.js        # getAllergyList、addAllergy、removeAllergy
   │   ├── mother.js         # getMother、createMother、updateMother、getWeightRecords、addWeightRecord
@@ -256,6 +257,12 @@
       - camera 的两处直接调 record：recordToMother 和 onSubjectSelectorConfirm 都固定传 source: 'PHOTO'（recordToBaby 是 setPendingMeal 跳转至 meal-record，走后者的逻辑）
       - updateMeal 编辑接口：不传 source 字段，后端不更新来源
       - 状态清理机制：meal-record 的 cancelEdit 和编辑保存成功分支都调 resetAiParseState() 重置 usedAiParse、foodDescription、lowConfidenceWarning、newIngredientsAdded，避免跨页面操作污染来源标记
+  44. **用户自定义食材入库流程**：
+      - 触发点：meal-record「手动添加新食材」按钮、camera 高置信度「+ 添加」、camera 低置信度「+ 添加其他食材」
+      - 流程：打开 CustomIngredientDialog（名称输入 + 15 类分类芯片网格）→ 用户填名称选分类 → confirm 时调 createIngredient(name, category) → 成功后把返回的食材加入清单 → 失败时 handleError 提示且不加入（保证清单数据一致性）
+      - 校验：名称去空白后为空时 toast「请输入食材名称」；未选分类时 toast「请选择食材分类」；重复食材检查确保清单内无同名项
+      - 分类选择方案：因微信小程序 uni.showActionSheet 的 itemList 上限 6 项，15 类分类选择采用 chip 网格布局（3 列）而非 actionSheet，视觉一致性与 meal-record 分类 tab 保持一致
+      - API 幂等性：后端接口保证同名食材已存在时直接返回已有记录，前端无需额外处理「已存在」错误
 
 # 变更复检规则
 
