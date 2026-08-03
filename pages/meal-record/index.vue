@@ -57,6 +57,37 @@
       <view class="photo-remove" @tap="form.photo = ''">✕</view>
     </view>
 
+    <!-- AI 文字拆食材 -->
+    <view class="ai-parse-card card">
+      <view class="ai-parse-header">
+        <text class="ai-parse-title">不知道有哪些食材？让 AI 帮你拆</text>
+      </view>
+      <wd-input
+        v-model="foodDescription"
+        type="textarea"
+        placeholder="说说这餐吃了什么，比如：中午吃了番茄炒蛋和一碗米饭"
+        :maxlength="200"
+        show-word-limit
+        class="ai-parse-input"
+      />
+      <view v-if="lowConfidenceWarning" class="low-confidence-tip">
+        <text>描述有点模糊，识别结果可能不准，记得核对下食材清单</text>
+      </view>
+      <view v-if="newIngredientsAdded.length > 0" class="new-ingredients-tip">
+        <text>已把 {{ newIngredientsAdded.join('、') }} 加入食材库</text>
+      </view>
+      <wd-button
+        size="small"
+        type="primary"
+        :disabled="!foodDescription.trim()"
+        :loading="parsing"
+        @click="parseByAi"
+        class="ai-parse-btn"
+      >
+        AI 帮我拆食材
+      </wd-button>
+    </view>
+
     <!-- 食材列表 -->
     <view class="section-title-row">
       <text class="section-title">食材清单</text>
@@ -73,11 +104,6 @@
         <text v-if="ing.isAllergy" class="row-allergy-icon">⚠️</text>
         <text class="row-emoji">{{ ing.emoji || '🍴' }}</text>
         <text class="row-name" :class="{ 'text-danger': ing.isAllergy }">{{ ing.name }}</text>
-        <view class="row-amount">
-          <view class="amount-btn" @tap="changeAmount(idx, -5)">-</view>
-          <text class="amount-val">{{ ing.amount }}g</text>
-          <view class="amount-btn" @tap="changeAmount(idx, 5)">+</view>
-        </view>
         <view class="row-remove" @tap="removeIngredient(idx)">✕</view>
       </view>
     </view>
@@ -276,14 +302,16 @@
 import { ref, computed, nextTick, onUnmounted } from 'vue'
 import { onLoad, onBackPress } from '@dcloudio/uni-app'
 import SubjectSelector from '@/components/SubjectSelector.vue'
-import { record, getIngredients, getFrequentIngredients, getMealById, getMealList, updateMeal } from '@/api/meal.js'
+import { record, getIngredients, getFrequentIngredients, getMealById, getMealList, updateMeal, parseFoodText } from '@/api/meal.js'
 import { useUserStore } from '@/store/user.js'
 import { useMealStore } from '@/store/meal'
 import { useErrorHandler } from '@/composables/useErrorHandler.js'
+import { useAiDisclaimer } from '@/composables/useAiDisclaimer.js'
 
 const userStore = useUserStore()
 const mealStore = useMealStore()
 const { handleError } = useErrorHandler()
+const { showAiDisclaimer } = useAiDisclaimer()
 const subjectSelectorRef = ref(null)
 const showSubjectSelector = ref(false)
 const useMultipleSubjects = ref(false)
@@ -311,6 +339,13 @@ const selectedCategory = ref('全部')
 const allIngredients = ref([])
 const frequentIngredients = ref([])
 const customIngredientName = ref('')
+
+// AI 文字拆食材相关
+const foodDescription = ref('')
+const parsing = ref(false)
+const usedAiParse = ref(false)
+const lowConfidenceWarning = ref(false)
+const newIngredientsAdded = ref([])
 
 const form = ref({
   mealType: 'breakfast',
@@ -398,7 +433,7 @@ onLoad((options) => {
   else if (options?.from === 'camera') {
     const pending = mealStore.clearPendingMeal()
     if (pending?.ingredients) {
-      form.value.ingredients = pending.ingredients.map(i => ({ ...i, amount: 30 }))
+      form.value.ingredients = pending.ingredients
       form.value.photo = pending.photo || ''
       form.value.recognitionId = pending.recognitionId || null
       form.value.photoKey = pending.photoKey || null
@@ -441,11 +476,6 @@ onUnmounted(() => {
     clearInterval(pollingTimer.value)
   }
 })
-
-function changeAmount(idx, delta) {
-  const cur = form.value.ingredients[idx].amount || 30
-  form.value.ingredients[idx].amount = Math.max(5, cur + delta)
-}
 
 function removeIngredient(idx) {
   form.value.ingredients.splice(idx, 1)
@@ -495,7 +525,6 @@ function selectIngredient(item) {
     id: item.name,
     name: item.name,
     emoji: '🍴',
-    amount: 30,
     isAllergy: allergyList.value.some(a => (a.ingredientName || a.name) === item.name)
   })
   scoreResult.value = null
@@ -517,12 +546,86 @@ function addCustomIngredient() {
     id: name,
     name: name,
     emoji: '🍴',
-    amount: 30,
     isAllergy: allergyList.value.some(a => (a.ingredientName || a.name) === name)
   })
   scoreResult.value = null
   customIngredientName.value = ''
   showIngredientSheet.value = false
+}
+
+async function parseByAi() {
+  // 1. 先显示 AI 免责声明
+  const canProceed = await showAiDisclaimer()
+  if (!canProceed) return
+
+  // 2. 检查输入
+  const desc = foodDescription.value.trim()
+  if (!desc) {
+    uni.showToast({ title: '先说说这餐吃了什么吧', icon: 'none' })
+    return
+  }
+
+  // 3. 调用 API
+  parsing.value = true
+  lowConfidenceWarning.value = false
+  newIngredientsAdded.value = []
+
+  try {
+    const result = await parseFoodText(desc)
+    const { recognized, newIngredients, confidence } = result
+
+    // 4. 追加食材到清单，去重
+    const beforeCount = form.value.ingredients.length
+    let addedCount = 0
+    let duplicateCount = 0
+
+    recognized.forEach(name => {
+      const exists = form.value.ingredients.find(i => i.name === name)
+      if (exists) {
+        duplicateCount++
+      } else {
+        form.value.ingredients.push({
+          id: name,
+          name,
+          emoji: '🍴',
+          isAllergy: allergyList.value.some(a => (a.ingredientName || a.name) === name)
+        })
+        addedCount++
+      }
+    })
+
+    // 5. 清空评分（食材变了）
+    scoreResult.value = null
+
+    // 6. 显示提示
+    if (addedCount === 0) {
+      uni.showToast({ title: '这些食材已经在清单里了', icon: 'none' })
+    } else {
+      uni.showToast({ title: `已添加 ${addedCount} 种食材`, icon: 'success' })
+    }
+
+    // 7. 新食材库提示
+    if (newIngredients && newIngredients.length > 0) {
+      newIngredientsAdded.value = newIngredients
+      // 2 秒后自动清除提示
+      setTimeout(() => {
+        newIngredientsAdded.value = []
+      }, 2000)
+    }
+
+    // 8. 低置信度警告
+    if (confidence === 'low') {
+      lowConfidenceWarning.value = true
+    }
+
+    // 9. 清空输入
+    foodDescription.value = ''
+  } catch (e) {
+    handleError(e, { fallback: 'AI 拆解失败，请稍后再试或手动选择食材' })
+  } finally {
+    parsing.value = false
+    usedAiParse.value = true
+  }
 }
 
 function openSubjectSelector() {
@@ -552,7 +655,6 @@ async function loadMealData(mealId) {
       id: typeof i === 'string' ? i : (i.id || i.name),
       name: typeof i === 'string' ? i : (i.name || i),
       emoji: '🍴',
-      amount: 30,
       isAllergy: false,
       allergyDesc: ''
     }))
@@ -705,6 +807,10 @@ async function saveMeal() {
         photoKey: null
       }
       scoreResult.value = null
+      usedAiParse.value = false
+      foodDescription.value = ''
+      lowConfidenceWarning.value = false
+      newIngredientsAdded.value = []
       return
     }
 
@@ -733,7 +839,7 @@ async function saveMeal() {
       note: form.value.note || '',
       photoKey: form.value.photoKey || null,
       recognitionId: form.value.recognitionId || null,
-      source: form.value.recognitionId ? 'PHOTO' : 'MANUAL'
+      source: usedAiParse.value ? 'TEXT_AI' : (form.value.recognitionId ? 'PHOTO' : 'MANUAL')
     }
 
     const res = await record(payload)
@@ -856,6 +962,48 @@ function getScoreGrade(score) {
   font-size: 24rpx;
 }
 
+// AI 文字拆食材卡片
+.ai-parse-card {
+  margin-bottom: 24rpx;
+  padding: 24rpx;
+}
+
+.ai-parse-header {
+  margin-bottom: 16rpx;
+}
+
+.ai-parse-title {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: #3D3935;
+}
+
+.ai-parse-input {
+  margin-bottom: 16rpx;
+}
+
+.low-confidence-tip {
+  background: #FFFBF0;
+  border-radius: 10rpx;
+  padding: 12rpx 16rpx;
+  margin-bottom: 12rpx;
+  font-size: 24rpx;
+  color: #E87D3F;
+}
+
+.new-ingredients-tip {
+  background: #E8F8EE;
+  border-radius: 10rpx;
+  padding: 12rpx 16rpx;
+  margin-bottom: 12rpx;
+  font-size: 24rpx;
+  color: #5CB87A;
+}
+
+.ai-parse-btn {
+  width: 100%;
+}
+
 .section-title-row {
   display: flex;
   align-items: center;
@@ -886,27 +1034,6 @@ function getScoreGrade(score) {
 .row-emoji { font-size: 36rpx; flex-shrink: 0; }
 .row-name { font-size: 28rpx; color: #3D3935; flex: 1; }
 .text-danger { color: #E07A5F; font-weight: 600; }
-
-.row-amount {
-  display: flex;
-  align-items: center;
-  gap: 8rpx;
-}
-
-.amount-btn {
-  width: 48rpx;
-  height: 48rpx;
-  background: #F5F5F5;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 32rpx;
-  color: #666;
-  flex-shrink: 0;
-}
-
-.amount-val { font-size: 26rpx; color: #666; min-width: 64rpx; text-align: center; }
 
 .row-remove {
   font-size: 28rpx;

@@ -227,6 +227,21 @@
       - 首页 onShow 会调用 /mother 刷新 store 中的 mother，保证阶段随时间自动推进；刷新失败（NOT_FOUND 或网络异常）时静默忽略，沿用 storage 缓存
       - 妈妈模式下，若 dueDatePassed 为 true，首页营养卡片会显示"预产期已过啦，去更新一下档案吧～"提示，点击可编辑档案
       - mother-profile 页面删除了本地孕周纠正逻辑，calcPregnancyPhase 函数采用统一的 gestDays 计算（280 - 距今天数），确保前后端口径一致
+  40. **AI 文字拆食材**：
+      - 新增 POST /meal/parse-text 接口，用户输入自然语言描述菜肴（如"番茄炒蛋盖饭"），AI 拆解出食材列表
+      - 入口在 meal-record 页面食材清单上方，识别结果按 name 去重后追加到食材清单（不覆盖已选食材）
+      - 复用拍照识别配额（免费用户 3 次/天，超限时后端返回业务错误）
+      - 若识别结果 confidence 为 low，显示"描述有点模糊，识别结果可能不准，记得核对下食材清单"的黄色提示
+      - 若返回 newIngredients，轻提示"已把 XX 加入食材库"（非阻断）
+      - POST /meal/record 的 source 字段现已生效：AI 拆食材记录传 TEXT_AI；拍照记录传 PHOTO；手动记录传 MANUAL
+  41. **克重展示已全部移除**：
+      - meal-record 页面不再显示或编辑食材克重（amount 字段）
+      - form.ingredients 仅包含 id、name、emoji、isAllergy，无 amount 字段
+      - 提交给后端的 payload 仅传食材名称列表
+      - 过敏警告仍独立展示，不受克重移除影响
+  42. **AI 免责声明可复用**：
+      - 抽取为 composables/useAiDisclaimer.js，camera 和 meal-record 页面共用
+      - storage key 为 ai_disclaimer_confirmed，用户首次使用 AI 功能时弹窗，后续不再提示
 
 # 变更复检规则
 

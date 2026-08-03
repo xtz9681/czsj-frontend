@@ -99,6 +99,7 @@
 <script setup>
 import { ref, computed, nextTick } from 'vue'
 import { useErrorHandler } from '@/composables/useErrorHandler.js'
+import { useAiDisclaimer } from '@/composables/useAiDisclaimer.js'
 import { onLoad } from '@dcloudio/uni-app'
 import SubjectSelector from '@/components/SubjectSelector.vue'
 import RecognitionResult from '@/components/camera/RecognitionResult.vue'
@@ -113,6 +114,7 @@ const userStore = useUserStore()
 const mealStore = useMealStore()
 const subjectSelectorRef = ref(null)
 const { handleError } = useErrorHandler()
+const { showAiDisclaimer } = useAiDisclaimer()
 
 // ── 安全区适配 ──────────────────────────────
 const { safeTop } = useSafeArea()
@@ -188,30 +190,6 @@ const allergyWarnings = computed(() => {
   }))
 })
 
-
-async function showAiDisclaimer() {
-  const confirmed = uni.getStorageSync('ai_disclaimer_confirmed')
-  if (confirmed) return true
-  return new Promise((resolve) => {
-    uni.showModal({
-      title: 'AI 使用须知',
-      content: 'AI 识别与营养建议仅供参考，不构成医疗诊断或治疗建议。如有健康问题，请咨询专业医生或营养师。',
-      confirmText: '我知道了',
-      cancelText: '取消',
-      success: (res) => {
-        if (res.confirm) {
-          uni.setStorageSync('ai_disclaimer_confirmed', true)
-          resolve(true)
-        } else {
-          resolve(false)
-        }
-      },
-      fail: () => {
-        resolve(false)
-      }
-    })
-  })
-}
 
 async function takePhoto() {
   const canProceed = await showAiDisclaimer()
@@ -351,7 +329,8 @@ function recordToMother() {
     mealType: 'DINNER',  // 妈妈餐默认为晚餐，前端可后续优化
     photoKey: pendingRecognition.value?.photoKey || null,
     recognitionId: pendingRecognition.value?.recognitionId || null,
-    note: ''
+    note: '',
+    source: 'PHOTO'
   }
 
   uni.showLoading({ title: '保存中...' })
@@ -416,7 +395,8 @@ function onSubjectSelectorConfirm(selectedSubjects) {
     mealType: 'DINNER',  // 从相机记录默认为晚餐
     photoKey: pendingRecognition.value?.photoKey || null,
     recognitionId: pendingRecognition.value?.recognitionId || null,
-    note: ''
+    note: '',
+    source: 'PHOTO'
   }
 
   uni.showLoading({ title: '保存中...' })

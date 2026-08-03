@@ -6,6 +6,11 @@ export function record(data) {
   return request({ url: '/meal/record', method: 'POST', data })
 }
 
+// AI 文字拆食材（识别不入库，用户确认后调 record）
+export function parseFoodText(description) {
+  return request({ url: '/meal/parse-text', method: 'POST', data: { description } })
+}
+
 // 多主体记录前的 suitability 检查（检查 nursing 孩子警告）
 export function checkMultiRecordWarning(data) {
   return request({ url: '/meal/check-multi-record-warning', method: 'POST', data })
