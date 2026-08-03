@@ -261,6 +261,10 @@
             </text>
           </view>
 
+          <view v-if="mother.value?.dueDatePassed" class="due-date-passed-tip" @tap="goEditMother">
+            <text class="due-date-passed-text">预产期已过啦，去更新一下档案吧～</text>
+          </view>
+
           <view class="mother-tip-edit" @tap="goEditMother">
             <text>修改我的阶段 ›</text>
           </view>
@@ -344,6 +348,7 @@ import { ref, computed } from 'vue'
 import { useErrorHandler } from '@/composables/useErrorHandler.js'
 import { onShow } from '@dcloudio/uni-app'
 import { getMealList, getIngredients, getDailySummary, getNutritionTrend } from '@/api/meal.js'
+import { getMother } from '@/api/mother.js'
 import { useUserStore } from '@/store/user.js'
 import { calcAgeMonths, formatAge } from '@/utils/age.js'
 import { phaseMap } from '@/constants/phase.js'
@@ -660,7 +665,17 @@ function syncFromStore() {
   }
 }
 
-onShow(() => {
+onShow(async () => {
+  // 刷新妈妈档案（如果存在）
+  if (userStore.mother) {
+    try {
+      const updatedMother = await getMother()
+      userStore.setMother(updatedMother)
+    } catch (e) {
+      // 静默忽略，沿用 storage 缓存
+    }
+  }
+
   syncFromStore()
   pageLoading.value = true
   todayMeals.value = []
@@ -1688,6 +1703,21 @@ const motherNutritionTips = computed(() => {
 }
 
 .nutrition-highlight {
+  color: #E07A5F;
+  font-weight: 600;
+}
+
+.due-date-passed-tip {
+  background: #FDEEE9;
+  border-radius: 12rpx;
+  padding: 16rpx 20rpx;
+  margin-bottom: 16rpx;
+  display: flex;
+  align-items: center;
+}
+
+.due-date-passed-text {
+  font-size: 26rpx;
   color: #E07A5F;
   font-weight: 600;
 }

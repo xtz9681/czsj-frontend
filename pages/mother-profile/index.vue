@@ -294,23 +294,30 @@ function onPhaseSelect(chipValue) {
   }
 }
 
+// 根据预产期计算孕天数和孕周
+function calcGestationInfo(dueDate) {
+  if (!dueDate) return { gestDays: 0, week: 0 }
+  const gestDays = 280 - Math.floor((new Date(dueDate) - new Date()) / 86400000)
+  const week = Math.floor(Math.max(gestDays, 0) / 7)
+  return { gestDays, week }
+}
+
 // 根据预产期自动计算孕期阶段
 function calcPregnancyPhase(dueDate) {
   if (!dueDate) return 'pregnancy_mid'
-  const weeksLeft = Math.round((new Date(dueDate) - new Date()) / (1000 * 60 * 60 * 24 * 7))
-  if (weeksLeft > 28) return 'pregnancy_early'
-  if (weeksLeft > 14) return 'pregnancy_mid'
+  const { week } = calcGestationInfo(dueDate)
+  if (week <= 13) return 'pregnancy_early'
+  if (week <= 27) return 'pregnancy_mid'
   return 'pregnancy_late'
 }
 
 const pregnancyPhaseHint = computed(() => {
   if (!form.value.dueDate) return ''
-  const weeksLeft = Math.round((new Date(form.value.dueDate) - new Date()) / (1000 * 60 * 60 * 24 * 7))
-  const weeksPregnant = 40 - weeksLeft
-  if (weeksPregnant < 0) return '预产期已过，宝宝应该出生了~'
-  if (weeksLeft > 28) return `孕早期 · 约第 ${weeksPregnant} 周`
-  if (weeksLeft > 14) return `孕中期 · 约第 ${weeksPregnant} 周`
-  return `孕晚期 · 约第 ${weeksPregnant} 周`
+  const { gestDays, week } = calcGestationInfo(form.value.dueDate)
+  if (gestDays > 280) return '预产期已过，宝宝应该出生了~'
+  if (week <= 13) return `孕早期 · 第 ${week} 周`
+  if (week <= 27) return `孕中期 · 第 ${week} 周`
+  return `孕晚期 · 第 ${week} 周`
 })
 
 const birthDateForPicker = computed(() => form.value.birthYear ? `${form.value.birthYear}-01-01` : '1990-01-01')
@@ -376,11 +383,6 @@ async function save() {
   if (form.value.phase === 'lactation' && !form.value.deliveryDate) {
     uni.showToast({ title: '请填写宝宝出生日期', icon: 'none' })
     return
-  }
-
-  // 根据预产期自动修正孕期阶段
-  if (isPregnancy.value && form.value.dueDate) {
-    form.value.phase = calcPregnancyPhase(form.value.dueDate)
   }
 
   saving.value = true
