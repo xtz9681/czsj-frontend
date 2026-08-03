@@ -1,62 +1,64 @@
 <template>
   <view class="result-stage">
-    <image :src="photo" class="result-photo" mode="aspectFill" />
+    <image :src="photo" class="result-photo" mode="aspectFill" @tap="previewPhoto" />
 
-    <scroll-view scroll-y class="result-card-scroll">
-      <view class="result-card">
-        <view class="result-header">
-          <text class="result-icon">✅</text>
-          <text class="result-title">识别到这些食材</text>
-          <text class="result-sub">点击可以调整</text>
-        </view>
-
-        <view class="ingredient-tags">
-          <view
-            v-for="ing in ingredients"
-            :key="ing.id"
-            class="ingredient-tag"
-            :class="{
-              selected: ing.selected,
-              'allergy-tag': ing.isAllergy
-            }"
-            @tap="$emit('toggle-ingredient', ing)"
-          >
-            <text v-if="ing.isAllergy" class="tag-warning">⚠️</text>
-            <text>{{ ing.name }}</text>
-            <text v-if="ing.selected" class="tag-check">✓</text>
-            <text v-else class="tag-remove">✕</text>
+    <view class="result-card-container">
+      <scroll-view scroll-y class="result-card-scroll">
+        <view class="result-card">
+          <view class="result-header">
+            <text class="result-icon">✅</text>
+            <text class="result-title">识别到这些食材</text>
+            <text class="result-sub">点击可以调整</text>
           </view>
-          <view class="ingredient-tag add-tag" @tap="$emit('add-ingredient')">
-            <text>+ 添加</text>
+
+          <view class="ingredient-tags">
+            <view
+              v-for="ing in ingredients"
+              :key="ing.id"
+              class="ingredient-tag"
+              :class="{
+                selected: ing.selected,
+                'allergy-tag': ing.isAllergy
+              }"
+              @tap="$emit('toggle-ingredient', ing)"
+            >
+              <text v-if="ing.isAllergy" class="tag-warning">⚠️</text>
+              <text>{{ ing.name }}</text>
+              <text v-if="ing.selected" class="tag-check">✓</text>
+              <text v-else class="tag-remove">✕</text>
+            </view>
+            <view class="ingredient-tag add-tag" @tap="$emit('add-ingredient')">
+              <text>+ 添加</text>
+            </view>
+          </view>
+
+          <!-- 年龄警告 -->
+          <view v-if="ageWarning" class="age-warning-card">
+            <text class="warning-title">💡 食材提示</text>
+            <text class="warning-text">{{ ageWarning }}</text>
+          </view>
+
+          <!-- 过敏预警 -->
+          <view v-if="allergyWarnings.length > 0" class="allergy-warning-card">
+            <text class="warning-title">⚠️ 过敏提醒</text>
+            <view v-for="w in allergyWarnings" :key="w.name" class="warning-item">
+              <text class="warning-name">{{ w.name }}</text>
+              <text class="warning-desc">{{ w.desc }}</text>
+            </view>
           </view>
         </view>
+      </scroll-view>
 
-        <!-- 年龄警告 -->
-        <view v-if="ageWarning" class="age-warning-card">
-          <text class="warning-title">💡 食材提示</text>
-          <text class="warning-text">{{ ageWarning }}</text>
-        </view>
-
-        <!-- 过敏预警 -->
-        <view v-if="allergyWarnings.length > 0" class="allergy-warning-card">
-          <text class="warning-title">⚠️ 过敏提醒</text>
-          <view v-for="w in allergyWarnings" :key="w.name" class="warning-item">
-            <text class="warning-name">{{ w.name }}</text>
-            <text class="warning-desc">{{ w.desc }}</text>
-          </view>
-        </view>
-
-        <!-- 动作按钮 -->
-        <RecordActions
-          :subject-mode="subjectMode"
-          :has-babies="hasBabies"
-          :disabled="selectedIngredients.length === 0"
-          @record-mother="$emit('record-mother')"
-          @record-baby="$emit('record-baby')"
-          @record-multiple="$emit('record-multiple')"
-        />
-      </view>
-    </scroll-view>
+      <!-- 动作按钮 -->
+      <RecordActions
+        :subject-mode="subjectMode"
+        :has-babies="hasBabies"
+        :disabled="selectedIngredients.length === 0"
+        @record-mother="$emit('record-mother')"
+        @record-baby="$emit('record-baby')"
+        @record-multiple="$emit('record-multiple')"
+      />
+    </view>
   </view>
 </template>
 
@@ -96,23 +98,40 @@ defineEmits(['toggle-ingredient', 'add-ingredient', 'record-mother', 'record-bab
 const selectedIngredients = computed(() =>
   props.ingredients.filter(i => i.selected)
 )
+
+function previewPhoto() {
+  uni.previewImage({
+    urls: [props.photo],
+    current: props.photo
+  })
+}
 </script>
 
 <style lang="scss" scoped>
 .result-stage {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  flex: 1;
+  min-height: 0;
 }
 
 .result-photo {
   width: 100%;
-  height: 400rpx;
-  flex-shrink: 0;
+  flex: 1;
+  min-height: 280rpx;
+  object-fit: cover;
+}
+
+.result-card-container {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .result-card-scroll {
-  flex: 1;
+  flex: 0 0 auto;
+  max-height: 55vh;
   overflow-y: auto;
   border-radius: 40rpx 40rpx 0 0;
   background: #FFFFFF;

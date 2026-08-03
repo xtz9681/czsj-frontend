@@ -223,6 +223,13 @@
       @cancel="showSubjectSelector = false"
     />
 
+    <!-- 自定义食材录入弹窗 -->
+    <CustomIngredientDialog
+      :visible="showCustomIngredientDialog"
+      @confirm="handleCustomIngredientConfirm"
+      @cancel="showCustomIngredientDialog = false"
+    />
+
     <!-- 食材选择弹窗 -->
     <view v-if="showIngredientSheet" class="ingredient-sheet-mask" @tap="showIngredientSheet = false">
       <view class="ingredient-sheet" @tap.stop>
@@ -287,11 +294,10 @@
           </view>
         </scroll-view>
 
-        <!-- 自定义输入 -->
-        <view class="custom-input-row">
-          <wd-input v-model="customIngredientName" placeholder="没找到？手动输入食材名" />
-          <wd-button size="small" type="primary" @click="addCustomIngredient" :disabled="!customIngredientName">添加</wd-button>
-        </view>
+    <!-- 自定义输入 -->
+    <view class="custom-input-row">
+      <wd-button size="small" type="primary" block @click="showCustomIngredientDialog = true">＋ 手动添加新食材</wd-button>
+    </view>
       </view>
     </view>
 
@@ -302,7 +308,8 @@
 import { ref, computed, nextTick, onUnmounted } from 'vue'
 import { onLoad, onBackPress } from '@dcloudio/uni-app'
 import SubjectSelector from '@/components/SubjectSelector.vue'
-import { record, getIngredients, getFrequentIngredients, getMealById, getMealList, updateMeal, parseFoodText } from '@/api/meal.js'
+import CustomIngredientDialog from '@/components/CustomIngredientDialog.vue'
+import { record, getIngredients, getFrequentIngredients, getMealById, getMealList, updateMeal, parseFoodText, createIngredient } from '@/api/meal.js'
 import { useUserStore } from '@/store/user.js'
 import { useMealStore } from '@/store/meal'
 import { useErrorHandler } from '@/composables/useErrorHandler.js'
@@ -339,6 +346,7 @@ const selectedCategory = ref('全部')
 const allIngredients = ref([])
 const frequentIngredients = ref([])
 const customIngredientName = ref('')
+const showCustomIngredientDialog = ref(false)
 
 // AI 文字拆食材相关
 const foodDescription = ref('')
@@ -551,6 +559,33 @@ function addCustomIngredient() {
   scoreResult.value = null
   customIngredientName.value = ''
   showIngredientSheet.value = false
+}
+
+async function handleCustomIngredientConfirm(e) {
+  const { name, category } = e
+
+  // 检查重复
+  const exists = form.value.ingredients.find(i => i.name === name)
+  if (exists) {
+    uni.showToast({ title: '食材已存在', icon: 'none' })
+    return
+  }
+
+  // 调用后端入库接口
+  try {
+    const result = await createIngredient(name, category)
+    // 入库成功，添加到清单
+    form.value.ingredients.push({
+      id: result.id,
+      name: result.name,
+      emoji: '🍴',
+      isAllergy: allergyList.value.some(a => (a.ingredientName || a.name) === result.name)
+    })
+    scoreResult.value = null
+    showCustomIngredientDialog.value = false
+  } catch (error) {
+    handleError(error, { fallback: '添加食材失败，请重试' })
+  }
 }
 
 async function parseByAi() {

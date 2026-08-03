@@ -23,6 +23,11 @@ export function getIngredients(category = null) {
   return request({ url: '/meal/ingredients', method: 'GET', data: params })
 }
 
+// 用户自定义食材入库（先入库再加入清单，确保首页统计时能查到 category）
+export function createIngredient(name, category) {
+  return request({ url: '/meal/ingredients', method: 'POST', data: { name, category } })
+}
+
 // 餐次历史列表
 export function getMealList(subjectId, subjectType, page = 0, size = 20, startDate = null, endDate = null) {
   const data = { subjectId, subjectType, page, size }

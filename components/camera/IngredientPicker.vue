@@ -1,71 +1,69 @@
 <template>
   <view class="fallback-stage">
-    <image v-if="photo" :src="photo" class="fallback-photo" mode="aspectFill" />
+    <image v-if="photo" :src="photo" class="fallback-photo" mode="aspectFill" @tap="previewPhoto" />
 
-    <view class="fallback-card">
-      <view class="fallback-header">
-        <text class="fallback-title">📸 这一餐看起来是辅食～</text>
-        <text class="fallback-sub">帮我确认下用了什么食材？</text>
-      </view>
+    <view class="fallback-card-container">
+      <scroll-view scroll-y class="fallback-scroll-container">
+        <view class="fallback-card">
+          <view class="fallback-header">
+            <text class="fallback-title">📸 这一餐看起来是辅食～</text>
+            <text class="fallback-sub">帮我确认下用了什么食材？</text>
+          </view>
 
-      <!-- 月龄常用食材 -->
-      <view class="quick-select-section">
-        <text class="quick-select-title">{{ babyAgeText }}常用食材</text>
-        <view class="quick-select-grid">
-          <view
-            v-for="ing in ingredients"
-            :key="ing.id"
-            class="quick-select-item"
-            :class="{
-              selected: ing.selected,
-              'allergy-item': ing.isAllergy
-            }"
-            @tap="$emit('toggle-ingredient', ing)"
-          >
-            <text class="quick-item-emoji">{{ ing.emoji }}</text>
-            <text class="quick-item-name">{{ ing.name }}</text>
-            <text v-if="ing.isAllergy" class="quick-allergy-icon">⚠️</text>
-            <view v-if="ing.selected" class="selected-check">✓</view>
+          <!-- 月龄常用食材 -->
+          <view class="quick-select-section">
+            <text class="quick-select-title">{{ babyAgeText }}常用食材</text>
+            <view class="quick-select-grid">
+              <view
+                v-for="ing in ingredients"
+                :key="ing.id"
+                class="quick-select-item"
+                :class="{
+                  selected: ing.selected,
+                  'allergy-item': ing.isAllergy
+                }"
+                @tap="$emit('toggle-ingredient', ing)"
+              >
+                <text class="quick-item-emoji">{{ ing.emoji }}</text>
+                <text class="quick-item-name">{{ ing.name }}</text>
+                <text v-if="ing.isAllergy" class="quick-allergy-icon">⚠️</text>
+                <view v-if="ing.selected" class="selected-check">✓</view>
+              </view>
+            </view>
+          </view>
+
+          <!-- 自定义输入 -->
+          <view class="custom-input-area">
+            <wd-button type="primary" block @click="$emit('request-add-custom')">＋ 添加其他食材</wd-button>
+          </view>
+
+          <!-- 已选食材展示 -->
+          <view v-if="selectedIngredients.length > 0" class="selected-summary">
+            <text class="selected-title">已选 {{ selectedIngredients.length }} 种食材</text>
+            <view class="selected-tags">
+              <view
+                v-for="ing in selectedIngredients"
+                :key="ing.id"
+                class="selected-tag"
+                :class="{ 'allergy-tag': ing.isAllergy }"
+              >
+                <text v-if="ing.isAllergy">⚠️ </text>
+                <text>{{ ing.name }}</text>
+                <text class="remove-tag" @tap="$emit('remove-ingredient', ing)">✕</text>
+              </view>
+            </view>
+          </view>
+
+          <!-- 过敏预警 -->
+          <view v-if="allergyWarnings.length > 0" class="allergy-warning-card">
+            <text class="warning-title">⚠️ 过敏提醒</text>
+            <view v-for="w in allergyWarnings" :key="w.name" class="warning-item">
+              <text class="warning-name">{{ w.name }}</text>
+              <text class="warning-desc">{{ w.desc }}</text>
+            </view>
           </view>
         </view>
-      </view>
-
-      <!-- 自定义输入 -->
-      <view class="custom-input-area">
-        <wd-input
-          v-model="customIngredient"
-          placeholder="输入其他食材名称"
-          clearable
-          @confirm="handleAddCustom"
-        />
-        <wd-button @click="handleAddCustom" type="primary">添加</wd-button>
-      </view>
-
-      <!-- 已选食材展示 -->
-      <view v-if="selectedIngredients.length > 0" class="selected-summary">
-        <text class="selected-title">已选 {{ selectedIngredients.length }} 种食材</text>
-        <view class="selected-tags">
-          <view
-            v-for="ing in selectedIngredients"
-            :key="ing.id"
-            class="selected-tag"
-            :class="{ 'allergy-tag': ing.isAllergy }"
-          >
-            <text v-if="ing.isAllergy">⚠️ </text>
-            <text>{{ ing.name }}</text>
-            <text class="remove-tag" @tap="$emit('remove-ingredient', ing)">✕</text>
-          </view>
-        </view>
-      </view>
-
-      <!-- 过敏预警 -->
-      <view v-if="allergyWarnings.length > 0" class="allergy-warning-card">
-        <text class="warning-title">⚠️ 过敏提醒</text>
-        <view v-for="w in allergyWarnings" :key="w.name" class="warning-item">
-          <text class="warning-name">{{ w.name }}</text>
-          <text class="warning-desc">{{ w.desc }}</text>
-        </view>
-      </view>
+      </scroll-view>
 
       <!-- 动作按钮 -->
       <RecordActions
@@ -81,10 +79,8 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { computed } from 'vue'
 import RecordActions from './RecordActions.vue'
-
-const customIngredient = ref('')
 
 const props = defineProps({
   photo: {
@@ -113,16 +109,18 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['toggle-ingredient', 'add-custom', 'remove-ingredient', 'record-mother', 'record-baby', 'record-multiple'])
+const emit = defineEmits(['toggle-ingredient', 'remove-ingredient', 'request-add-custom', 'record-mother', 'record-baby', 'record-multiple'])
 
 const selectedIngredients = computed(() =>
   props.ingredients.filter(i => i.selected)
 )
 
-function handleAddCustom() {
-  if (!customIngredient.value.trim()) return
-  emit('add-custom', customIngredient.value.trim())
-  customIngredient.value = ''
+function previewPhoto() {
+  if (!props.photo) return
+  uni.previewImage({
+    urls: [props.photo],
+    current: props.photo
+  })
 }
 </script>
 
@@ -130,13 +128,27 @@ function handleAddCustom() {
 .fallback-stage {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  flex: 1;
+  min-height: 0;
 }
 
 .fallback-photo {
   width: 100%;
-  height: 240rpx;
-  flex-shrink: 0;
+  flex: 1;
+  min-height: 200rpx;
+  object-fit: cover;
+}
+
+.fallback-card-container {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.fallback-scroll-container {
+  flex: 1;
+  min-height: 0;
 }
 
 .fallback-card {
@@ -144,8 +156,6 @@ function handleAddCustom() {
   border-radius: 40rpx 40rpx 0 0;
   margin-top: -40rpx;
   padding: 40rpx 40rpx 60rpx;
-  flex: 1;
-  overflow-y: auto;
 }
 
 .fallback-header {
@@ -248,13 +258,11 @@ function handleAddCustom() {
 
 /* 自定义输入 */
 .custom-input-area {
-  display: flex;
-  gap: 12rpx;
   margin-bottom: 32rpx;
 }
 
-.custom-input-area .wd-input {
-  flex: 1;
+.custom-input-area :deep(.wd-button) {
+  width: 100%;
 }
 
 /* 已选食材展示 */

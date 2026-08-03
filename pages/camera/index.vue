@@ -55,6 +55,7 @@
     <!-- === 状态3：高置信度 — 直接展示识别结果 === -->
     <RecognitionResult
       v-if="stage === 'high-confidence'"
+      class="stage-flex"
       :photo="capturedPhoto"
       :ingredients="recognizedIngredients"
       :age-warning="ageWarning"
@@ -71,6 +72,7 @@
     <!-- === 状态4：低置信度 — fallback 勾选 === -->
     <IngredientPicker
       v-if="stage === 'low-confidence'"
+      class="stage-flex"
       :photo="capturedPhoto"
       :ingredients="ageBasedIngredients"
       :allergy-warnings="allergyWarnings"
@@ -78,7 +80,7 @@
       :subject-mode="subjectMode"
       :has-babies="userStore.babies.length > 0"
       @toggle-ingredient="toggleIngredient"
-      @add-custom="handleCustomIngredient"
+      @request-add-custom="handleCustomIngredient"
       @remove-ingredient="removeIngredient"
       @record-mother="recordToMother"
       @record-baby="recordToBaby"
@@ -93,6 +95,13 @@
       @confirm="onSubjectSelectorConfirm"
       @cancel="showSubjectSelector = false"
     />
+
+    <!-- 自定义食材录入弹窗 -->
+    <CustomIngredientDialog
+      :visible="showCustomIngredientDialog"
+      @confirm="handleCustomIngredientConfirm"
+      @cancel="showCustomIngredientDialog = false"
+    />
   </view>
 </template>
 
@@ -104,8 +113,9 @@ import { onLoad } from '@dcloudio/uni-app'
 import SubjectSelector from '@/components/SubjectSelector.vue'
 import RecognitionResult from '@/components/camera/RecognitionResult.vue'
 import IngredientPicker from '@/components/camera/IngredientPicker.vue'
+import CustomIngredientDialog from '@/components/CustomIngredientDialog.vue'
 import { photoRecord } from '@/api/ai.js'
-import { getIngredients, record } from '@/api/meal.js'
+import { getIngredients, record, createIngredient } from '@/api/meal.js'
 import { useUserStore } from '@/store/user.js'
 import { useMealStore } from '@/store/meal'
 import { useSafeArea } from '@/composables/useSafeArea.js'
@@ -129,6 +139,7 @@ const ageWarning = ref(null)
 const suggestedSubjectType = ref(null)
 const showSubjectSelector = ref(false)
 const pendingIngredients = ref([])
+const showCustomIngredientDialog = ref(false)
 
 const baby = computed(() => userStore.currentBaby || { ageMonths: 8 })
 const allergyList = computed(() => userStore.allergyList)
@@ -272,37 +283,58 @@ function toggleIngredient(ing) {
 }
 
 function showAddIngredient() {
-  uni.showModal({
-    title: '添加食材',
-    editable: true,
-    placeholderText: '输入食材名称',
-    success(res) {
-      if (res.confirm && res.content?.trim()) {
-        recognizedIngredients.value.push({
-          id: Date.now(),
-          name: res.content.trim(),
-          selected: true,
-          isAllergy: allergyList.value.some(a => (a.ingredientName || a.name) === res.content.trim())
-        })
-      }
-    }
-  })
+  showCustomIngredientDialog.value = true
 }
 
+async function handleCustomIngredientConfirm(e) {
+  const { name, category } = e
+
+  // Determine which stage to add to
+  if (stage.value === 'high-confidence') {
+    // 检查重复（对于高置信度页）
+    const exists = recognizedIngredients.value.some(i => i.name === name)
+    if (exists) {
+      uni.showToast({ title: '食材已存在', icon: 'none' })
+      return
+    }
+  } else if (stage.value === 'low-confidence') {
+    // 检查重复（对于低置信度页）
+    const exists = ageBasedIngredients.value.some(i => i.name === name)
+    if (exists) {
+      uni.showToast({ title: '该食材已添加', icon: 'none' })
+      return
+    }
+  }
+
+  // 调用后端入库接口
+  try {
+    const result = await createIngredient(name, category)
+    // 入库成功，添加到对应清单
+    if (stage.value === 'high-confidence') {
+      recognizedIngredients.value.push({
+        id: result.id,
+        name: result.name,
+        selected: true,
+        isAllergy: allergyList.value.some(a => (a.ingredientName || a.name) === result.name)
+      })
+    } else if (stage.value === 'low-confidence') {
+      ageBasedIngredients.value.push({
+        id: result.id,
+        emoji: '🍴',
+        name: result.name,
+        selected: true,
+        isAllergy: allergyList.value.some(a => (a.ingredientName || a.name) === result.name)
+      })
+    }
+    showCustomIngredientDialog.value = false
+  } catch (error) {
+    handleError(error, { fallback: '添加食材失败，请重试' })
+  }
+}
 
 // 用于 IngredientPicker 子组件的处理函数
-function handleCustomIngredient(name) {
-  if (ageBasedIngredients.value.some(i => i.name === name)) {
-    uni.showToast({ title: '该食材已添加', icon: 'none' })
-    return
-  }
-  ageBasedIngredients.value.push({
-    id: Date.now(),
-    emoji: '🍴',
-    name,
-    selected: true,
-    isAllergy: allergyList.value.some(a => (a.ingredientName || a.name) === name)
-  })
+function handleCustomIngredient() {
+  showCustomIngredientDialog.value = true
 }
 
 function removeIngredient(ing) {
@@ -434,7 +466,10 @@ function goBack() {
 
 <style lang="scss" scoped>
 .camera-page {
-  min-height: 100vh;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   background: #FAF7F2;
 }
 
@@ -445,6 +480,15 @@ function goBack() {
   justify-content: space-between;
   padding: 0 40rpx 20rpx;
   background: #FAF7F2;
+  flex-shrink: 0;
+}
+
+/* 阶段容器 flex 包装 */
+.stage-flex {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .nav-back {
