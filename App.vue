@@ -10,17 +10,18 @@
         return
       }
 
-      // 校验 token 是否仍然有效
+      // 校验 token 是否仍然有效，并同步最新的用户档案信息
       try {
-        await getUserInfo()
-        // token 有效，继续正常流程
+        const res = await getUserInfo()
+        // token 有效，同步最新的 babies / mother / isPaid
+        useUserStore().syncUserInfo(res)
 
         // 启动时刷新过敏列表，避免依赖过期的 Storage 缓存
         useUserStore().loadAllergyList()
 
-        const babies = uni.getStorageSync('babies') || []
-        const mother = uni.getStorageSync('mother')
-        if (babies.length === 0 && !mother) {
+        // 判断是否需要跳转 setup 页面，用 store 当前值而非 storage 快照
+        const store = useUserStore()
+        if (store.babies.length === 0 && !store.mother) {
           uni.reLaunch({ url: '/pages/setup/index' })
         }
       } catch (e) {

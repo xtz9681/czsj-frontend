@@ -126,9 +126,28 @@ export const useUserStore = defineStore('user', () => {
     isPaid.value = uni.getStorageSync('isPaid') || false
   }
 
+  function syncUserInfo(res) {
+    // 只同步用户档案信息（babies / mother / isPaid），严禁碰 token 和 userId
+    // 后端 GET /auth/me 返回的 token 为 null，不能用 setLoginResult，否则会覆盖现有 token
+    babies.value = res.babies || []
+    mother.value = res.mother || null
+    isPaid.value = !!res.isPaid
+
+    // 边界处理：如果当前 currentBabyId 对应的宝宝已被删除，重置为新列表的第一个
+    if (currentBabyId.value && !babies.value.some(b => b.id === currentBabyId.value)) {
+      currentBabyId.value = babies.value.length > 0 ? babies.value[0].id : null
+    }
+
+    // 写入 storage
+    uni.setStorageSync('babies', babies.value)
+    uni.setStorageSync('mother', mother.value)
+    uni.setStorageSync('isPaid', isPaid.value)
+    uni.setStorageSync('currentBabyId', currentBabyId.value)
+  }
+
   return {
     token, userId, babies, currentBabyId, mother, allergyList, isPaid,
     currentBaby, currentSubject, isLoggedIn, currentBabyAgeMonths,
-    setLoginResult, switchBaby, addBaby, updateBaby, setMother, logout, loadAllergyList, initFromStorage
+    setLoginResult, switchBaby, addBaby, updateBaby, setMother, logout, loadAllergyList, initFromStorage, syncUserInfo
   }
 })

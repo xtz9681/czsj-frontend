@@ -10,20 +10,8 @@
         </view>
       </view>
       <view class="premium-actions">
-        <view class="premium-price-row">
-          <view class="price-tag">
-            <text class="price-num">¥19</text>
-            <text class="price-unit">/月</text>
-          </view>
-          <text class="price-or">或</text>
-          <view class="price-tag price-year">
-            <text class="price-num">¥149</text>
-            <text class="price-unit">/年</text>
-          </view>
-          <text class="price-save">省 79 元</text>
-        </view>
-        <view class="premium-btn" @tap="showPayModal">开通会员，生成本周计划</view>
-        <text class="premium-features">包含：无限 AI 评分 · 无限拍照识别 · PDF 月报(即将上线) · 群体对比(即将上线)</text>
+        <view class="premium-btn" @tap="showBetaModal = true">内测期间如需体验，请联系客服开通</view>
+        <text class="premium-features">包含：{{ benefits.join(' · ') }}</text>
       </view>
     </view>
 
@@ -105,54 +93,12 @@
       </view>
     </view>
 
-    <!-- 付费弹窗 -->
-    <view v-if="showPay" class="pay-modal-mask" @tap.self="showPay = false">
-      <view class="pay-modal">
-        <text class="pay-modal-title">开通成长食记会员</text>
-
-        <view class="pay-options">
-          <view
-            class="pay-option"
-            :class="{ selected: selectedPlan === 'month' }"
-            @tap="selectedPlan = 'month'"
-          >
-            <text class="po-name">月会员</text>
-            <text class="po-price">¥19/月</text>
-            <text class="po-desc">随时取消</text>
-          </view>
-          <view
-            class="pay-option popular"
-            :class="{ selected: selectedPlan === 'year' }"
-            @tap="selectedPlan = 'year'"
-          >
-            <view class="po-popular-tag">最划算</view>
-            <text class="po-name">年会员</text>
-            <text class="po-price">¥149/年</text>
-            <text class="po-desc">相当于 ¥12.4/月</text>
-          </view>
-          <view
-            class="pay-option"
-            :class="{ selected: selectedPlan === 'lifetime' }"
-            @tap="selectedPlan = 'lifetime'"
-          >
-            <text class="po-name">终身会员</text>
-            <text class="po-price">¥299</text>
-            <text class="po-desc">一次买断</text>
-          </view>
-        </view>
-
-        <view class="pay-benefits">
-          <view class="pb-item" v-for="b in benefits" :key="b">
-            <text class="pb-check">✓</text>
-            <text class="pb-text">{{ b }}</text>
-          </view>
-        </view>
-
-        <view class="pay-confirm-btn" @tap="confirmPay">
-          {{ selectedPlan === 'month' ? '¥19 开通月会员' : selectedPlan === 'year' ? '¥149 开通年会员' : '¥299 终身会员' }}
-        </view>
-
-        <text class="pay-disclaimer">AI 建议仅供参考，不构成医疗建议，请咨询专业人员</text>
+    <!-- 内测提示模态框 -->
+    <view v-if="showBetaModal" class="modal-mask" @tap="showBetaModal = false">
+      <view class="modal-content" @tap.stop>
+        <text class="modal-title">成长食记会员内测</text>
+        <text class="modal-desc">当前功能处于内测阶段，会员功能需人工开通。如需体验，请在「我的」页面反馈。</text>
+        <view class="modal-btn" @tap="showBetaModal = false">关闭</view>
       </view>
     </view>
   </view>
@@ -162,24 +108,24 @@
 import { ref, computed } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
 import { getWeeklyPlan, getLatestPlan } from '@/api/ai.js'
+import { getUserInfo } from '@/api/auth.js'
 import { useUserStore } from '@/store/user.js'
 import { useErrorHandler } from '@/composables/useErrorHandler.js'
 
-const isPremium = ref(false)
-const showPay = ref(false)
-const selectedPlan = ref('year')
+const userStore = useUserStore()
+const isPremium = computed(() => userStore.isPaid)
 const planReady = ref(false)
 const planLoading = ref(false)
+const showBetaModal = ref(false)
 
 const { handleError } = useErrorHandler()
 
 const benefits = [
+  'AI 智能周计划',
   '无限次 AI 拍照识食材',
+  '无限次 AI 文字拆食材',
   '无限次 AI 营养评分',
-  'AI 智能周计划生成',
-  'PDF 周报/月报导出（即将上线）',
-  '同月龄群体营养对比（即将上线）',
-  '全部历史记录无限保存',
+  '营养趋势曲线',
 ]
 
 const weekRangeText = computed(() => {
@@ -248,22 +194,13 @@ async function loadLatestPlan() {
   }
 }
 
-function showPayModal() {
-  showPay.value = true
-}
-
-function confirmPay() {
-  uni.showModal({
-    title: '功能开发中',
-    content: '支付功能正在开发中，敬请期待！',
-    showCancel: false,
-    confirmText: '好的'
-  })
+function recordDay(day) {
+  uni.navigateTo({ url: '/pages/meal-record/index' })
 }
 
 async function generatePlan() {
   if (planLoading.value) return
-  const baby = useUserStore().currentBaby
+  const baby = userStore.currentBaby
   if (!baby?.id) { uni.showToast({ title: '请先添加宝宝档案', icon: 'none' }); return }
   planLoading.value = true
   planReady.value = false
@@ -282,11 +219,19 @@ async function generatePlan() {
   }
 }
 
-function recordDay(day) {
-  uni.navigateTo({ url: '/pages/meal-record/index' })
+async function refreshMemberStatus() {
+  try {
+    const res = await getUserInfo()
+    userStore.syncUserInfo(res)
+  } catch (e) {
+    // 静默忽略刷新失败，沿用现有状态
+  }
 }
 
-onShow(() => { loadLatestPlan() })
+onShow(async () => {
+  await refreshMemberStatus()
+  await loadLatestPlan()
+})
 </script>
 
 <style lang="scss" scoped>
@@ -356,6 +301,51 @@ onShow(() => { loadLatestPlan() })
 }
 
 .premium-features { font-size: 22rpx; color: rgba(255,255,255,0.8); text-align: center; }
+
+/* 内测提示模态框 */
+.modal-mask {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: #FFFFFF;
+  border-radius: 24rpx;
+  padding: 40rpx;
+  max-width: 600rpx;
+  text-align: center;
+}
+
+.modal-title {
+  display: block;
+  font-size: 32rpx;
+  font-weight: 700;
+  color: #3D3935;
+  margin-bottom: 20rpx;
+}
+
+.modal-desc {
+  display: block;
+  font-size: 26rpx;
+  color: #666;
+  line-height: 1.6;
+  margin-bottom: 32rpx;
+}
+
+.modal-btn {
+  background: #F5A85B;
+  color: #FFFFFF;
+  border-radius: 12rpx;
+  padding: 16rpx 40rpx;
+  font-size: 28rpx;
+  font-weight: 600;
+  display: inline-block;
+}
 
 /* 预览 */
 .preview-section { padding: 0 40rpx; }

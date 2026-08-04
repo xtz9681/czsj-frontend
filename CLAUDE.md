@@ -39,6 +39,7 @@
 - **日期计算规范**：获取本地日期字符串时使用 `const d = new Date(); return \`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}\``，不要用 `toISOString().split('T')[0]`（后者受 UTC 时区偏移影响）。解析后端返回的 ISO 时间字符串时使用 `new Date(isoStr)` 转本地时间再取日期，不要直接 `split('T')[0]`。
 - **安全区适配规范**：所有自定义导航栏页面统一使用 `useSafeArea()` 获取 safeTop，不再各自计算 statusBarHeight。useSafeArea 优先使用胶囊按钮位置（更精准），降级使用 statusBarHeight + 44px。
 - **错误处理规范**：所有 API 调用的 catch 块都必须使用 `useErrorHandler()` 统一处理，不要硬编码错误提示。后端返回的具体错误信息（如"6个月以下宝宝不能吃蜂蜜"）会自动显示给用户，无需前端重复处理。详见 `ERROR_HANDLING.md`。
+- **会员状态管理**：isPaid 由后端 FeatureService.isPaidUser 实时计算并通过登录接口与 GET /auth/me 返回。前端通过 userStore.isPaid（computed）读取，不再有硬编码。sync 方式：App.vue 冷启动调 syncUserInfo，plan 页 onShow 也调一次（因为后台手工 SQL 开通会员，用户不重新登录也要感知）。**严禁用 setLoginResult 处理 /auth/me 的响应，因为该接口 token 为 null，会导致用户掉登录**；改用 syncUserInfo(res)，它只同步 babies / mother / isPaid，不碰 token 和 userId，并会处理宝宝被删的边界情况。
 - 数据：先用 ref + mock 数据让 UI 跑起来，API 调用留 TODO 注释
 - 国际化：暂不做，中文硬编码
 
@@ -264,6 +265,12 @@
       - 分类选择方案：因微信小程序 uni.showActionSheet 的 itemList 上限 6 项，15 类分类选择采用 chip 网格布局（3 列）而非 actionSheet，视觉一致性与 meal-record 分类 tab 保持一致
       - API 幂等性：后端接口保证同名食材已存在时直接返回已有记录，前端无需额外处理「已存在」错误
       - 代码清理：meal-record 的旧 addCustomIngredient 直接 push 不入库的路径已彻底移除，手动添加食材的唯一入口是 CustomIngredientDialog；camera 页两处入口（高置信度「+ 添加」+ 低置信度「+ 添加其他食材」）共用同一个 openCustomIngredientDialog 函数打开弹窗，confirm 处理函数 handleCustomIngredientConfirm 按 stage 分流到对应清单，对非 high/low 阶段做前置守卫禁用操作
+  45. **会员状态管理与动态刷新**：
+      - isPaid 来源：后端 FeatureService.isPaidUser 实时计算，通过登录接口与 GET /auth/me 返回。前端通过 store/user.js 的 useUserStore().isPaid（computed）统一读取，不再有硬编码
+      - 新增 syncUserInfo(res) 方法：store/user.js 新增此方法专门接收 /auth/me 响应，仅同步 babies / mother / isPaid，不碰 token 和 userId。**严禁用 setLoginResult 处理 /auth/me 的响应，因为该接口 token 为 null，会导致用户掉登录**
+      - 两处刷新时机：1) App.vue 冷启动调 syncUserInfo(getUserInfo())；2) plan 页 onShow 也调一次（后台手工 SQL 开通会员，用户不重新登录也要感知）。两处都用 try/catch 静默处理异常，不中断主流程
+      - plan 页改造：isPremium 改为 computed（读 userStore.isPaid），删除支付弹窗及相关死代码，banner 改为内测提示文案（「内测期间如需体验，请联系客服开通」），功能清单删除未实现项（PDF 报告、群体对比等）
+      - 首页正确使用：index.vue 第 127/630 行的 isPaid 判断已正确，付费判断限制 AI 调用，不需要改动
 
 # 变更复检规则
 
