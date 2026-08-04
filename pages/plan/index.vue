@@ -20,17 +20,28 @@
       <view class="plan-header">
         <view class="plan-header-left">
           <text class="plan-week">{{ weekRangeText }}</text>
-          <text class="plan-status" :class="planReady ? 'status-ready' : 'status-generating'">
-            {{ planReady ? '✓ 计划已生成' : '⏳ 生成中...' }}
+          <text class="plan-status" :class="{
+            'status-generating': planLoading,
+            'status-ready': !planLoading && planReady,
+            'status-empty': !planLoading && !planReady
+          }">
+            {{ planStatusText }}
           </text>
         </view>
-        <view class="regenerate-btn" :class="{ disabled: planLoading }" @tap="!planLoading && generatePlan">{{ planLoading ? '生成中...' : '重新生成' }}</view>
+        <view class="regenerate-btn" :class="{ disabled: planLoading }" @tap="!planLoading && generatePlan()">{{ planLoading ? '生成中...' : '重新生成' }}</view>
       </view>
 
       <view class="plan-days" style="padding: 0 40rpx;">
         <view v-if="planLoading" class="loading-state">
           <text class="loading-icon">⏳</text>
           <text class="loading-text">AI 正在准备中...</text>
+        </view>
+        <view v-else-if="!planReady" class="empty-state">
+          <view class="empty-card">
+            <text class="empty-icon">📋</text>
+            <text class="empty-text">本周还没有生成计划</text>
+            <view class="empty-btn" @tap="generatePlan">立即生成本周计划</view>
+          </view>
         </view>
         <template v-else>
           <view
@@ -120,6 +131,12 @@ const showBetaModal = ref(false)
 
 const { handleError } = useErrorHandler()
 
+const planStatusText = computed(() => {
+  if (planLoading.value) return '⏳ 生成中...'
+  if (planReady.value) return '✓ 计划已生成'
+  return '本周还没有计划'
+})
+
 const benefits = [
   'AI 智能周计划',
   '无限次 AI 拍照识食材',
@@ -208,11 +225,10 @@ async function generatePlan() {
     const res = await getWeeklyPlan(baby.id)
     if (res?.planJson) {
       weekPlan.value = parsePlanJson(res.planJson)
+      planReady.value = true
     }
-    planReady.value = true
     uni.showToast({ title: '周计划已更新~', icon: 'success' })
   } catch (e) {
-    planReady.value = true
     handleError(e, { fallback: '生成失败，请稍后再试' })
   } finally {
     planLoading.value = false
@@ -394,6 +410,7 @@ onShow(async () => {
 .plan-status { display: block; font-size: 24rpx; }
 .status-ready { color: #5CB87A; }
 .status-generating { color: #F5A85B; }
+.status-empty { color: #999; }
 
 .regenerate-btn {
   background: #F5F5F5;
@@ -589,4 +606,42 @@ onShow(async () => {
 }
 
 .pay-disclaimer { display: block; text-align: center; font-size: 22rpx; color: #C8C8C8; }
+
+/* 空状态卡片 */
+.empty-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 100rpx 40rpx;
+}
+
+.empty-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.empty-icon {
+  font-size: 80rpx;
+  display: block;
+  margin-bottom: 24rpx;
+}
+
+.empty-text {
+  display: block;
+  font-size: 28rpx;
+  color: #999;
+  margin-bottom: 32rpx;
+}
+
+.empty-btn {
+  background: #F5A85B;
+  color: #FFFFFF;
+  border-radius: 20rpx;
+  padding: 16rpx 40rpx;
+  font-size: 26rpx;
+  font-weight: 600;
+}
+
 </style>
