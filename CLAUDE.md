@@ -271,6 +271,11 @@
       - 两处刷新时机：1) App.vue 冷启动调 syncUserInfo(getUserInfo())；2) plan 页 onShow 也调一次（后台手工 SQL 开通会员，用户不重新登录也要感知）。两处都用 try/catch 静默处理异常，不中断主流程
       - plan 页改造：isPremium 改为 computed（读 userStore.isPaid），删除支付弹窗及相关死代码，banner 改为内测提示文案（「内测期间如需体验，请联系客服开通」），功能清单删除未实现项（PDF 报告、群体对比等）
       - 首页正确使用：index.vue 第 127/630 行的 isPaid 判断已正确，付费判断限制 AI 调用，不需要改动
+  46. **plan 页面状态判定口径**：
+      - planReady 仅在成功解析出非空七天计划时才为 true；接口成功但结果为空时视为「本周还没有计划」
+      - generatePlan 中，必须先用 `const parsed = parsePlanJson(res?.planJson)` 解析到局部变量，只有 `parsed.length > 0` 时才设 planReady=true、弹成功提示；否则弹「生成结果为空，请稍后重试」（icon:none）
+      - loadLatestPlan 中，同样先解析，只有非空时才 planReady=true；空结果时保持 false，静默不弹 toast（自动加载的查询归正常情况）
+      - 目的：防止"接口返回成功、状态却显示空计划"这类误导性 UX
 
 # 变更复检规则
 

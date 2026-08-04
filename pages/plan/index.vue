@@ -200,12 +200,16 @@ async function loadLatestPlan() {
   planLoading.value = true
   try {
     const res = await getLatestPlan(baby.id)
-    if (res?.planJson) {
-      weekPlan.value = parsePlanJson(res.planJson)
+    const parsed = parsePlanJson(res?.planJson)
+    if (parsed.length > 0) {
+      weekPlan.value = parsed
       planReady.value = true
+    } else {
+      weekPlan.value = []
+      planReady.value = false
     }
   } catch (e) {
-    // 暂无计划，保持空
+    // 暂无计划，保持空，静默忽略
   } finally {
     planLoading.value = false
   }
@@ -223,11 +227,16 @@ async function generatePlan() {
   planReady.value = false
   try {
     const res = await getWeeklyPlan(baby.id)
-    if (res?.planJson) {
-      weekPlan.value = parsePlanJson(res.planJson)
+    const parsed = parsePlanJson(res?.planJson)
+    if (parsed.length > 0) {
+      weekPlan.value = parsed
       planReady.value = true
+      uni.showToast({ title: '周计划已更新~', icon: 'success' })
+    } else {
+      weekPlan.value = []
+      planReady.value = false
+      uni.showToast({ title: '生成结果为空，请稍后重试', icon: 'none' })
     }
-    uni.showToast({ title: '周计划已更新~', icon: 'success' })
   } catch (e) {
     handleError(e, { fallback: '生成失败，请稍后再试' })
   } finally {
