@@ -63,7 +63,7 @@
       :subject-mode="subjectMode"
       :has-babies="userStore.babies.length > 0"
       @toggle-ingredient="toggleIngredient"
-      @add-ingredient="showAddIngredient"
+      @add-ingredient="openCustomIngredientDialog"
       @record-mother="recordToMother"
       @record-baby="recordToBaby"
       @record-multiple="showMultipleSelect"
@@ -80,7 +80,7 @@
       :subject-mode="subjectMode"
       :has-babies="userStore.babies.length > 0"
       @toggle-ingredient="toggleIngredient"
-      @request-add-custom="handleCustomIngredient"
+      @request-add-custom="openCustomIngredientDialog"
       @remove-ingredient="removeIngredient"
       @record-mother="recordToMother"
       @record-baby="recordToBaby"
@@ -282,12 +282,18 @@ function toggleIngredient(ing) {
   ing.selected = !ing.selected
 }
 
-function showAddIngredient() {
+function openCustomIngredientDialog() {
   showCustomIngredientDialog.value = true
 }
 
 async function handleCustomIngredientConfirm(e) {
   const { name, category } = e
+
+  // 前置守卫：只在高置信度和低置信度两个阶段处理
+  if (stage.value !== 'high-confidence' && stage.value !== 'low-confidence') {
+    console.warn('[camera] handleCustomIngredientConfirm called in invalid stage:', stage.value)
+    return
+  }
 
   // Determine which stage to add to
   if (stage.value === 'high-confidence') {
@@ -330,11 +336,6 @@ async function handleCustomIngredientConfirm(e) {
   } catch (error) {
     handleError(error, { fallback: '添加食材失败，请重试' })
   }
-}
-
-// 用于 IngredientPicker 子组件的处理函数
-function handleCustomIngredient() {
-  showCustomIngredientDialog.value = true
 }
 
 function removeIngredient(ing) {

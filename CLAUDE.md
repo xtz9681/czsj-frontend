@@ -263,6 +263,7 @@
       - 校验：名称去空白后为空时 toast「请输入食材名称」；未选分类时 toast「请选择食材分类」；重复食材检查确保清单内无同名项
       - 分类选择方案：因微信小程序 uni.showActionSheet 的 itemList 上限 6 项，15 类分类选择采用 chip 网格布局（3 列）而非 actionSheet，视觉一致性与 meal-record 分类 tab 保持一致
       - API 幂等性：后端接口保证同名食材已存在时直接返回已有记录，前端无需额外处理「已存在」错误
+      - 代码清理：meal-record 的旧 addCustomIngredient 直接 push 不入库的路径已彻底移除，手动添加食材的唯一入口是 CustomIngredientDialog；camera 页两处入口（高置信度「+ 添加」+ 低置信度「+ 添加其他食材」）共用同一个 openCustomIngredientDialog 函数打开弹窗，confirm 处理函数 handleCustomIngredientConfirm 按 stage 分流到对应清单，对非 high/low 阶段做前置守卫禁用操作
 
 # 变更复检规则
 

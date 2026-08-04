@@ -345,7 +345,6 @@ const ingredientSearch = ref('')
 const selectedCategory = ref('全部')
 const allIngredients = ref([])
 const frequentIngredients = ref([])
-const customIngredientName = ref('')
 const showCustomIngredientDialog = ref(false)
 
 // AI 文字拆食材相关
@@ -540,25 +539,6 @@ function selectIngredient(item) {
   frequentIngredients.value = frequentIngredients.value.filter(i => i.name !== item.name)
   showIngredientSheet.value = false
   ingredientSearch.value = ''
-}
-
-function addCustomIngredient() {
-  if (!customIngredientName.value) return
-  const name = customIngredientName.value.trim()
-  const exists = form.value.ingredients.find(i => i.name === name)
-  if (exists) {
-    uni.showToast({ title: '食材已存在', icon: 'none' })
-    return
-  }
-  form.value.ingredients.push({
-    id: name,
-    name: name,
-    emoji: '🍴',
-    isAllergy: allergyList.value.some(a => (a.ingredientName || a.name) === name)
-  })
-  scoreResult.value = null
-  customIngredientName.value = ''
-  showIngredientSheet.value = false
 }
 
 async function handleCustomIngredientConfirm(e) {
