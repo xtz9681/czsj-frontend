@@ -6,7 +6,7 @@
         <image src="/static/icons/icon-plan.png" class="premium-icon-img" mode="aspectFit" />
         <view>
           <text class="premium-title">AI 智能周计划</text>
-          <text class="premium-desc">根据宝宝月龄 + 过敏史 + 已吃食材，自动生成 7 天食谱安排</text>
+          <text class="premium-desc">结合月龄或孕期阶段、过敏史和近期饮食，自动生成 7 天饮食安排</text>
         </view>
       </view>
       <view class="premium-actions">
@@ -17,6 +17,24 @@
 
     <!-- 已订阅：周计划内容 -->
     <view v-if="isPremium">
+      <!-- 主体切换器 -->
+      <view v-if="showSubjectToggle" class="subject-toggle">
+        <view
+          class="subject-tab"
+          :class="{ active: subjectMode === 'baby' }"
+          @tap="switchSubject('baby')"
+        >
+          {{ userStore.currentBaby?.name || '宝宝' }}
+        </view>
+        <view
+          class="subject-tab"
+          :class="{ active: subjectMode === 'mother' }"
+          @tap="switchSubject('mother')"
+        >
+          我的营养
+        </view>
+      </view>
+
       <view class="plan-header">
         <view class="plan-header-left">
           <text class="plan-week">{{ weekRangeText }}</text>
@@ -131,6 +149,32 @@ const showBetaModal = ref(false)
 
 const { handleError } = useErrorHandler()
 
+// 主体模式：'baby' | 'mother'
+const subjectMode = ref('baby')
+
+// 根据当前主体得出 subjectType 和 subjectId
+const currentSubject = computed(() => {
+  if (subjectMode.value === 'baby') {
+    return { subjectType: 'baby', subjectId: userStore.currentBaby?.id }
+  } else {
+    return { subjectType: 'user', subjectId: userStore.userId }
+  }
+})
+
+// 初始化 subjectMode：有宝宝则默认 'baby'，否则 'mother'
+function initSubjectMode() {
+  if (userStore.babies.length > 0) {
+    subjectMode.value = 'baby'
+  } else if (userStore.mother) {
+    subjectMode.value = 'mother'
+  }
+}
+
+// 是否显示切换器：同时存在宝宝和妈妈档案
+const showSubjectToggle = computed(() =>
+  userStore.babies.length > 0 && userStore.mother
+)
+
 const planStatusText = computed(() => {
   if (planLoading.value) return '⏳ 生成中...'
   if (planReady.value) return '✓ 计划已生成'
@@ -195,11 +239,11 @@ function parsePlanJson(raw) {
 }
 
 async function loadLatestPlan() {
-  const baby = useUserStore().currentBaby
-  if (!baby?.id) return
+  const { subjectType, subjectId } = currentSubject.value
+  if (!subjectId) return
   planLoading.value = true
   try {
-    const res = await getLatestPlan(baby.id)
+    const res = await getLatestPlan(subjectType, subjectId)
     const parsed = parsePlanJson(res?.planJson)
     if (parsed.length > 0) {
       weekPlan.value = parsed
@@ -221,12 +265,12 @@ function recordDay(day) {
 
 async function generatePlan() {
   if (planLoading.value) return
-  const baby = userStore.currentBaby
-  if (!baby?.id) { uni.showToast({ title: '请先添加宝宝档案', icon: 'none' }); return }
+  const { subjectType, subjectId } = currentSubject.value
+  if (!subjectId) { uni.showToast({ title: '请先完善档案后再生成计划', icon: 'none' }); return }
   planLoading.value = true
   planReady.value = false
   try {
-    const res = await getWeeklyPlan(baby.id)
+    const res = await getWeeklyPlan(subjectType, subjectId)
     const parsed = parsePlanJson(res?.planJson)
     if (parsed.length > 0) {
       weekPlan.value = parsed
@@ -253,8 +297,17 @@ async function refreshMemberStatus() {
   }
 }
 
+function switchSubject(mode) {
+  if (subjectMode.value === mode) return
+  subjectMode.value = mode
+  planReady.value = false
+  weekPlan.value = []
+  loadLatestPlan()
+}
+
 onShow(async () => {
   await refreshMemberStatus()
+  initSubjectMode()
   await loadLatestPlan()
 })
 </script>
@@ -370,6 +423,31 @@ onShow(async () => {
   font-size: 28rpx;
   font-weight: 600;
   display: inline-block;
+}
+
+/* 主体切换器 */
+.subject-toggle {
+  display: flex;
+  gap: 16rpx;
+  padding: 20rpx 40rpx;
+  border-bottom: 1rpx solid #F0E9DE;
+}
+
+.subject-tab {
+  flex: 1;
+  padding: 12rpx 24rpx;
+  border-radius: 20rpx;
+  text-align: center;
+  font-size: 28rpx;
+  color: #999;
+  background: #F5F5F5;
+  transition: all 0.2s;
+
+  &.active {
+    background: #FFF3E6;
+    color: #F5A85B;
+    font-weight: 600;
+  }
 }
 
 /* 预览 */

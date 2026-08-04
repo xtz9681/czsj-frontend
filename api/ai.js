@@ -65,13 +65,15 @@ export function photoRecord(filePath, babyId) {
 }
 
 // 获取 AI 周计划
-export function getWeeklyPlan(babyId) {
-  return request({ url: '/plan/generate', method: 'POST', data: { subjectType: 'baby', subjectId: babyId } })
+// subjectType: 'baby' | 'user'（'user' 时 subjectId 传 userId）
+export function getWeeklyPlan(subjectType, subjectId) {
+  return request({ url: '/plan/generate', method: 'POST', data: { subjectType, subjectId } })
 }
 
 // 获取最新周计划
-export function getLatestPlan(babyId) {
-  return request({ url: '/plan/latest', data: { subjectId: babyId } })
+// subjectType: 'baby' | 'user'（'user' 时 subjectId 传 userId）
+export function getLatestPlan(subjectType, subjectId) {
+  return request({ url: '/plan/latest', data: { subjectType, subjectId } })
 }
 
 // AI 即时问答

@@ -276,6 +276,14 @@
       - generatePlan 中，必须先用 `const parsed = parsePlanJson(res?.planJson)` 解析到局部变量，只有 `parsed.length > 0` 时才设 planReady=true、弹成功提示；否则弹「生成结果为空，请稍后重试」（icon:none）
       - loadLatestPlan 中，同样先解析，只有非空时才 planReady=true；空结果时保持 false，静默不弹 toast（自动加载的查询归正常情况）
       - 目的：防止"接口返回成功、状态却显示空计划"这类误导性 UX
+  47. **plan 页面多主体支持（宝宝与妈妈）**：
+      - 后端 API 变更：POST /plan/generate 和 GET /plan/latest 现支持 { subjectType, subjectId }，subjectType 可为 'baby' | 'user'，'user' 时 subjectId 传 userId
+      - API 签名更新：getWeeklyPlan(subjectType, subjectId) 和 getLatestPlan(subjectType, subjectId)，两个函数均透传主体信息给后端
+      - 妈妈版 planJson 结构与宝宝版一致（days[]、breakfast/lunch/dinner/snack、ingredients 等），parsePlanJson 和卡片渲染完全复用，妈妈版不含 grams 字段
+      - 页内主体切换：plan 页新增 subjectMode 状态（'baby' | 'mother'），当同时存在宝宝档案和妈妈档案时顶部显示切换器（两个 tab：宝宝名字、我的营养），样式为选中态 #FFF3E6 底色 + #F5A85B 文字
+      - 切换行为：切换主体时重置 planReady=false、weekPlan=[]，然后重新查询历史计划；不会自动触发生成（用户需显式点击生成按钮）
+      - 付费引导 banner 文案改为通用表述：「结合月龄或孕期阶段、过敏史和近期饮食，自动生成 7 天饮食安排」
+      - 核心目标：使纯孕期妈妈（无宝宝档案）也能生成个人周计划
 
 # 变更复检规则
 
