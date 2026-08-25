@@ -58,6 +58,7 @@
         <view v-if="planLoading" class="loading-state">
           <text class="loading-icon">⏳</text>
           <text class="loading-text">AI 正在准备中...</text>
+          <text class="loading-sub">预计需要 10-30 秒，可以先去看看别的~</text>
         </view>
         <view v-else-if="!planReady" class="empty-state">
           <view class="empty-card">
@@ -153,6 +154,11 @@ const userStore = useUserStore()
 const isPremium = computed(() => userStore.isPaid)
 const planReady = ref(false)
 const planLoading = ref(false)
+// 正在生成中的主体标识（格式 `${subjectType}:${subjectId}`）。
+// 周计划生成请求耗时较长（约 10-30 秒），用户可能在生成期间切走 Tab 再切回：
+// Tab 页不会被销毁，该标记随页面存活，切回时据此继续保持"生成中"界面，
+// 避免 onShow 重新拉取服务器旧计划把生成中状态覆盖掉。
+const generatingKey = ref('')
 const showBetaModal = ref(false)
 
 const { handleError } = useErrorHandler()
@@ -168,6 +174,11 @@ const currentSubject = computed(() => {
     return { subjectType: 'user', subjectId: userStore.userId }
   }
 })
+
+// 生成主体唯一标识，用于跟踪"哪个主体的计划正在生成中"
+function subjectKeyOf({ subjectType, subjectId }) {
+  return `${subjectType}:${subjectId}`
+}
 
 // 初始化 subjectMode：仅当当前选择无效时才重新初始化
 function initSubjectMode() {
@@ -300,13 +311,23 @@ function recordDay(day) {
 }
 
 async function generatePlan() {
-  if (planLoading.value) return
+  // 已有生成任务进行中时不重复触发（首次生成与重新生成共用同一把锁）
+  if (planLoading.value || generatingKey.value) return
   const { subjectType, subjectId } = currentSubject.value
   if (!subjectId) { uni.showToast({ title: '请先完善档案后再生成计划', icon: 'none' }); return }
+  const key = subjectKeyOf(currentSubject.value)
+  // Step 1: 标记当前主体进入生成中，清空旧计划展示，界面切换为"生成中"
+  generatingKey.value = key
   planLoading.value = true
   planReady.value = false
+  weekPlan.value = []
+  weekTips.value = ''
   try {
     const res = await getWeeklyPlan(subjectType, subjectId)
+    // Step 2: 请求返回时用户可能已切换到其他主体（界面展示的主体变了），
+    // 此时不回写，避免旧主体的计划覆盖新主体的界面；
+    // generatingKey 保留，用户切回该主体时仍能恢复"生成中"→完成后由 loadLatestPlan 拉取新计划
+    if (subjectKeyOf(currentSubject.value) !== key) return
     const parsed = parsePlanJson(res?.planJson, res?.weekStart)
     weekTips.value = res?.planJson?.tips || ''
     if (parsed.length > 0) {
@@ -319,9 +340,18 @@ async function generatePlan() {
       uni.showToast({ title: '生成结果为空，请稍后重试', icon: 'none' })
     }
   } catch (e) {
+    // 界面已切换到其他主体时静默放弃（错误提示对当前界面无意义）
+    if (subjectKeyOf(currentSubject.value) !== key) return
     handleError(e, { fallback: '生成失败，请稍后再试' })
   } finally {
-    planLoading.value = false
+    // Step 3: 仅当仍是本次生成任务时才清除生成标记
+    if (generatingKey.value === key) {
+      generatingKey.value = ''
+      // 仅当界面仍在展示该主体时才复位 loading，避免误关其他主体的加载态
+      if (subjectKeyOf(currentSubject.value) === key) {
+        planLoading.value = false
+      }
+    }
   }
 }
 
@@ -339,13 +369,27 @@ function switchSubject(mode) {
   subjectMode.value = mode
   planReady.value = false
   weekPlan.value = []
-  loadLatestPlan()
+  weekTips.value = ''
+  loadCurrentSubject()
+}
+
+// 按当前主体加载内容的统一入口（onShow / 切换主体共用）：
+//  - 当前主体有进行中的生成任务 → 保持"生成中"界面，等生成请求返回后回写，不拉旧计划覆盖
+//  - 否则拉取服务器最新已保存的计划
+async function loadCurrentSubject() {
+  const key = subjectKeyOf(currentSubject.value)
+  if (generatingKey.value === key) {
+    planLoading.value = true
+    planReady.value = false
+    return
+  }
+  await loadLatestPlan()
 }
 
 onShow(async () => {
   await refreshMemberStatus()
   initSubjectMode()
-  await loadLatestPlan()
+  await loadCurrentSubject()
 })
 </script>
 
@@ -764,6 +808,13 @@ onShow(async () => {
   align-items: center;
   justify-content: center;
   padding: 100rpx 40rpx;
+}
+
+/* 生成中界面的耗时提示（弱提示小字） */
+.loading-sub {
+  font-size: 24rpx;
+  color: #C8C8C8;
+  margin-top: 8rpx;
 }
 
 .empty-card {

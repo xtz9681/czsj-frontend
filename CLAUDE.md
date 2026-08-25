@@ -285,6 +285,7 @@
       - 切换行为：切换主体时重置 planReady=false、weekPlan=[]，然后重新查询历史计划；不会自动触发生成（用户需显式点击生成按钮）
       - 付费引导 banner 文案改为通用表述：「结合月龄或孕期阶段、过敏史和近期饮食，自动生成 7 天饮食安排」
       - 核心目标：使纯孕期妈妈（无宝宝档案）也能生成个人周计划
+      - 计划卡每餐渲染 note 字段为 💡 建议行（后端 AI note 为建议性语气），note 为空时不渲染
   48. **record 响应 allergyWarning（交叉过敏预警）展示规范**：
       - 后端 record() 返回的 MealResponse.allergyWarning 字段承载交叉过敏预警（如"蟹与已知过敏食材虾可能交叉过敏"）
       - 分工：meal-record 页 saveMeal 成功后收集 res 数组中所有非空 allergyWarning，存入 serverAllergyWarnings ref，在评分结果卡片上方用 allergy-block 暖红样式渲染；camera 页两处直接调 record 的地方（recordToMother、onSubjectSelectorConfirm）在成功返回后若有 allergyWarning，用 uni.showModal（标题"过敏小提醒"，内容拼接预警文案，确认按钮"我知道啦"）展示，用户点确认后再跳转；文案保持温暖不焦虑，禁用"错误""危险"等字眼
