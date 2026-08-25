@@ -74,7 +74,7 @@ watch(
       initChart()
     }
   },
-  { deep: true }
+  { deep: true, flush: 'post' }
 )
 
 async function initChart() {
