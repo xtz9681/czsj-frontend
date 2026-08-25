@@ -370,16 +370,44 @@ function recordToMother() {
   record(payload)
     .then((res) => {
       uni.hideLoading()
-      uni.showToast({ title: '保存成功~', icon: 'success' })
-      // 跳转到 meal-record 页展示 AI 评分结果（取第一个档案的 id）
-      if (res && res.length > 0 && res[0].id) {
-        setTimeout(() => {
-          uni.redirectTo({ url: '/pages/meal-record/index?id=' + res[0].id + '&waitScore=1' })
-        }, 800)
+
+      // 检查是否有交叉过敏预警
+      const allergyWarnings = res
+        .filter(meal => meal.allergyWarning)
+        .map(meal => meal.allergyWarning)
+
+      if (allergyWarnings.length > 0) {
+        uni.showModal({
+          title: '过敏小提醒',
+          content: allergyWarnings.join('\n'),
+          confirmText: '我知道啦',
+          showCancel: false,
+          success: () => {
+            uni.showToast({ title: '保存成功~', icon: 'success' })
+            // 跳转到 meal-record 页展示 AI 评分结果（取第一个档案的 id）
+            if (res && res.length > 0 && res[0].id) {
+              setTimeout(() => {
+                uni.redirectTo({ url: '/pages/meal-record/index?id=' + res[0].id + '&waitScore=1' })
+              }, 800)
+            } else {
+              setTimeout(() => {
+                uni.navigateBack()
+              }, 1200)
+            }
+          }
+        })
       } else {
-        setTimeout(() => {
-          uni.navigateBack()
-        }, 1200)
+        uni.showToast({ title: '保存成功~', icon: 'success' })
+        // 跳转到 meal-record 页展示 AI 评分结果（取第一个档案的 id）
+        if (res && res.length > 0 && res[0].id) {
+          setTimeout(() => {
+            uni.redirectTo({ url: '/pages/meal-record/index?id=' + res[0].id + '&waitScore=1' })
+          }, 800)
+        } else {
+          setTimeout(() => {
+            uni.navigateBack()
+          }, 1200)
+        }
       }
     })
     .catch(e => {
@@ -436,17 +464,46 @@ function onSubjectSelectorConfirm(selectedSubjects) {
   record(payload)
     .then((res) => {
       uni.hideLoading()
-      uni.showToast({ title: '保存成功~', icon: 'success' })
-      showSubjectSelector.value = false
-      // 跳转到 meal-record 页展示 AI 评分结果（取第一个档案的 id）
-      if (res && res.length > 0 && res[0].id) {
-        setTimeout(() => {
-          uni.redirectTo({ url: '/pages/meal-record/index?id=' + res[0].id + '&waitScore=1' })
-        }, 800)
+
+      // 检查是否有交叉过敏预警
+      const allergyWarnings = res
+        .filter(meal => meal.allergyWarning)
+        .map(meal => meal.allergyWarning)
+
+      if (allergyWarnings.length > 0) {
+        uni.showModal({
+          title: '过敏小提醒',
+          content: allergyWarnings.join('\n'),
+          confirmText: '我知道啦',
+          showCancel: false,
+          success: () => {
+            uni.showToast({ title: '保存成功~', icon: 'success' })
+            showSubjectSelector.value = false
+            // 跳转到 meal-record 页展示 AI 评分结果（取第一个档案的 id）
+            if (res && res.length > 0 && res[0].id) {
+              setTimeout(() => {
+                uni.redirectTo({ url: '/pages/meal-record/index?id=' + res[0].id + '&waitScore=1' })
+              }, 800)
+            } else {
+              setTimeout(() => {
+                uni.navigateBack()
+              }, 1200)
+            }
+          }
+        })
       } else {
-        setTimeout(() => {
-          uni.navigateBack()
-        }, 1200)
+        uni.showToast({ title: '保存成功~', icon: 'success' })
+        showSubjectSelector.value = false
+        // 跳转到 meal-record 页展示 AI 评分结果（取第一个档案的 id）
+        if (res && res.length > 0 && res[0].id) {
+          setTimeout(() => {
+            uni.redirectTo({ url: '/pages/meal-record/index?id=' + res[0].id + '&waitScore=1' })
+          }, 800)
+        } else {
+          setTimeout(() => {
+            uni.navigateBack()
+          }, 1200)
+        }
       }
     })
     .catch(e => {

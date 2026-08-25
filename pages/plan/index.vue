@@ -49,6 +49,11 @@
         <view class="regenerate-btn" :class="{ disabled: planLoading }" @tap="!planLoading && generatePlan()">{{ planLoading ? '生成中...' : '重新生成' }}</view>
       </view>
 
+      <!-- 周营养要点 -->
+      <view v-if="planReady && weekTips" class="week-tips-card">
+        <text class="week-tips-text">💡 {{ weekTips }}</text>
+      </view>
+
       <view class="plan-days" style="padding: 0 40rpx;">
         <view v-if="planLoading" class="loading-state">
           <text class="loading-icon">⏳</text>
@@ -161,13 +166,19 @@ const currentSubject = computed(() => {
   }
 })
 
-// 初始化 subjectMode：有宝宝则默认 'baby'，否则 'mother'
+// 初始化 subjectMode：仅当当前选择无效时才重新初始化
 function initSubjectMode() {
-  if (userStore.babies.length > 0) {
-    subjectMode.value = 'baby'
-  } else if (userStore.mother) {
-    subjectMode.value = 'mother'
+  const currentMode = subjectMode.value
+  const hasBaby = userStore.babies.length > 0 && userStore.currentBaby
+  const hasMother = userStore.mother
+
+  // 如果当前选择的主体不存在，则重新初始化
+  if (currentMode === 'baby' && !hasBaby) {
+    subjectMode.value = hasMother ? 'mother' : 'baby'
+  } else if (currentMode === 'mother' && !hasMother) {
+    subjectMode.value = hasBaby ? 'baby' : 'mother'
   }
+  // 否则保持用户当前选择
 }
 
 // 是否显示切换器：同时存在宝宝和妈妈档案
@@ -200,6 +211,7 @@ const weekRangeText = computed(() => {
 })
 
 const weekPlan = ref([])
+const weekTips = ref('')
 const previewDays = ref(generatePreviewDays())
 
 function generatePreviewDays() {
@@ -211,15 +223,34 @@ function generatePreviewDays() {
   }))
 }
 
-function parsePlanJson(raw) {
+function parsePlanJson(raw, weekStart) {
   if (!raw) return []
-  const today = new Date().toISOString().split('T')[0]
+  // 本地今天日期
+  const now = new Date()
+  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+
+  // 确定周一日期：weekStart 存在则用它，否则计算当前周一
+  let mondayDate
+  if (weekStart) {
+    const [year, month, day] = weekStart.split('-').map(Number)
+    mondayDate = new Date(year, month - 1, day)
+  } else {
+    mondayDate = new Date(now)
+    const dow = now.getDay() || 7
+    mondayDate.setDate(now.getDate() - dow + 1)
+  }
+
   const dayNames = ['一', '二', '三', '四', '五', '六', '日']
   const mealTypeMap = { breakfast: '早', lunch: '午', dinner: '晚', snack: '加' }
+
   return (raw.days || []).map((day, i) => {
-    const d = new Date()
-    d.setDate(d.getDate() - d.getDay() + 1 + i)
-    const dateStr = d.toISOString().split('T')[0]
+    const d = new Date(mondayDate)
+    d.setDate(d.getDate() + i)
+    const year = d.getFullYear()
+    const month = String(d.getMonth() + 1).padStart(2, '0')
+    const date = String(d.getDate()).padStart(2, '0')
+    const dateStr = `${year}-${month}-${date}`
+
     const meals = Object.entries(mealTypeMap)
       .filter(([type]) => day[type])
       .map(([type, typeLabel]) => ({
@@ -244,7 +275,8 @@ async function loadLatestPlan() {
   planLoading.value = true
   try {
     const res = await getLatestPlan(subjectType, subjectId)
-    const parsed = parsePlanJson(res?.planJson)
+    const parsed = parsePlanJson(res?.planJson, res?.weekStart)
+    weekTips.value = res?.planJson?.tips || ''
     if (parsed.length > 0) {
       weekPlan.value = parsed
       planReady.value = true
@@ -260,7 +292,7 @@ async function loadLatestPlan() {
 }
 
 function recordDay(day) {
-  uni.navigateTo({ url: '/pages/meal-record/index' })
+  uni.navigateTo({ url: `/pages/meal-record/index?date=${day.date}` })
 }
 
 async function generatePlan() {
@@ -271,7 +303,8 @@ async function generatePlan() {
   planReady.value = false
   try {
     const res = await getWeeklyPlan(subjectType, subjectId)
-    const parsed = parsePlanJson(res?.planJson)
+    const parsed = parsePlanJson(res?.planJson, res?.weekStart)
+    weekTips.value = res?.planJson?.tips || ''
     if (parsed.length > 0) {
       weekPlan.value = parsed
       planReady.value = true
@@ -448,6 +481,21 @@ onShow(async () => {
     color: #F5A85B;
     font-weight: 600;
   }
+}
+
+/* 周营养要点 */
+.week-tips-card {
+  background: #E8F8EE;
+  border-radius: 16rpx;
+  margin: 20rpx 40rpx 0;
+  padding: 20rpx 24rpx;
+}
+
+.week-tips-text {
+  display: block;
+  font-size: 26rpx;
+  color: #5CB87A;
+  line-height: 1.6;
 }
 
 /* 预览 */

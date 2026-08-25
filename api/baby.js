@@ -38,7 +38,20 @@ export function uploadBabyAvatar(babyId, filePath) {
       success(res) {
         if (res.statusCode === 200) {
           try {
-            resolve(JSON.parse(res.data))
+            const parsed = JSON.parse(res.data)
+            // 成功：code=0，解包 data 字段
+            if (parsed.code === 0 && parsed.data) {
+              resolve(parsed.data)
+            } else if (parsed.code === 0) {
+              resolve(parsed.data)
+            } else {
+              // 业务错误：UNAUTHORIZED 时清 token 并跳登录页
+              if (parsed.code === 'UNAUTHORIZED') {
+                uni.removeStorageSync('token')
+                uni.reLaunch({ url: '/pages/login/index' })
+              }
+              reject(new Error(parsed.message || '上传头像遇到了点问题~'))
+            }
           } catch (e) {
             reject(new Error('服务器返回格式错误'))
           }

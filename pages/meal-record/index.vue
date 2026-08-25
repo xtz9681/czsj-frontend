@@ -176,6 +176,13 @@
       <wd-button type="primary" size="small" round @click="uni.navigateBack()">返回首页</wd-button>
     </view>
 
+    <!-- 服务端返回的交叉过敏预警 -->
+    <view v-if="serverAllergyWarnings.length > 0" class="allergy-block">
+      <view v-for="(warning, idx) in serverAllergyWarnings" :key="idx">
+        <text>{{ warning }}</text>
+      </view>
+    </view>
+
     <!-- AI 营养评分结果 -->
     <view v-if="scoreResult" class="score-result card anim-fade-in-up">
       <view class="score-header">
@@ -333,6 +340,9 @@ const isScoring = ref(false)
 const savedMealId = ref(null)
 // 评分轮询超时标记（30s 未返回评分时置位，展示超时提示）
 const scoreTimeout = ref(false)
+
+// 服务端返回的交叉过敏预警
+const serverAllergyWarnings = ref([])
 
 // 今日已记录列表（用于快速编辑）
 const todayMeals = ref([])
@@ -676,9 +686,9 @@ async function loadMealData(mealId) {
       }
     })
     form.value.note = meal.note || ''
-    form.value.photo = meal.photoUrl || ''
-    form.value.photoKey = meal.photoKey || null
-    form.value.recognitionId = meal.recognitionId || null
+    form.value.photo = meal.signedPhotoUrl || ''
+    form.value.photoKey = null
+    form.value.recognitionId = null
 
     // 如果已有评分，直接显示
     if (meal.aiScore !== null && meal.aiScore !== undefined) {
@@ -868,6 +878,13 @@ async function saveMeal() {
     }
 
     const res = await record(payload)
+
+    // 收集服务端返回的交叉过敏预警
+    if (Array.isArray(res)) {
+      serverAllergyWarnings.value = res
+        .filter(meal => meal.allergyWarning)
+        .map(meal => meal.allergyWarning)
+    }
 
     // 返回值是列表
     uni.showToast({ title: '保存成功', icon: 'success' })

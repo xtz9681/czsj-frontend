@@ -218,7 +218,7 @@
   30. **ai-chat 安全区适配**：导航栏加 :style="{ paddingTop: safeTop }" 动态绑定（statusBarHeight + 44px），与 camera 页面写法一致。
   31. **用餐提醒模板 ID**：MEAL_REMINDER_TPL_ID 当前为占位符 'your-template-id-here'，需在上线前替换为微信公众平台申请的真实模板 ID（上线阻断项）。
   32. **Token 有效性校验**：App.vue onLaunch 有 token 时调 GET /auth/me 校验，401 则清除 token 跳登录页，防止过期 token 导致所有请求返回 401
-  33. **宝宝头像上传**：profile 页选择头像后上传到 OSS（POST /baby/{id}/avatar），先本地预览再替换为签名 URL；新建档案时头像仅本地预览，保存后才上传
+  33. **宝宝头像上传**：profile 页选择头像后上传到 OSS（POST /baby/{id}/avatar），先本地预览再替换为签名 URL；新建档案时头像仅本地预览，保存后才上传；uploadBabyAvatar 已统一解包 ApiResponse（code=0 时 resolve(data)，业务错误时 reject），参照 photoRecord 实现
   34. **新手引导流程**：首次登录后 setup 完成 → profile 完成 → 跳 onboarding 页，分 3 步引导用户选择宝宝阶段、标记常见过敏、记第一餐；完成后标记 onboarded 不再触发
   35. **宝妈档案入口提升**：SubjectSelector 组件中妈妈选项旁增加"编辑我的信息 ›"快捷入口，点击 @tap.stop 跳转 mother-profile 编辑模式
   36. **营养评分一键分享**：meal-record 页面评分结果卡片下方增加"分享给朋友"按钮。海报由两部分组成：
@@ -271,11 +271,12 @@
       - 两处刷新时机：1) App.vue 冷启动调 syncUserInfo(getUserInfo())；2) plan 页 onShow 也调一次（后台手工 SQL 开通会员，用户不重新登录也要感知）。两处都用 try/catch 静默处理异常，不中断主流程
       - plan 页改造：isPremium 改为 computed（读 userStore.isPaid），删除支付弹窗及相关死代码，banner 改为内测提示文案（「内测期间如需体验，请联系客服开通」），功能清单删除未实现项（PDF 报告、群体对比等）
       - 首页正确使用：index.vue 第 127/630 行的 isPaid 判断已正确，付费判断限制 AI 调用，不需要改动
-  46. **plan 页面状态判定口径**：
+  46. **plan 页面状态判定口径与日期推算**：
       - planReady 仅在成功解析出非空七天计划时才为 true；接口成功但结果为空时视为「本周还没有计划」
-      - generatePlan 中，必须先用 `const parsed = parsePlanJson(res?.planJson)` 解析到局部变量，只有 `parsed.length > 0` 时才设 planReady=true、弹成功提示；否则弹「生成结果为空，请稍后重试」（icon:none）
-      - loadLatestPlan 中，同样先解析，只有非空时才 planReady=true；空结果时保持 false，静默不弹 toast（自动加载的查询归正常情况）
-      - 目的：防止"接口返回成功、状态却显示空计划"这类误导性 UX
+      - generatePlan/loadLatestPlan 中必须先用 `const parsed = parsePlanJson(res?.planJson, res?.weekStart)` 解析，weekStart 是后端返回的计划起始日期（yyyy-MM-dd），作为周一日期传入；weekStart 缺失时退回当前周一；所有日期字符串拼接用本地写法（getFullYear/getMonth+1/getDate + padStart），禁用 toISOString().split('T')[0]
+      - generatePlan/loadLatestPlan 成功后赋值 `weekTips.value = res?.planJson?.tips || ''`（根级 tips 字段）；渲染周营养要点卡片（薄荷绿 #A3D9B1 浅色背景）；day.tip 保留做兼容
+      - onShow 里的 initSubjectMode 改为只在当前选择无效时初始化（baby 模式但 currentBaby 不存在，或 mother 模式但 mother 档案不存在时重新初始化），否则保持用户当前选择（切到"我的营养"后跳走再回来不被打回宝宝 tab）
+      - recordDay(day) 跳转时带 date 参数（如 `/pages/meal-record/index?date=xxx`）
   47. **plan 页面多主体支持（宝宝与妈妈）**：
       - 后端 API 变更：POST /plan/generate 和 GET /plan/latest 现支持 { subjectType, subjectId }，subjectType 可为 'baby' | 'user'，'user' 时 subjectId 传 userId
       - API 签名更新：getWeeklyPlan(subjectType, subjectId) 和 getLatestPlan(subjectType, subjectId)，两个函数均透传主体信息给后端
@@ -284,6 +285,9 @@
       - 切换行为：切换主体时重置 planReady=false、weekPlan=[]，然后重新查询历史计划；不会自动触发生成（用户需显式点击生成按钮）
       - 付费引导 banner 文案改为通用表述：「结合月龄或孕期阶段、过敏史和近期饮食，自动生成 7 天饮食安排」
       - 核心目标：使纯孕期妈妈（无宝宝档案）也能生成个人周计划
+  48. **record 响应 allergyWarning（交叉过敏预警）展示规范**：
+      - 后端 record() 返回的 MealResponse.allergyWarning 字段承载交叉过敏预警（如"蟹与已知过敏食材虾可能交叉过敏"）
+      - 分工：meal-record 页 saveMeal 成功后收集 res 数组中所有非空 allergyWarning，存入 serverAllergyWarnings ref，在评分结果卡片上方用 allergy-block 暖红样式渲染；camera 页两处直接调 record 的地方（recordToMother、onSubjectSelectorConfirm）在成功返回后若有 allergyWarning，用 uni.showModal（标题"过敏小提醒"，内容拼接预警文案，确认按钮"我知道啦"）展示，用户点确认后再跳转；文案保持温暖不焦虑，禁用"错误""危险"等字眼
 
 # 变更复检规则
 
