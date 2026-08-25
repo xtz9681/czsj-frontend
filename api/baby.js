@@ -40,9 +40,7 @@ export function uploadBabyAvatar(babyId, filePath) {
           try {
             const parsed = JSON.parse(res.data)
             // 成功：code=0，解包 data 字段
-            if (parsed.code === 0 && parsed.data) {
-              resolve(parsed.data)
-            } else if (parsed.code === 0) {
+            if (parsed.code === 0) {
               resolve(parsed.data)
             } else {
               // 业务错误：UNAUTHORIZED 时清 token 并跳登录页

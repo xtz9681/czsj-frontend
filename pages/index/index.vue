@@ -637,7 +637,8 @@ async function loadTrend() {
       ? { subjectType: "user", subjectId: userStore.userId, days: 7 }
       : { subjectType: "baby", subjectId: currentBaby.value?.id, days: 7 }
     const res = await getNutritionTrend(params)
-    trendData.value = res.points || []
+    // 后端 402（未付费）时会被 handleError 捕捉，此处仅检查成功响应的格式
+    trendData.value = Array.isArray(res?.points) ? res.points : []
   } catch (e) {
     trendData.value = []
   }
