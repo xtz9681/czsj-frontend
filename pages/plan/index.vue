@@ -84,8 +84,11 @@
           <view class="pdc-meals">
             <view class="pdc-meal" v-for="meal in day.meals" :key="meal.type">
               <text class="pdc-meal-type">{{ meal.typeLabel }}</text>
-              <view class="pdc-ingredients">
-                <text v-for="ing in meal.ingredients" :key="ing">{{ ing }}</text>
+              <view class="pdc-meal-body">
+                <view class="pdc-ingredients">
+                  <text v-for="ing in meal.ingredients" :key="ing">{{ ing }}</text>
+                </view>
+                <text v-if="meal.note" class="pdc-meal-note">💡 {{ meal.note }}</text>
               </view>
             </view>
           </view>
@@ -256,7 +259,8 @@ function parsePlanJson(raw, weekStart) {
       .map(([type, typeLabel]) => ({
         type,
         typeLabel,
-        ingredients: day[type]?.ingredients || []
+        ingredients: day[type]?.ingredients || [],
+        note: day[type]?.note || ''
       }))
     return {
       date: dateStr,
@@ -626,8 +630,20 @@ onShow(async () => {
   font-weight: 700;
 }
 
-.pdc-ingredients {
+.pdc-meal-body {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
+}
+
+.pdc-meal-note {
+  font-size: 24rpx;
+  color: #999;
+  line-height: 1.5;
+}
+
+.pdc-ingredients {
   display: flex;
   flex-wrap: wrap;
   gap: 8rpx;
