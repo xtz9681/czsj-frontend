@@ -303,6 +303,7 @@
       - **页面样式**：#FAF7F2 背景，32rpx padding 卡片，16rpx border-radius，card class 复用，上传失败状态覆盖 rgba(224,122,95,0.3) 暖红色
       - **导航注册**：pages.json 在 /pages/reminder/index 之后注册 /pages/feedback/index
       - **mine 页修改**：反馈入口改从 `<button open-type="feedback">` 改为 `<view class="feature-item card" @tap="goToFeedback">`，完全复用 feature-item 卡片样式，删除 .feedback-btn 的 button 重置样式规则
+      - **关键实现细节**：图片条目创建时必须用 reactive() 包裹——若在异步上传回调里直接修改原始对象属性，Vue 响应式系统无法感知，会导致状态遮罩与提交按钮禁用态不更新（本次已修复）
 
 # 变更复检规则
 

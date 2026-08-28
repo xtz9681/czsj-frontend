@@ -326,7 +326,8 @@ async function generatePlan() {
     const res = await getWeeklyPlan(subjectType, subjectId)
     // Step 2: 请求返回时用户可能已切换到其他主体（界面展示的主体变了），
     // 此时不回写，避免旧主体的计划覆盖新主体的界面；
-    // generatingKey 保留，用户切回该主体时仍能恢复"生成中"→完成后由 loadLatestPlan 拉取新计划
+    // 此时新计划已在服务端落库，紧随其后的 finally 会清除 generatingKey，
+    // 用户切回该主体时 loadCurrentSubject 会经 loadLatestPlan 拉到新计划，无需特殊处理
     if (subjectKeyOf(currentSubject.value) !== key) return
     const parsed = parsePlanJson(res?.planJson, res?.weekStart)
     weekTips.value = res?.planJson?.tips || ''

@@ -72,7 +72,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, reactive } from 'vue'
 import { uploadFeedbackImage, submitFeedback } from '@/api/feedback.js'
 import { useErrorHandler } from '@/composables/useErrorHandler.js'
 
@@ -106,11 +106,11 @@ async function chooseImages() {
     sourceType: ['album', 'camera'],
     success: (res) => {
       res.tempFilePaths.forEach(tempPath => {
-        const imgItem = {
+        const imgItem = reactive({
           tempPath,
           key: null,
           status: 'uploading'
-        }
+        })
         form.value.images.push(imgItem)
 
         // 立即上传
