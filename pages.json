@@ -104,6 +104,12 @@
       }
     },
     {
+      "path": "pages/feedback/index",
+      "style": {
+        "navigationBarTitleText": "意见反馈"
+      }
+    },
+    {
       "path": "pages/record-hub/index",
       "style": {
         "navigationStyle": "custom"

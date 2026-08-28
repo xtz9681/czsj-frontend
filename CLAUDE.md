@@ -289,6 +289,20 @@
   48. **record 响应 allergyWarning（交叉过敏预警）展示规范**：
       - 后端 record() 返回的 MealResponse.allergyWarning 字段承载交叉过敏预警（如"蟹与已知过敏食材虾可能交叉过敏"）
       - 分工：meal-record 页 saveMeal 成功后收集 res 数组中所有非空 allergyWarning，存入 serverAllergyWarnings ref，在评分结果卡片上方用 allergy-block 暖红样式渲染；camera 页两处直接调 record 的地方（recordToMother、onSubjectSelectorConfirm）在成功返回后若有 allergyWarning，用 uni.showModal（标题"过敏小提醒"，内容拼接预警文案，确认按钮"我知道啦"）展示，用户点确认后再跳转；文案保持温暖不焦虑，禁用"错误""危险"等字眼
+  49. **意见反馈自建功能（页面 + API 完整集成）**：
+      - 新增页面 `pages/feedback/index` 和 API 模块 `api/feedback.js`，my 页面入口改为自建导航而非微信原生 open-type="feedback"
+      - **API 模块** api/feedback.js：
+        - uploadFeedbackImage(filePath)：上传单张反馈图片到 POST /feedback/image，使用 uni.uploadFile 与 Authorization Bearer token，成功返回 data.imageKey（后端签名 URL 对应的键）；401 时清 token 跳登录页，其他状态码或解析失败走 catch 返回温和错误提示
+        - submitFeedback(data)：POST 请求 /feedback，body 为 { content (required, 最长 500 字), imageKeys (optional, 已上传图片键数组), contact (optional, 最长 64 字, 微信号或手机号) }
+      - **反馈页布局**：三层卡片（反馈内容 textarea + 字数计数、截图网格 + 上传状态、联系方式 input）+ 提交按钮（#F5A85B, 88rpx 高）
+        - 反馈内容卡片：textarea maxlength 500，实时显示"X/500" 字数，placeholder "描述一下你遇到的问题或建议吧…"
+        - 截图卡片：最多 3 张，上传成功后显示缩略图（1:1 aspect-ratio），上传中 / 上传失败都有状态覆盖层，每张图上方有 ✕ 删除按钮（可删除任何状态的图），未达 3 张时显示"＋ 添加图片"占位符（虚线框）
+        - 联系方式卡片：input maxlength 64，placeholder "微信号或手机号，方便我们联系你"（选填）
+        - 提交按钮禁用条件：内容为空 OR 有图片仍在上传 OR 正在提交中；禁用时 opacity 0.5、pointer-events none
+      - **流程**：选择图片后立即调 uploadFeedbackImage 上传（后台并发），不阻断用户继续编辑或删除；提交时检查内容非空、所有图片已完成（done 状态），收集 done 图片的 key 数组，调 submitFeedback；成功后显示 success 类型 toast "感谢你的反馈~"，1500ms 后 navigateBack
+      - **页面样式**：#FAF7F2 背景，32rpx padding 卡片，16rpx border-radius，card class 复用，上传失败状态覆盖 rgba(224,122,95,0.3) 暖红色
+      - **导航注册**：pages.json 在 /pages/reminder/index 之后注册 /pages/feedback/index
+      - **mine 页修改**：反馈入口改从 `<button open-type="feedback">` 改为 `<view class="feature-item card" @tap="goToFeedback">`，完全复用 feature-item 卡片样式，删除 .feedback-btn 的 button 重置样式规则
 
 # 变更复检规则
 
