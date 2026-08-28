@@ -5,9 +5,9 @@
       <view class="top-bar">
         <view class="subject-info" @tap="showSwitcher = true">
           <view class="subject-avatar">
-            <image v-if="subjectMode === 'baby' && currentBaby?.gender === 'female'" src="/static/icons/avatar-girl.png" class="avatar-img" />
-            <image v-else-if="subjectMode === 'baby' && currentBaby?.gender === 'male'" src="/static/icons/avatar-boy.png" class="avatar-img" />
-            <image v-else src="/static/icons/avatar-mother.png" class="avatar-img" />
+            <image v-if="subjectMode === 'baby' && currentBaby?.gender === 'female'" src="/static/icons/avatar-girl.jpg" class="avatar-img" />
+            <image v-else-if="subjectMode === 'baby' && currentBaby?.gender === 'male'" src="/static/icons/avatar-boy.jpg" class="avatar-img" />
+            <image v-else src="/static/icons/avatar-mother.jpg" class="avatar-img" />
           </view>
           <view class="subject-detail">
             <view class="subject-name-row">
@@ -136,7 +136,7 @@
     <!-- 快速记录按钮 -->
     <view class="quick-actions">
       <view class="action-primary" @tap="goCamera">
-        <image src="/static/icons/icon-camera.png" class="action-icon-img-big" />
+        <image src="/static/icons/icon-camera.jpg" class="action-icon-img-big" />
         <view>
           <text class="action-title">拍照记一餐</text>
           <text class="action-sub">AI 自动识别食材</text>
@@ -144,7 +144,7 @@
         <text class="action-arrow">›</text>
       </view>
       <view class="action-secondary" @tap="goMealRecord">
-        <image src="/static/icons/icon-manual.png" class="action-icon-img" />
+        <image src="/static/icons/icon-manual.jpg" class="action-icon-img" />
         <text class="action-text">手动记录</text>
       </view>
     </view>
@@ -161,7 +161,7 @@
           <text class="loading-text">加载中...</text>
         </view>
         <view v-else-if="todayMeals.length === 0" class="empty-meals">
-          <image src="/static/empty/no-meals.png" class="empty-img" mode="aspectFit" />
+          <image src="/static/empty/no-meals.jpg" class="empty-img" mode="aspectFit" />
           <text class="empty-text">今天还没记录，快去拍一拍吧~</text>
           <view class="empty-btn" @tap="goCamera">记第一餐</view>
         </view>
@@ -275,7 +275,7 @@
     <!-- AI 周计划入口 -->
     <view class="plan-banner" @tap="goPlan">
       <view class="plan-banner-content">
-        <image src="/static/icons/icon-plan.png" class="plan-banner-icon-img" />
+        <image src="/static/icons/icon-plan.jpg" class="plan-banner-icon-img" />
         <view>
           <text class="plan-banner-title">AI 智能周计划</text>
           <text class="plan-banner-sub">根据月龄 + 过敏史，帮你安排本周饮食</text>
@@ -306,7 +306,7 @@
 
         <!-- 宝妈档案 -->
         <view v-if="mother" class="switcher-item" :class="{ active: subjectMode === 'mother' }" @tap="switchToMother">
-          <image src="/static/icons/avatar-mother.png" class="switcher-avatar-img" />
+          <image src="/static/icons/avatar-mother.jpg" class="switcher-avatar-img" />
           <view class="switcher-info">
             <text class="switcher-name">我的营养</text>
             <text class="switcher-sub">{{ { preconception: '备孕期', pregnancy_early: '孕早期', pregnancy_mid: '孕中期', pregnancy_late: '孕晚期', lactation: '哺乳期', adult_female: '日常营养' }[mother.phase] || '妈妈' }}</text>
@@ -323,8 +323,8 @@
           :class="{ active: subjectMode === 'baby' && currentBabyId === b.id }"
           @tap="switchToBaby(b)"
         >
-          <image v-if="b.gender === 'female'" src="/static/icons/avatar-girl.png" class="switcher-avatar-img" />
-          <image v-else src="/static/icons/avatar-boy.png" class="switcher-avatar-img" />
+          <image v-if="b.gender === 'female'" src="/static/icons/avatar-girl.jpg" class="switcher-avatar-img" />
+          <image v-else src="/static/icons/avatar-boy.jpg" class="switcher-avatar-img" />
           <view class="switcher-info">
             <text class="switcher-name">{{ b.name }}</text>
             <text class="switcher-sub">{{ babyAgeText(b) }}</text>
@@ -511,14 +511,14 @@ function hexToRgba(hex, alpha) {
 
 // 月龄里程碑数据
 const MILESTONES = [
-  { month: 4,  icon: '/static/icons/avatar-baby.png', title: '关注辅食时机', desc: '宝宝 4 个月啦，可以开始关注辅食添加时机了', tip: '建议纯母乳到 6 个月再开始添加' },
-  { month: 6,  icon: '/static/icons/avatar-baby.png', title: '辅食启程！', desc: '可以尝试米糊、南瓜泥等单一食材', tip: '每次只试一种新食材，观察 3 天' },
-  { month: 8,  icon: '/static/icons/avatar-baby.png', title: '解锁蛋黄', desc: '可以尝试蛋黄了，记得先少量试敏哦', tip: '蛋白建议 12 个月后再尝试' },
-  { month: 10, icon: '/static/icons/avatar-baby.png', title: '手指食物时间', desc: '可以尝试手指食物了，锻炼咀嚼能力', tip: '切成条状或小块，让宝宝自主抓握' },
-  { month: 12, icon: '/static/icons/avatar-baby.png', title: '满 1 岁啦！', desc: '可以喝鲜牛奶、尝试蜂蜜了', tip: '逐步从奶瓶过渡到水杯' },
-  { month: 15, icon: '/static/icons/avatar-baby.png', title: '饮食大升级', desc: '可以和大人吃差不多的食物了', tip: '注意少盐少糖，避免重口味' },
-  { month: 18, icon: '/static/icons/avatar-baby.png', title: '大部分食材解锁', desc: '大部分食材都能吃了，注意均衡搭配', tip: '每天保证奶量 400-500ml' },
-  { month: 24, icon: '/static/icons/avatar-baby.png', title: '2 岁啦！', desc: '饮食接近成人，重点关注钙铁锌', tip: '可以开始培养自主进食习惯了' },
+  { month: 4,  icon: '/static/icons/avatar-baby.jpg', title: '关注辅食时机', desc: '宝宝 4 个月啦，可以开始关注辅食添加时机了', tip: '建议纯母乳到 6 个月再开始添加' },
+  { month: 6,  icon: '/static/icons/avatar-baby.jpg', title: '辅食启程！', desc: '可以尝试米糊、南瓜泥等单一食材', tip: '每次只试一种新食材，观察 3 天' },
+  { month: 8,  icon: '/static/icons/avatar-baby.jpg', title: '解锁蛋黄', desc: '可以尝试蛋黄了，记得先少量试敏哦', tip: '蛋白建议 12 个月后再尝试' },
+  { month: 10, icon: '/static/icons/avatar-baby.jpg', title: '手指食物时间', desc: '可以尝试手指食物了，锻炼咀嚼能力', tip: '切成条状或小块，让宝宝自主抓握' },
+  { month: 12, icon: '/static/icons/avatar-baby.jpg', title: '满 1 岁啦！', desc: '可以喝鲜牛奶、尝试蜂蜜了', tip: '逐步从奶瓶过渡到水杯' },
+  { month: 15, icon: '/static/icons/avatar-baby.jpg', title: '饮食大升级', desc: '可以和大人吃差不多的食物了', tip: '注意少盐少糖，避免重口味' },
+  { month: 18, icon: '/static/icons/avatar-baby.jpg', title: '大部分食材解锁', desc: '大部分食材都能吃了，注意均衡搭配', tip: '每天保证奶量 400-500ml' },
+  { month: 24, icon: '/static/icons/avatar-baby.jpg', title: '2 岁啦！', desc: '饮食接近成人，重点关注钙铁锌', tip: '可以开始培养自主进食习惯了' },
 ]
 
 const currentMilestone = computed(() => {
@@ -761,14 +761,14 @@ function addIngredient(item) {
 
 const phaseEmoji = computed(() => {
   const map = {
-    preconception: '/static/icons/phase-preconception.png',
-    pregnancy_early: '/static/icons/phase-pregnancy.png',
-    pregnancy_mid: '/static/icons/phase-pregnancy.png',
-    pregnancy_late: '/static/icons/phase-pregnancy.png',
-    lactation: '/static/icons/phase-lactation.png',
-    adult_female: '/static/icons/phase-daily.png'
+    preconception: '/static/icons/phase-preconception.jpg',
+    pregnancy_early: '/static/icons/phase-pregnancy.jpg',
+    pregnancy_mid: '/static/icons/phase-pregnancy.jpg',
+    pregnancy_late: '/static/icons/phase-pregnancy.jpg',
+    lactation: '/static/icons/phase-lactation.jpg',
+    adult_female: '/static/icons/phase-daily.jpg'
   }
-  return map[mother.value?.phase] || '/static/icons/phase-pregnancy.png'
+  return map[mother.value?.phase] || '/static/icons/phase-pregnancy.jpg'
 })
 
 const phaseDesc = computed(() => {

@@ -24,7 +24,7 @@
 
       <!-- 提示文案：信息越完善 AI 建议越准 -->
       <view class="tip-bar">
-        <image src="/static/icons/icon-sparkle.png" class="tip-icon-img" mode="aspectFit" />
+        <image src="/static/icons/icon-sparkle.jpg" class="tip-icon-img" mode="aspectFit" />
         <text class="tip-text">填得越详细，AI 给出的营养建议就越贴合你的情况～</text>
       </view>
 
@@ -107,7 +107,7 @@
           </picker>
         </view>
         <view v-if="pregnancyPhaseHint" class="pregnancy-phase-hint">
-          <image src="/static/icons/phase-pregnancy.png" class="phase-hint-icon" mode="aspectFit" />
+          <image src="/static/icons/phase-pregnancy.jpg" class="phase-hint-icon" mode="aspectFit" />
           <text class="phase-hint-text">{{ pregnancyPhaseHint }}</text>
         </view>
         <view class="divider"></view>

@@ -33,7 +33,7 @@
       <text class="loading-text">加载中...</text>
     </view>
     <view v-else-if="mealGroups.length === 0" class="empty-state">
-      <image src="/static/empty/no-meals.png" class="empty-img" mode="aspectFit" />
+      <image src="/static/empty/no-meals.jpg" class="empty-img" mode="aspectFit" />
       <text class="empty-text">还没有记录，去记第一餐吧~</text>
       <view class="empty-btn" @tap="goRecord">开始记录</view>
     </view>

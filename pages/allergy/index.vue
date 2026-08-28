@@ -44,7 +44,7 @@
       </view>
 
       <view v-else-if="allergyList.length === 0" class="empty-allergy">
-        <image src="/static/empty/no-allergy.png" class="empty-img" mode="aspectFit" />
+        <image src="/static/empty/no-allergy.jpg" class="empty-img" mode="aspectFit" />
         <text class="empty-text">
           {{ activeSubject === 'baby' ? '还没有标记过敏食材，目前没有已知过敏~' : '还没有标记妈妈的过敏食材~' }}
         </text>

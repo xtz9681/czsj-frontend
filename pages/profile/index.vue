@@ -9,7 +9,7 @@
     <view class="avatar-area" @tap="chooseAvatar">
       <image v-if="form.avatar" :src="form.avatar" class="avatar-img" mode="aspectFill" />
       <view v-else class="avatar-placeholder">
-        <image src="/static/icons/avatar-baby.png" class="avatar-icon-img" mode="aspectFit" />
+        <image src="/static/icons/avatar-baby.jpg" class="avatar-icon-img" mode="aspectFit" />
       </view>
       <view class="avatar-badge">📷</view>
     </view>
@@ -38,7 +38,7 @@
             :class="{ active: form.gender === 'male' }"
             @tap="form.gender = 'male'"
           >
-            <image src="/static/icons/gender-boy.png" class="gender-icon-img" mode="aspectFit" />
+            <image src="/static/icons/gender-boy.jpg" class="gender-icon-img" mode="aspectFit" />
             <text>男宝</text>
           </view>
           <view
@@ -46,7 +46,7 @@
             :class="{ active: form.gender === 'female' }"
             @tap="form.gender = 'female'"
           >
-            <image src="/static/icons/gender-girl.png" class="gender-icon-img" mode="aspectFit" />
+            <image src="/static/icons/gender-girl.jpg" class="gender-icon-img" mode="aspectFit" />
             <text>女宝</text>
           </view>
         </view>

@@ -10,7 +10,7 @@
     <view class="content" :style="contentStyle">
       <!-- Logo 区域 -->
       <view class="logo-area">
-        <image src="/static/icons/logo-app.png" class="logo-icon-img" mode="aspectFit" />
+        <image src="/static/icons/logo-app.jpg" class="logo-icon-img" mode="aspectFit" />
         <text class="app-name">成长食记</text>
         <text class="app-slogan">从第一口辅食开始，记录宝宝的成长</text>
       </view>
@@ -35,7 +35,7 @@
           </text>
         </view>
         <button class="wx-login-btn" :disabled="!agreedPrivacy" :class="{ disabled: !agreedPrivacy }" @tap="handleWxLogin" :loading="loading">
-          <image src="/static/icons/icon-wechat.png" class="btn-icon-img" mode="aspectFit" />
+          <image src="/static/icons/icon-wechat.jpg" class="btn-icon-img" mode="aspectFit" />
           <text>微信一键登录</text>
         </button>
         <text class="privacy-tip">AI 建议仅供参考，请咨询专业人员</text>
@@ -64,9 +64,9 @@ const contentStyle = computed(() => ({
 }))
 
 const features = [
-  { id: 1, iconPath: '/static/icons/icon-camera.png', title: '拍照识食材', desc: '拍一拍，AI 自动识别今天吃了什么' },
-  { id: 2, iconPath: '/static/icons/icon-star.png', title: 'AI 营养评分', desc: '实时评估营养均衡度，小建议一目了然' },
-  { id: 3, iconPath: '/static/icons/icon-allergy.png', title: '过敏预警', desc: '自动检测交叉过敏风险，宝宝更安全' },
+  { id: 1, iconPath: '/static/icons/icon-camera.jpg', title: '拍照识食材', desc: '拍一拍，AI 自动识别今天吃了什么' },
+  { id: 2, iconPath: '/static/icons/icon-star.jpg', title: 'AI 营养评分', desc: '实时评估营养均衡度，小建议一目了然' },
+  { id: 3, iconPath: '/static/icons/icon-allergy.jpg', title: '过敏预警', desc: '自动检测交叉过敏风险，宝宝更安全' },
 ]
 
 async function handleWxLogin() {
@@ -197,6 +197,8 @@ function showPrivacy() {
 .logo-icon-img {
   width: 120rpx;
   height: 120rpx;
+  /* 图片素材自带圆角（实测 22.6%），圆角外四角为黑色不透明区域，30% 圆角留足余量裁掉黑边 */
+  border-radius: 30%;
   margin-bottom: 20rpx;
 }
 

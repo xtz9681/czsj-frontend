@@ -2,7 +2,7 @@
   <view class="page-container">
     <!-- 妈妈信息卡片 -->
     <view class="mother-info-card card">
-      <image src="/static/icons/avatar-mother.png" class="mother-emoji-img" mode="aspectFit" />
+      <image src="/static/icons/avatar-mother.jpg" class="mother-emoji-img" mode="aspectFit" />
       <text class="mother-phase">{{ motherPhaseLabel }}</text>
     </view>
 
@@ -113,7 +113,7 @@
 
     <!-- 空状态 -->
     <view v-else class="empty-state">
-      <image src="/static/empty/no-records-adult.png" class="empty-img" mode="aspectFit" />
+      <image src="/static/empty/no-records-adult.jpg" class="empty-img" mode="aspectFit" />
       <text class="empty-text">还没有记录过体重数据</text>
       <text class="empty-sub">开始记录，关注自己的健康～</text>
     </view>

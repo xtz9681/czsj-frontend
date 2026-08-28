@@ -1,6 +1,9 @@
 // 基础请求封装
 const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080'
 
+// 排查日志：启动时输出实际生效的 API 地址（在 vConsole 中确认包内嵌的是否为最新配置）
+console.log('[api] BASE_URL =', BASE_URL)
+
 /**
  * 自定义错误类，包含错误类型、状态码和原始数据
  */
@@ -78,6 +81,8 @@ export function request(options) {
         }
       },
       fail(err) {
+        // 网络层失败：输出完整目标地址，便于区分「未到达服务器」（连接被拒/超时/域名拦截）与「服务端报错」
+        console.error('[api] 请求失败 →', BASE_URL + options.url, '| errMsg:', err?.errMsg)
         reject(new ApiError('网络开小差了，请检查网络~', 0, 'NETWORK_ERROR', err))
       }
     })

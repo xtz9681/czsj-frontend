@@ -159,7 +159,7 @@
 
     <!-- 空状态 -->
     <view v-else class="empty-state">
-      <image src="/static/empty/no-records.png" class="empty-img" mode="aspectFit" />
+      <image src="/static/empty/no-records.jpg" class="empty-img" mode="aspectFit" />
       <text class="empty-text">还没有记录过宝宝的成长数据</text>
       <text class="empty-sub">开始记录，见证宝宝的每一步成长～</text>
     </view>

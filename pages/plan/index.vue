@@ -3,7 +3,7 @@
     <!-- 付费引导 Banner（未订阅时显示） -->
     <view v-if="!isPremium" class="premium-banner">
       <view class="premium-content">
-        <image src="/static/icons/icon-plan.png" class="premium-icon-img" mode="aspectFit" />
+        <image src="/static/icons/icon-plan.jpg" class="premium-icon-img" mode="aspectFit" />
         <view>
           <text class="premium-title">AI 智能周计划</text>
           <text class="premium-desc">结合月龄或孕期阶段、过敏史和近期饮食，自动生成 7 天饮食安排</text>

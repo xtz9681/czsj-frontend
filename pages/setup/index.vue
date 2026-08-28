@@ -7,7 +7,7 @@
 
     <view class="content">
       <view class="logo-area">
-        <image src="/static/icons/logo-setup.png" class="logo-icon-img" mode="aspectFit" />
+        <image src="/static/icons/logo-setup.jpg" class="logo-icon-img" mode="aspectFit" />
         <text class="title">告诉我更多关于你</text>
         <text class="subtitle">根据你的阶段，我们会给出最合适的营养建议</text>
       </view>
@@ -43,10 +43,10 @@ const selected = ref('')
 const loading = ref(false)
 
 const motherStages = [
-  { value: 'preconception', icon: '/static/icons/stage-love.png', label: '备孕中', desc: '正在为迎接宝宝做准备' },
-  { value: 'pregnancy',     icon: '/static/icons/phase-pregnancy.png', label: '孕期',   desc: '孕早期 / 孕中期 / 孕晚期' },
-  { value: 'lactation',     icon: '/static/icons/phase-lactation.png', label: '哺乳期', desc: '刚生产，正在哺乳' },
-  { value: 'adult_female',  icon: '/static/icons/stage-woman.png', label: '日常管理', desc: '自身日常营养管理或孩子处于三岁以内' },
+  { value: 'preconception', icon: '/static/icons/stage-love.jpg', label: '备孕中', desc: '正在为迎接宝宝做准备' },
+  { value: 'pregnancy',     icon: '/static/icons/phase-pregnancy.jpg', label: '孕期',   desc: '孕早期 / 孕中期 / 孕晚期' },
+  { value: 'lactation',     icon: '/static/icons/phase-lactation.jpg', label: '哺乳期', desc: '刚生产，正在哺乳' },
+  { value: 'adult_female',  icon: '/static/icons/stage-woman.jpg', label: '日常管理', desc: '自身日常营养管理或孩子处于三岁以内' },
 ]
 
 function handleNext() {
@@ -104,6 +104,8 @@ function handleNext() {
 .logo-icon-img {
   width: 120rpx;
   height: 120rpx;
+  /* 图片素材自带圆角（实测 22.6%），圆角外四角为黑色不透明区域，30% 圆角留足余量裁掉黑边 */
+  border-radius: 30%;
   display: block;
   margin: 0 auto 24rpx;
 }

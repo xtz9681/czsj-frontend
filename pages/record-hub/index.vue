@@ -397,9 +397,9 @@ const todayDisplayStr = computed(() => {
 
 const emptyImage = computed(() => {
   if (selectedSubject.value?.type === 'user') {
-    return '/static/empty/no-records-adult.png'
+    return '/static/empty/no-records-adult.jpg'
   }
-  return '/static/empty/no-meals.png'
+  return '/static/empty/no-meals.jpg'
 })
 
 // ── 数据加载 ──────────────────────────────
